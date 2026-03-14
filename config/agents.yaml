@@ -1,0 +1,73 @@
+# Terminal Agent Kit (tak) -- Agent Definitions
+# Defines available agent types and their configuration.
+# User overrides go in ~/.tak/agents.yaml
+
+providers:
+
+  cursor-acp:
+    name: "Cursor (ACP)"
+    description: "Cursor CLI agent via Agent Client Protocol (JSON-RPC over stdio)"
+    command: ["cursor", "agent", "acp"]
+    protocol: "json-rpc"
+    auth:
+      env_var: "CURSOR_API_KEY"
+      login_command: ["cursor", "agent", "login"]
+    capabilities:
+      streaming: true        # To be confirmed via research
+      session_resume: false   # To be confirmed via research
+      project_required: false # Can run without a project folder
+    output_formats:
+      - text
+      - json
+      - stream-json
+
+  # cursor-print:
+  #   name: "Cursor (Print Mode)"
+  #   description: "Cursor CLI in headless print mode (simpler, no ACP)"
+  #   command: ["cursor", "agent", "-p"]
+  #   protocol: "stdio"
+  #   capabilities:
+  #     streaming: false
+  #     session_resume: false
+  #     project_required: false
+
+  # claude-code:
+  #   name: "Claude Code"
+  #   description: "Anthropic's Claude Code CLI agent"
+  #   command: ["claude"]
+  #   protocol: "stdio"
+  #   capabilities:
+  #     streaming: true
+  #     session_resume: true
+  #     project_required: false
+
+  # goose:
+  #   name: "Goose"
+  #   description: "Block's open-source Goose agent"
+  #   command: ["goose"]
+  #   protocol: "stdio"
+  #   capabilities:
+  #     streaming: true
+  #     session_resume: false
+  #     project_required: false
+
+  # generic-stdio:
+  #   name: "Generic (stdio)"
+  #   description: "Any CLI tool that reads from stdin and writes to stdout"
+  #   command: []  # User must specify
+  #   protocol: "stdio"
+  #   capabilities:
+  #     streaming: false
+  #     session_resume: false
+  #     project_required: false
+
+  # llm-api:
+  #   name: "Direct LLM API"
+  #   description: "Direct HTTP calls to LLM provider APIs"
+  #   protocol: "http"
+  #   endpoints:
+  #     openai: "https://api.openai.com/v1/chat/completions"
+  #     anthropic: "https://api.anthropic.com/v1/messages"
+  #   auth:
+  #     openai_env: "OPENAI_API_KEY"
+  #     anthropic_env: "ANTHROPIC_API_KEY"

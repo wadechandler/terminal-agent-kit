@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "terminal-agent-kit"
+version = "0.1.0-alpha"
+description = "Forging your terminal into an agentic environment"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Wade Chandler" },
+]
+keywords = ["terminal", "agent", "ai", "cli", "iterm2", "devkit"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Terminals :: Terminal Emulators/X Terminals",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "iterm2>=2.7",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+llm = [
+    "httpx>=0.27",
+]
+
+[project.scripts]
+tak = "tak.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/wadechandler/terminal-agent-kit"
+Repository = "https://github.com/wadechandler/terminal-agent-kit"
+Issues = "https://github.com/wadechandler/terminal-agent-kit/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tak"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "SIM", "TCH"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

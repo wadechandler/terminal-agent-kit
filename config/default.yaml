@@ -1,0 +1,42 @@
+# Terminal Agent Kit (tak) -- Default Configuration
+# User overrides go in ~/.tak/config.yaml
+
+# Prefixes intercepted by the terminal driver daemon.
+# These are caught before reaching the shell.
+prefixes:
+  agent_query: "@ai"          # Route query to tab's associated agent
+  agent_targeted: "@ai:"      # Route to named agent, e.g. @ai:cursor-myapp
+  toolkit_command: "@tak"     # Toolkit commands (tabs, switch, status)
+  quick_query: "??"           # Shorthand alias for @ai
+
+# CLI command name (installed on PATH via pip)
+cli_command: "tak"
+
+# State and config directory
+state_dir: "~/.tak"
+
+# Agent defaults
+agents:
+  default_provider: "cursor-acp"
+  startup_timeout_seconds: 30
+  health_check_interval_seconds: 60
+
+# iTerm2 driver settings
+iterm2:
+  status_bar:
+    enabled: true
+    show_agent_name: true
+    show_agent_status: true
+  profiles:
+    create_agent_profiles: true
+    agent_profile_prefix: "tak-"
+
+# Tab display
+tabs:
+  show_agent_in_title: true
+  title_format: "[{agent_name}] {original_title}"
+
+# Security
+security:
+  audit_dependencies: true
+  warn_single_maintainer: true

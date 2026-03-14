@@ -1,0 +1,251 @@
+# Terminal Agent Kit (tak) -- Task Manifest
+# Tracks all phases, tasks, and research questions.
+# Status: not_started | in_progress | research | done | blocked | deferred
+
+project:
+  name: Terminal Agent Kit
+  command: tak
+  tagline: "Forging your terminal into an agentic environment"
+  repo: terminal-agent-kit
+  started: 2026-03-14
+
+phases:
+
+  - id: phase-0
+    name: Scaffold & Research
+    status: in_progress
+    tasks:
+      - id: p0-scaffold
+        name: Project structure and initial files
+        status: done
+      - id: p0-research-iterm2
+        name: Deep-dive iTerm2 Python API capabilities
+        status: research
+        notes: >
+          Key question: can triggers intercept input before shell?
+          Need to test trigger behavior with @ai prefix patterns.
+        doc: docs/research/iterm2-api-capabilities.md
+      - id: p0-research-acp
+        name: Cursor CLI ACP protocol exploration
+        status: research
+        notes: >
+          Need to discover exact JSON-RPC method names, streaming
+          support, session resumption, startup latency.
+        doc: docs/research/cursor-acp-integration.md
+      - id: p0-research-routing
+        name: Agent routing approaches (input interception vs keybinding)
+        status: not_started
+        notes: >
+          How to distinguish @ai queries from shell commands.
+          Options: triggers, shell function wrapper, readline hook,
+          keybinding RPC, coprocess.
+      - id: p0-prior-art
+        name: Survey existing tools
+        status: done
+        doc: docs/research/prior-art.md
+      - id: p0-naming
+        name: Project naming decision
+        status: done
+        doc: docs/research/architecture-decisions.md
+      - id: p0-ux-design
+        name: UI/TUI/UX design for overlays, panels, tab management
+        status: not_started
+        notes: >
+          Research what iTerm2 API can render (split panes, status bar,
+          annotations). Design overlay concepts for agent panels, tab
+          switcher, session details. Consider Rich library for CLI output.
+      - id: p0-keyboard-commands
+        name: Design keyboard shortcuts and command vocabulary
+        status: not_started
+        notes: >
+          Map out keybindings for common actions: spawn agent, switch
+          agent, show status, tab overlay, quick ask. Balance between
+          @tak commands, tak CLI, and direct keybindings.
+
+  - id: phase-1
+    name: "MVP: Talk to an Agent"
+    status: not_started
+    tasks:
+      - id: p1-core-config
+        name: Config loading from YAML
+        status: not_started
+      - id: p1-core-agent-manager
+        name: AgentManager -- spawn, stop, list agents
+        status: not_started
+      - id: p1-provider-cursor-acp
+        name: Cursor ACP provider implementation
+        status: not_started
+      - id: p1-core-agent-bus
+        name: AgentBus -- route messages from tab to agent
+        status: not_started
+      - id: p1-core-session-registry
+        name: SessionRegistry -- tab-agent associations
+        status: not_started
+      - id: p1-driver-iterm2-daemon
+        name: iTerm2 daemon script (AutoLaunch)
+        status: not_started
+      - id: p1-driver-iterm2-trigger
+        name: iTerm2 @ai trigger or keybinding RPC
+        status: not_started
+      - id: p1-driver-iterm2-statusbar
+        name: iTerm2 status bar component (active agent)
+        status: not_started
+      - id: p1-cli-basic
+        name: "tak CLI: spawn, stop, status, ask"
+        status: not_started
+      - id: p1-state-persistence
+        name: State persistence to ~/.tak/state.yaml
+        status: not_started
+      - id: p1-ad-hoc-mode
+        name: "Ad-hoc mode: agent without a project folder"
+        status: not_started
+        notes: >
+          User wants to just spin up an agent for quick questions
+          without associating a project. System admin, brew help, etc.
+
+  - id: phase-2
+    name: Project & Setup Tooling
+    status: not_started
+    tasks:
+      - id: p2-scaffold-agents-md
+        name: "tak scaffold agents -- generate AGENTS.md"
+        status: not_started
+      - id: p2-scaffold-rules
+        name: "tak scaffold rules -- generate .cursor/rules/"
+        status: not_started
+      - id: p2-scaffold-skills
+        name: "tak scaffold skills -- generate SKILL.md"
+        status: not_started
+      - id: p2-new-project
+        name: "tak new project -- interactive or quick project creation"
+        status: not_started
+        notes: >
+          Interactive mode: planning session to create project.
+          Quick mode: just a folder to do stuff and ask questions.
+      - id: p2-setup-starship
+        name: "tak setup starship -- install and configure"
+        status: not_started
+      - id: p2-setup-fonts
+        name: "tak setup fonts -- JetBrains Mono Nerd Font"
+        status: not_started
+      - id: p2-setup-profiles
+        name: "tak setup profiles -- iTerm2 profiles via API"
+        status: not_started
+      - id: p2-multi-agent
+        name: Multiple simultaneous agents with named instances
+        status: not_started
+      - id: p2-restart-recovery
+        name: Restart recovery -- re-spawn agents on iTerm2 restart
+        status: not_started
+
+  - id: phase-3
+    name: Multi-Agent & Remote
+    status: not_started
+    tasks:
+      - id: p3-provider-claude-code
+        name: Claude Code provider
+        status: not_started
+      - id: p3-provider-goose
+        name: Goose provider
+        status: not_started
+      - id: p3-provider-llm-api
+        name: Direct LLM API provider (OpenAI, Anthropic HTTP)
+        status: not_started
+      - id: p3-provider-generic-stdio
+        name: Generic stdio provider for arbitrary CLI agents
+        status: not_started
+      - id: p3-remote-ssh
+        name: Remote agent management via SSH + tmux
+        status: not_started
+      - id: p3-driver-kitty
+        name: Kitty terminal driver
+        status: not_started
+      - id: p3-driver-tmux
+        name: tmux driver
+        status: not_started
+      - id: p3-tab-overlay
+        name: Tab management overlay UI
+        status: not_started
+      - id: p3-agent-panel
+        name: Agent session panel (side panel concept)
+        status: not_started
+
+  - id: phase-4
+    name: Enterprise & IDE (Future Vision)
+    status: deferred
+    tasks:
+      - id: p4-vscode-extension
+        name: VS Code / Cursor extension
+        status: deferred
+      - id: p4-jetbrains-plugin
+        name: JetBrains plugin
+        status: deferred
+      - id: p4-azure-devops
+        name: Azure DevOps work breakdown integration
+        status: deferred
+      - id: p4-coder-integration
+        name: Coder.com remote environment integration
+        status: deferred
+      - id: p4-multi-agent-orchestration
+        name: Multi-agent orchestration (Stripe Minions-style)
+        status: deferred
+      - id: p4-pi-agent
+        name: Pi coding agent / framework support
+        status: deferred
+
+research_questions:
+  - id: rq-trigger-interception
+    question: Can iTerm2 triggers intercept input before the shell processes it?
+    status: open
+    priority: high
+    notes: >
+      Triggers match on terminal output (post-echo). We may need shell
+      integration hooks, a custom shell function, or readline wrapper
+      to catch @ai before bash tries to execute it.
+
+  - id: rq-overlay-rendering
+    question: Can iTerm2 API create floating overlays or popups?
+    status: open
+    priority: medium
+    notes: >
+      Likely no native overlay support. Alternatives: split pane that
+      auto-closes, status bar for brief info, Rich-rendered output in
+      a temporary pane, or a separate companion TUI window.
+
+  - id: rq-acp-methods
+    question: What are the exact JSON-RPC method names for Cursor ACP?
+    status: open
+    priority: high
+
+  - id: rq-acp-streaming
+    question: Does ACP support streaming responses?
+    status: open
+    priority: medium
+
+  - id: rq-acp-session-resume
+    question: Can Cursor ACP sessions be resumed after restart?
+    status: open
+    priority: medium
+
+  - id: rq-session-var-persistence
+    question: Do iTerm2 user-defined variables survive session restoration?
+    status: open
+    priority: medium
+
+  - id: rq-input-vs-output-hooks
+    question: "Best approach for @ai routing: shell function, coprocess, trigger, or keybinding?"
+    status: open
+    priority: high
+    notes: >
+      Shell function approach: alias @ai to a function that pipes to tak.
+      Coprocess approach: background process connected to shell.
+      Keybinding approach: Cmd+Enter sends current line to agent via RPC.
+      Each has different tradeoffs for UX, latency, and portability.
+
+  - id: rq-security-deps
+    question: Which dependencies have known CVEs or low bus factor?
+    status: open
+    priority: medium
+    notes: >
+      Need to audit iterm2, click, rich, pyyaml, httpx.
+      Set up pip-audit or safety in CI.
