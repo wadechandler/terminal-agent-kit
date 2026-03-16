@@ -1,13 +1,33 @@
-"""Tests for the tak CLI commands."""
+"""Tests for the tak CLI commands.
+
+All daemon-dependent commands are tested with ``_daemon_available`` mocked
+to ``False`` (no-daemon fallback) and ``True`` + ``_run_async`` mocked
+(daemon-available path) so tests never depend on a running daemon.
+"""
 
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
 from tak.cli.main import cli
+
+
+def _invoke_no_daemon(args: list[str]) -> Any:
+    """Invoke a CLI command with the daemon unavailable."""
+    with patch("tak.cli.main._daemon_available", return_value=False):
+        return CliRunner().invoke(cli, args)
+
+
+def _invoke_with_daemon(args: list[str], *, ipc_response: MagicMock) -> Any:
+    """Invoke a CLI command with a mocked daemon IPC response."""
+    with (
+        patch("tak.cli.main._daemon_available", return_value=True),
+        patch("tak.cli.main._run_async", return_value=ipc_response),
+    ):
+        return CliRunner().invoke(cli, args)
 
 
 class TestCLIBasics:
@@ -30,39 +50,61 @@ class TestSpawnCommand:
         result = runner.invoke(cli, ["spawn"])
         assert result.exit_code != 0
 
-    def test_spawn_with_name(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["spawn", "--name", "test-agent"])
+    def test_spawn_no_daemon_prints_info(self) -> None:
+        result = _invoke_no_daemon(["spawn", "--name", "test-agent"])
         assert result.exit_code == 0
         assert "test-agent" in result.output
+        assert "daemon not running" in result.output
 
-    def test_spawn_with_model(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(
-            cli, ["spawn", "--name", "test-agent", "--model", "claude-sonnet-4"]
+    def test_spawn_no_daemon_with_model(self) -> None:
+        result = _invoke_no_daemon(
+            ["spawn", "--name", "test-agent", "--model", "claude-sonnet-4"]
         )
         assert result.exit_code == 0
         assert "claude-sonnet-4" in result.output
 
+    def test_spawn_with_daemon_success(self) -> None:
+        resp = MagicMock(
+            success=True, data={"name": "test-agent", "status": "running"}
+        )
+        result = _invoke_with_daemon(
+            ["spawn", "--name", "test-agent"], ipc_response=resp
+        )
+        assert result.exit_code == 0
+        assert "spawned" in result.output
+
+    def test_spawn_with_daemon_error(self) -> None:
+        resp = MagicMock(success=False, error="spawn failed")
+        result = _invoke_with_daemon(
+            ["spawn", "--name", "test-agent"], ipc_response=resp
+        )
+        assert result.exit_code != 0
+
 
 class TestStatusCommand:
-    def test_status_runs(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["status"])
+    def test_status_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["status"])
         assert result.exit_code == 0
+        assert "daemon not running" in result.output
 
-    def test_agents_alias(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["agents"])
+    def test_agents_alias_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["agents"])
         assert result.exit_code == 0
 
 
 class TestStopCommand:
-    def test_stop_without_daemon(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["stop", "my-agent"])
+    def test_stop_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["stop", "my-agent"])
         assert result.exit_code == 0
         assert "my-agent" in result.output
+
+    def test_stop_with_daemon_success(self) -> None:
+        resp = MagicMock(success=True)
+        result = _invoke_with_daemon(
+            ["stop", "my-agent"], ipc_response=resp
+        )
+        assert result.exit_code == 0
+        assert "stopped" in result.output
 
 
 class TestAskCommand:
@@ -71,19 +113,44 @@ class TestAskCommand:
         result = runner.invoke(cli, ["ask"])
         assert result.exit_code != 0
 
-    def test_ask_with_query(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["ask", "what", "is", "python"])
+    def test_ask_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["ask", "what", "is", "python"])
         assert result.exit_code == 0
         assert "what is python" in result.output
+        assert "daemon not running" in result.output
+
+    def test_ask_with_daemon_success(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "response": "42"}
+        )
+        result = _invoke_with_daemon(
+            ["ask", "meaning", "of", "life"], ipc_response=resp
+        )
+        assert result.exit_code == 0
+        assert "42" in result.output
 
 
 class TestSwitchCommand:
-    def test_switch_without_daemon(self) -> None:
-        runner = CliRunner()
-        result = runner.invoke(cli, ["switch", "my-agent"])
+    def test_switch_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["switch", "my-agent"])
         assert result.exit_code == 0
         assert "my-agent" in result.output
+
+
+class TestRenameCommand:
+    def test_rename_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["rename", "old-name", "new-name"])
+        assert result.exit_code == 0
+        assert "daemon not running" in result.output
+
+    def test_rename_with_daemon_success(self) -> None:
+        resp = MagicMock(
+            success=True, data={"old_name": "old", "new_name": "new"}
+        )
+        result = _invoke_with_daemon(
+            ["rename", "old", "new"], ipc_response=resp
+        )
+        assert result.exit_code == 0
 
 
 class TestMenuCommand:
@@ -220,6 +287,13 @@ class TestSetupCommands:
     def test_setup_iterm2(self, mock_fn: Any) -> None:
         runner = CliRunner()
         result = runner.invoke(cli, ["setup", "iterm2"])
+        assert result.exit_code == 0
+        mock_fn.assert_called_once()
+
+    @patch("tak.setup.iterm2.setup_iterm2_pip", return_value=True)
+    def test_setup_iterm2_pip(self, mock_fn: Any) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["setup", "iterm2-pip"])
         assert result.exit_code == 0
         mock_fn.assert_called_once()
 
