@@ -5,69 +5,60 @@
 providers:
 
   cursor-acp:
+    type: acp
     name: "Cursor (ACP)"
     description: "Cursor CLI agent via Agent Client Protocol (JSON-RPC over stdio)"
     command: ["cursor", "agent", "acp"]
+    auth_method: login
+    list_models_command: ["cursor", "agent", "models"]
     protocol: "json-rpc"
-    auth:
-      env_var: "CURSOR_API_KEY"
-      login_command: ["cursor", "agent", "login"]
     capabilities:
-      streaming: true        # To be confirmed via research
-      session_resume: false   # To be confirmed via research
-      project_required: false # Can run without a project folder
+      streaming: true
+      session_resume: false
+      project_required: false
     output_formats:
       - text
       - json
       - stream-json
 
-  # cursor-print:
-  #   name: "Cursor (Print Mode)"
-  #   description: "Cursor CLI in headless print mode (simpler, no ACP)"
-  #   command: ["cursor", "agent", "-p"]
-  #   protocol: "stdio"
+  # goose-acp:
+  #   type: acp
+  #   name: "Goose (ACP)"
+  #   description: "Block's Goose agent via ACP (goose-acp crate)"
+  #   command: ["goose", "acp"]
+  #   auth_method: env
   #   capabilities:
-  #     streaming: false
+  #     streaming: true
   #     session_resume: false
   #     project_required: false
 
-  # claude-code:
+  # claude-acp:
+  #   type: acp
+  #   name: "Claude Code (ACP adapter)"
+  #   description: "Claude Code via Zed Industries claude-agent-acp adapter"
+  #   command: ["claude-agent-acp"]
+  #   auth_method: env
+  #   capabilities:
+  #     streaming: true
+  #     session_resume: false
+  #     project_required: false
+
+  # claude-terminal:
+  #   type: terminal
   #   name: "Claude Code"
-  #   description: "Anthropic's Claude Code CLI agent"
+  #   description: "Anthropic's Claude Code CLI -- runs in its own terminal tab"
   #   command: ["claude"]
-  #   protocol: "stdio"
   #   capabilities:
   #     streaming: true
   #     session_resume: true
   #     project_required: false
 
-  # goose:
+  # goose-terminal:
+  #   type: terminal
   #   name: "Goose"
-  #   description: "Block's open-source Goose agent"
+  #   description: "Block's Goose agent in interactive mode -- runs in its own tab"
   #   command: ["goose"]
-  #   protocol: "stdio"
   #   capabilities:
   #     streaming: true
   #     session_resume: false
   #     project_required: false
-
-  # generic-stdio:
-  #   name: "Generic (stdio)"
-  #   description: "Any CLI tool that reads from stdin and writes to stdout"
-  #   command: []  # User must specify
-  #   protocol: "stdio"
-  #   capabilities:
-  #     streaming: false
-  #     session_resume: false
-  #     project_required: false
-
-  # llm-api:
-  #   name: "Direct LLM API"
-  #   description: "Direct HTTP calls to LLM provider APIs"
-  #   protocol: "http"
-  #   endpoints:
-  #     openai: "https://api.openai.com/v1/chat/completions"
-  #     anthropic: "https://api.anthropic.com/v1/messages"
-  #   auth:
-  #     openai_env: "OPENAI_API_KEY"
-  #     anthropic_env: "ANTHROPIC_API_KEY"

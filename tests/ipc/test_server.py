@@ -1,0 +1,364 @@
+"""Tests for IPC server dispatch logic."""
+
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import pytest
+
+from tak.ipc.server import IPCServer
+
+if TYPE_CHECKING:
+    from conftest import MockProvider
+
+    from tak.core.agent_manager import AgentManager
+
+
+@pytest.fixture
+def short_tmp(tmp_path: Path) -> Path:
+    # Unix domain sockets have a 104-byte path limit on macOS.
+    # pytest's tmp_path can exceed this, so use /tmp directly.
+    d = Path(tempfile.mkdtemp(prefix="tak_", dir="/tmp"))
+    yield d
+    for f in d.iterdir():
+        f.unlink()
+    d.rmdir()
+
+
+@pytest.fixture
+def ipc_server(agent_manager: AgentManager, short_tmp: Path) -> IPCServer:
+    socket_path = short_tmp / "t.sock"
+    return IPCServer(agent_manager=agent_manager, socket_path=socket_path)
+
+
+@pytest.fixture
+def ipc_server_with_provider(
+    agent_manager: AgentManager,
+    mock_provider: MockProvider,
+    short_tmp: Path,
+) -> IPCServer:
+    socket_path = short_tmp / "tp.sock"
+    return IPCServer(
+        agent_manager=agent_manager,
+        socket_path=socket_path,
+        providers={"mock": mock_provider},
+    )
+
+
+@pytest.fixture
+def ipc_server_with_adhoc(
+    agent_manager: AgentManager,
+    mock_provider: MockProvider,
+    short_tmp: Path,
+) -> IPCServer:
+    from tak.core.adhoc import AdHocManager
+
+    adhoc = AdHocManager(agent_manager=agent_manager, provider_name="mock")
+    socket_path = short_tmp / "ta.sock"
+    return IPCServer(
+        agent_manager=agent_manager,
+        socket_path=socket_path,
+        providers={"mock": mock_provider},
+        adhoc_manager=adhoc,
+    )
+
+
+class TestIPCServerStartStop:
+    async def test_start_creates_socket(
+        self, ipc_server: IPCServer, tmp_path: Path
+    ) -> None:
+        await ipc_server.start()
+        try:
+            assert ipc_server.socket_path.exists()
+        finally:
+            await ipc_server.stop()
+
+    async def test_stop_removes_socket(
+        self, ipc_server: IPCServer, tmp_path: Path
+    ) -> None:
+        await ipc_server.start()
+        await ipc_server.stop()
+        assert not ipc_server.socket_path.exists()
+
+
+class TestIPCServerIntegration:
+    async def test_list_agents_via_socket(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("test-agent", "mock")
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "list_agents",
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            assert len(resp.data) == 1
+            assert resp.data[0]["name"] == "test-agent"
+        finally:
+            await ipc_server.stop()
+
+    async def test_spawn_via_socket(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "spawn",
+                params={"name": "new-agent", "provider": "mock"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            assert resp.data["name"] == "new-agent"
+            assert agent_manager.get("new-agent") is not None
+        finally:
+            await ipc_server.stop()
+
+    async def test_stop_via_socket(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("to-stop", "mock")
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "stop",
+                params={"name": "to-stop"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            handle = agent_manager.get("to-stop")
+            assert handle is not None
+            assert handle.status.value == "stopped"
+        finally:
+            await ipc_server.stop()
+
+    async def test_unknown_method(self, ipc_server: IPCServer) -> None:
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "nonexistent",
+                socket_path=ipc_server.socket_path,
+            )
+            assert not resp.success
+            assert "Unknown method" in (resp.error or "")
+        finally:
+            await ipc_server.stop()
+
+
+class TestIPCServerRename:
+    async def test_rename_agent(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("old-agent", "mock")
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "rename_agent",
+                params={"old_name": "old-agent", "new_name": "new-agent"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            assert resp.data["new_name"] == "new-agent"
+            assert agent_manager.get("new-agent") is not None
+            assert agent_manager.get("old-agent") is None
+        finally:
+            await ipc_server.stop()
+
+    async def test_rename_nonexistent_agent_returns_error(
+        self, ipc_server: IPCServer
+    ) -> None:
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "rename_agent",
+                params={"old_name": "ghost", "new_name": "new-name"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert not resp.success
+            assert "ghost" in (resp.error or "")
+        finally:
+            await ipc_server.stop()
+
+
+class TestIPCServerListAgentsFilter:
+    async def test_list_agents_filter_by_provider(
+        self, ipc_server: IPCServer, agent_manager: AgentManager, mock_provider: MockProvider
+    ) -> None:
+        second = type(mock_provider)()
+        agent_manager.register_provider("second", second)
+        await agent_manager.spawn("mock-agent", "mock")
+        await agent_manager.spawn("second-agent", "second")
+
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "list_agents",
+                params={"provider": "mock"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            names = [a["name"] for a in resp.data]
+            assert "mock-agent" in names
+            assert "second-agent" not in names
+        finally:
+            await ipc_server.stop()
+
+    async def test_list_agents_filter_running_only(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("running-agent", "mock")
+        await agent_manager.spawn("to-stop", "mock")
+        await agent_manager.stop("to-stop")
+
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "list_agents",
+                params={"running": True},
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            names = [a["name"] for a in resp.data]
+            assert "running-agent" in names
+            assert "to-stop" not in names
+        finally:
+            await ipc_server.stop()
+
+    async def test_list_agents_no_filter_returns_all(
+        self, ipc_server: IPCServer, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("agent-a", "mock")
+        await agent_manager.spawn("agent-b", "mock")
+        await agent_manager.stop("agent-b")
+
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "list_agents",
+                socket_path=ipc_server.socket_path,
+            )
+            assert resp.success
+            assert len(resp.data) == 2
+        finally:
+            await ipc_server.stop()
+
+
+class TestIPCServerAsk:
+    async def test_ask_sends_prompt_to_agent(
+        self,
+        ipc_server_with_provider: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("ask-agent", "mock")
+        await ipc_server_with_provider.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"agent": "ask-agent", "message": "hello world"},
+                socket_path=ipc_server_with_provider.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "ask-agent"
+            assert resp.data["response"] == "mock response"
+        finally:
+            await ipc_server_with_provider.stop()
+
+    async def test_ask_uses_first_running_agent_if_none_specified(
+        self,
+        ipc_server_with_provider: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("default-agent", "mock")
+        await ipc_server_with_provider.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "hi"},
+                socket_path=ipc_server_with_provider.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "default-agent"
+        finally:
+            await ipc_server_with_provider.stop()
+
+    async def test_ask_no_running_agents_returns_error(
+        self,
+        ipc_server_with_provider: IPCServer,
+    ) -> None:
+        await ipc_server_with_provider.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "hi"},
+                socket_path=ipc_server_with_provider.socket_path,
+            )
+            assert not resp.success
+            assert "No running agents" in (resp.error or "")
+        finally:
+            await ipc_server_with_provider.stop()
+
+
+class TestIPCServerAdHocAsk:
+    async def test_ask_adhoc_spawns_and_responds(
+        self,
+        ipc_server_with_adhoc: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await ipc_server_with_adhoc.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "quick question", "use_adhoc": True},
+                socket_path=ipc_server_with_adhoc.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "_adhoc"
+            assert resp.data["response"] == "mock response"
+        finally:
+            await ipc_server_with_adhoc.stop()
+
+    async def test_ask_adhoc_without_manager_returns_error(
+        self,
+        ipc_server: IPCServer,
+    ) -> None:
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "hi", "use_adhoc": True},
+                socket_path=ipc_server.socket_path,
+            )
+            assert not resp.success
+            assert "Ad-hoc" in (resp.error or "")
+        finally:
+            await ipc_server.stop()

@@ -1,0 +1,44 @@
+# Manifest and Documentation Maintenance
+
+This rule governs how agents keep project tracking documents current.
+
+## Single Source of Truth
+
+`docs/tasks/manifest.yaml` is the authoritative record of phase and task status.
+Other documents (README.md, AGENTS.md, PROJECT-STATUS.md) reference the manifest
+rather than duplicating status information.
+
+## After Completing a Phase or Task
+
+1. Update the corresponding entry in `docs/tasks/manifest.yaml`:
+   - Set `status: done`
+   - Add or update `notes:` with a brief summary of what was built
+   - Update the `Last updated` date at the top of the file
+2. If the work introduced a new architectural decision, add a numbered ADR to
+   `docs/research/architecture-decisions.md`.
+3. If the work created new source packages or significantly changed the project
+   structure, update the Architecture section of `AGENTS.md`.
+
+## After Adding New Work Items
+
+When discussion produces new features, phases, or deferred items:
+
+1. Add a phase or task entry to `manifest.yaml` with the appropriate status
+   (`not_started`, `deferred`, etc.).
+2. If a design decision was made, write an ADR.
+3. If the phase is ready for implementation, create a task file at
+   `docs/tasks/phase-{id}-{name}.md` following the existing format (Goal,
+   Context, Files to Read, What to Build, Tests, Acceptance Criteria, Agent
+   Prompt).
+
+## At the Start of a New Session
+
+Read `docs/PROJECT-STATUS.md` for a quick orientation. It points to the manifest,
+ADRs, and active task files. Check `manifest.yaml` for current status rather than
+assuming anything is done or not done.
+
+## Never Duplicate Status
+
+Do not copy phase status into README.md, AGENTS.md, or other docs. Those files
+should say "see manifest.yaml for current status" and link to it. This prevents
+the staleness that occurs when status lives in multiple places.

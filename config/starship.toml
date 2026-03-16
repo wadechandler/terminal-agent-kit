@@ -1,0 +1,14 @@
+# Starship prompt configuration
+# Managed by tak — https://github.com/wadechandler/terminal-agent-kit
+# See https://starship.rs/config/ for full documentation
+
+format = "$all"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[custom.tak]
+command = "echo $TAK_AGENT"
+when = '[ -n "$TAK_AGENT" ]'
+format = "via [tak:$output](bold blue) "

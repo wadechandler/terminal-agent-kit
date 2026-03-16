@@ -2,12 +2,20 @@
 
 Each driver implements terminal-specific operations. The core logic calls
 driver methods without knowing which terminal is in use.
+
+Variable keys use the ``tak_*`` prefix convention (e.g. ``tak_agent_id``).
+The driver prepends the terminal-specific scope (``user.`` for iTerm2).
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any
+
+TAK_VAR_AGENT_ID = "tak_agent_id"
+TAK_VAR_AGENT_STATUS = "tak_agent_status"
+TAK_VAR_AGENT_PROVIDER = "tak_agent_provider"
+TAK_VAR_AGENT_MODEL = "tak_agent_model"
 
 
 class BaseDriver(ABC):
@@ -40,11 +48,26 @@ class BaseDriver(ABC):
 
     @abstractmethod
     async def set_variable(self, session_id: str, key: str, value: str) -> None:
-        """Set a user-defined variable on a session."""
+        """Set a user-defined variable on a session.
+
+        Args:
+            session_id: Target session identifier.
+            key: Variable name without terminal scope prefix.
+                Use ``tak_*`` keys (see module-level constants).
+            value: Value to store.
+        """
 
     @abstractmethod
     async def get_variable(self, session_id: str, key: str) -> str | None:
-        """Get a user-defined variable from a session."""
+        """Get a user-defined variable from a session.
+
+        Args:
+            session_id: Target session identifier.
+            key: Variable name without terminal scope prefix.
+
+        Returns:
+            The variable value, or ``None`` if not set.
+        """
 
     @abstractmethod
     async def get_screen_contents(self, session_id: str) -> str:
@@ -52,6 +75,32 @@ class BaseDriver(ABC):
 
     async def set_session_title(self, session_id: str, title: str) -> None:
         """Set the title of a session. Optional -- not all terminals support this."""
+        raise NotImplementedError
+
+    async def activate_session(
+        self, session_id: str, *, focus_window: bool = True
+    ) -> None:
+        """Bring a session's tab/window to the foreground.
+
+        Args:
+            session_id: Target session identifier.
+            focus_window: Whether to also bring the window to front.
+        """
+        raise NotImplementedError
+
+    async def split_pane(
+        self, session_id: str, *, vertical: bool = True
+    ) -> str:
+        """Create a split pane from an existing session.
+
+        Args:
+            session_id: The session to split.
+            vertical: If True, split vertically (side-by-side).
+
+        Returns:
+            The session ID of the newly created pane.
+        """
+        raise NotImplementedError
 
     async def create_session(self, **kwargs: Any) -> str:
         """Create a new terminal session. Returns session ID."""

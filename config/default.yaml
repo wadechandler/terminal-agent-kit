@@ -36,6 +36,12 @@ tabs:
   show_agent_in_title: true
   title_format: "[{agent_name}] {original_title}"
 
+# Ad-hoc agent (used by `tak ask` without a prior spawn)
+adhoc:
+  provider: cursor-acp
+  model: null             # uses provider default
+  auto_stop_after: 300    # seconds of inactivity before auto-stopping
+
 # Security
 security:
   audit_dependencies: true

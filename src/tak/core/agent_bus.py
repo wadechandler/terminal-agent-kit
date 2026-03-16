@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class BusMessage:
+    """Incoming message from a terminal session to an agent."""
+
     session_id: str
     text: str
     agent_name: str | None = None
@@ -25,6 +27,8 @@ class BusMessage:
 
 @dataclass
 class BusResponse:
+    """Response from an agent back to a terminal session."""
+
     text: str
     agent_name: str
     session_id: str
@@ -39,11 +43,13 @@ class AgentBus:
         session_registry: SessionRegistry,
         providers: dict[str, BaseProvider],
     ) -> None:
+        """Create a bus with the given manager, registry, and provider map."""
         self._manager = agent_manager
         self._registry = session_registry
         self._providers = providers
 
     async def route(self, message: BusMessage) -> BusResponse:
+        """Route a message to the associated agent and return the response."""
         agent_name = message.agent_name or self._registry.get_agent(message.session_id)
 
         if agent_name is None:

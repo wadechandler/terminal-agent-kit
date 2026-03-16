@@ -1,0 +1,46 @@
+/* tak agent dashboard — dark terminal theme */
+
+TakApp {
+    background: $surface;
+}
+
+Header {
+    background: $primary-darken-3;
+    color: $text;
+    text-style: bold;
+}
+
+Footer {
+    background: $primary-darken-3;
+    color: $text-muted;
+}
+
+AgentTable {
+    height: 1fr;
+    margin: 1 2;
+}
+
+AgentTable Label {
+    padding: 0 1;
+    color: $warning;
+    text-style: italic;
+}
+
+DataTable {
+    height: 1fr;
+    border: tall $primary-darken-1;
+}
+
+DataTable > .datatable--header {
+    color: $accent;
+    background: $surface-darken-1;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $primary 30%;
+}
+
+DataTable > .datatable--hover {
+    background: $primary 15%;
+}

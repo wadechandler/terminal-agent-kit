@@ -1,0 +1,15 @@
+---
+description: Python coding style conventions
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python Coding Style
+
+Follow the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+
+- Line length: 100 characters (project override of Google's 80-char default)
+- Type hints on all public functions and methods
+- Google-style docstrings on all public modules, classes, and functions
+- Run `ruff check` and `mypy` before considering code complete
+- No wildcard imports — explicit is better than implicit

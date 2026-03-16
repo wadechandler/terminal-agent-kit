@@ -141,3 +141,159 @@ space has many fast-moving, single-maintainer packages.
 **Implementation**: Integrate safety/pip-audit into CI. Document dependency
 rationale in a DEPENDENCIES.md or similar. Flag single-maintainer packages
 for review.
+
+## ADR-010: Variable Namespace (user.tak_*)
+
+**Decision**: Use underscore-namespaced flat keys under `user.tak_*` prefix.
+
+**Context**: iTerm2 requires `user.` prefix for user-defined variables. Dots
+after `user.` not clearly documented.
+
+**Variables**: `user.tak_agent_id`, `user.tak_agent_status`,
+`user.tak_agent_provider`, `user.tak_agent_model`
+
+## ADR-011: Deferred @ai Interception
+
+**Decision**: Defer @ai prefix interception. Use tak CLI (`tak ask`) first.
+
+**Context**: Triggers match output only; KeystrokeFilter is complex. Shell
+function is interim.
+
+**Rationale**: Daemon proves value through UI features, not input interception.
+
+## ADR-012: Headless vs Terminal Agent Models
+
+**Decision**: Support both headless (ACP subprocess) and terminal (own tab)
+agents.
+
+**Context**: Different agent types have different interaction models.
+
+- **Headless**: tak mediates permissions via session/request_permission relay
+- **Terminal**: Agent has own TUI, tak manages lifecycle only
+- BaseProvider needs `interaction_model` property
+
+## ADR-013: Bash-First Shell Target
+
+**Decision**: Target bash first, zsh/fish later.
+
+**Context**: User runs bash 5.x from Homebrew. Bash is universal.
+
+**Implementation**: `tak setup shell` should detect macOS stock bash 3.2 and
+offer upgrade.
+
+## ADR-014: Idempotent Setup Commands
+
+**Decision**: All `tak setup` commands must be idempotent.
+
+**Context**: Users may run setup multiple times. Duplication causes confusion
+and breakage.
+
+**Implementation**: Check before acting, skip if done, never duplicate, report
+clearly, use markers.
+
+## ADR-015: Generic ACP Provider
+
+**Decision**: Refactor CursorACPProvider to generic ACPProvider.
+
+**Context**: ACP becoming cross-agent standard (Cursor, Goose, Claude via
+adapter).
+
+**Implementation**: Agent-specific spawn flags via config. Separate
+TerminalSessionProvider for TUI agents.
+
+## ADR-016: Graduated Conversation Surface
+
+**Decision**: Build the "poor man's Warp" interaction model in three levels:
+session persistence, streaming, then a dedicated conversation pane.
+
+**Context**: The core use case is conversational terminal AI -- ask a question,
+see the answer, follow up, have the agent act, handle permissions, iterate. Warp
+integrates its AI panel into the terminal chrome. iTerm2 cannot modify its chrome,
+but we can replicate the UX with split panes and the Textual TUI framework.
+
+**Level 1 -- Session persistence** (Phase M): The daemon keeps ACP sessions
+alive per agent. Subsequent `tak ask` calls reuse the same session so the agent
+has conversation history. Each `tak ask` is a new prompt in an ongoing
+conversation. Permissions and multiple-choice questions use keystroke injection
+(existing). Plans and todos are included in the response text. `--mode
+ask|plan|agent` controls agent behavior. `tak session end` resets.
+
+**Level 2 -- Streaming** (Phase N): Enhance the IPC protocol to support
+streaming responses. `tak ask` prints text as chunks arrive instead of waiting
+for the full response. The user sees the agent reasoning in real time.
+
+**Level 3 -- Conversation pane** (Phase O): A Textual TUI running in an iTerm2
+split pane serves as the dedicated conversation surface. It shows full
+conversation history, streaming output, plans, todos, permissions, and accepts
+typed input including free text. This is the "AI panel" equivalent:
+
+```
++-------------------------------------------+
+| iTerm2 Tab                                |
++---------------------+---------------------+
+| Shell (your CWD)    | tak Agent Panel     |
+|                     | (Textual TUI)       |
+| $ ls                | [cursor-myapp]      |
+| $ brew search jq    | You: install jq     |
+|                     | I'll install jq:    |
+|                     | brew install jq     |
+|                     | Allow? [y] [n] [a]  |
+|                     | > type follow-up    |
++---------------------+---------------------+
+```
+
+**Multi-tab model**: If tabs A and B share agent `cursor-myapp`, they share one
+ACP session. CWD differs per tab. The prompt includes CWD so the agent knows
+context. When the daemon routes a message, it attaches a context dict:
+`{"cwd": "/Users/me/project", "session_id": "..."}`.
+
+**CLI quoting**: `tak ask` uses Click `nargs=-1` so `tak ask what files are
+here` works without quotes. Quoting is only needed for shell metacharacters
+(`?`, `!`, `$`, `*`).
+
+**Rationale**: Graduated approach lets us validate the plumbing (Level 1) before
+investing in protocol changes (Level 2) or TUI work (Level 3). Each level is
+independently useful.
+
+## ADR-017: Remote Agent Model
+
+**Decision**: Support remote agents via SSH tunnels for ACP and SSH + tmux for
+terminal sessions, using a context dict to carry remote environment information.
+
+**Context**: Users want agents running on remote machines (devboxes, Coder.com
+environments, cloud VMs) while interacting locally. The agent executes remotely
+(sandboxed from the local machine); only responses travel back. ADR-007
+established the SSH + tmux foundation; this ADR details the implementation
+approach.
+
+**Provider layer**: A remote ACP agent is an `ACPProvider` whose command goes
+through SSH: `["ssh", "devbox", "cursor", "agent", "acp"]`. A remote terminal
+agent is a `TerminalSessionProvider` that spawns an SSH session in a new tab.
+No new provider types are needed -- the existing providers work transparently
+over SSH because ACP/stdio protocols don't care about transport.
+
+**Context dict**: Bus messages carry a context dict instead of a flat CWD string:
+
+```yaml
+context:
+  local_cwd: /Users/me/projects/foo
+  remote_cwd: /home/me/projects/foo   # present only for SSH sessions
+  is_remote: true
+  ssh_host: devbox.internal
+```
+
+Local sessions have `is_remote: false` and no `remote_cwd` or `ssh_host`. The
+ACP provider includes context in the prompt so the agent knows where it is.
+
+**Driver layer**: The iTerm2 driver can detect SSH sessions via shell integration
+variables. The tmux driver is a natural fit for remote work -- tmux sessions
+persist across SSH disconnections, providing durable remote agent sessions.
+
+**Architecture impact**: None. The core/driver/provider split already has the
+right boundaries. Remote support is additive: new config entries, richer context
+dict, optional SSH-aware command construction. No existing interfaces change.
+
+**Extensibility**: This model supports the "agentic IDE" vision: the TUI can
+evolve to show file browsers, vim integration, and multi-panel layouts. The split
+pane approach (ADR-016 Level 3) extends naturally to remote contexts. Nothing in
+the current architecture prevents these future directions.

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from tak.core.session_registry import SessionRegistry
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tak.core.session_registry import SessionRegistry
 
 
 class TestSessionRegistryAssociation:

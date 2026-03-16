@@ -1,0 +1,46 @@
+---
+description: Workspace safety constraints for tak development — defines allowed write zones and off-limits paths
+globs: "**/*"
+alwaysApply: true
+---
+
+# Workspace Safety Constraints
+
+These constraints govern where agents may read and write during tak development.
+
+## Always Allowed (no approval needed)
+
+Agents may freely create, modify, and delete files within these project directories:
+
+- `src/tak/` — source code
+- `tests/` — test files
+- `scripts/` — probe scripts and utilities
+- `docs/` — research and project documentation
+- `config/` — configuration templates
+- `.cursor/rules/` — cursor rules
+- `pyproject.toml`, `AGENTS.md` — project metadata
+
+## Allowed Outside Project (specific paths, only when user explicitly requests)
+
+These paths require the user to explicitly ask for the operation by name:
+
+- `~/Library/Application Support/iTerm2/Scripts/` — placing probe or daemon scripts
+- `~/Library/Application Support/iTerm2/Scripts/AutoLaunch/` — daemon installation
+- `~/.bashrc` — only for `tak setup shell`
+- `~/.config/starship.toml` — only for `tak setup starship`
+- `/tmp/` — temporary clones for research; clean up after use
+
+## Never Touch Without Explicit User Request
+
+- `~/.bash_profile`, `~/.profile`, `~/.zshrc` — not target shell config files
+- `~/Library/Application Support/iTerm2/iterm2env/` — iTerm2 bundled Python runtime
+- `defaults write` commands — only when user requests `tak setup iterm2`
+- `brew` commands — only when user requests a setup command
+- `git push` — never without explicit ask
+- Any files outside the project and the specific paths listed above
+- Do not delete files not created by tak
+
+## Execution Gating
+
+- Pause and report results to the user after completing each phase (A, B, C, etc.)
+- Research subagents may clone repos to `/tmp/` for read-only inspection

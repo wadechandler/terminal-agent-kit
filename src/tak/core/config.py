@@ -16,6 +16,7 @@ USER_CONFIG_DIR = Path.home() / ".tak"
 
 
 def load_config() -> dict[str, Any]:
+    """Load tak configuration, overlaying user config on package defaults."""
     config = _load_yaml(PACKAGE_CONFIG_DIR / "default.yaml")
     user_config_path = USER_CONFIG_DIR / "config.yaml"
 
@@ -27,6 +28,7 @@ def load_config() -> dict[str, Any]:
 
 
 def load_agents_config() -> dict[str, Any]:
+    """Load agent definitions, overlaying user config on package defaults."""
     config = _load_yaml(PACKAGE_CONFIG_DIR / "agents.yaml")
     user_agents_path = USER_CONFIG_DIR / "agents.yaml"
 

@@ -7,13 +7,29 @@ subprocess management and message passing.
 
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator
+from enum import Enum
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import AsyncIterator
+    from pathlib import Path
+
     from tak.core.agent_manager import AgentHandle
+
+
+class InteractionModel(Enum):
+    """How the agent interacts with the user.
+
+    HEADLESS: Agent is a subprocess; tak mediates all permission and
+        interaction requests (e.g. Cursor via ACP).
+    TERMINAL: Agent runs in its own terminal tab with its own TUI;
+        tak manages lifecycle only (e.g. Claude Code, Goose).
+    """
+
+    HEADLESS = "headless"
+    TERMINAL = "terminal"
 
 
 class BaseProvider(ABC):
@@ -29,13 +45,32 @@ class BaseProvider(ABC):
     def protocol(self) -> str:
         """Protocol identifier (e.g., 'json-rpc', 'stdio', 'http')."""
 
+    @property
+    def interaction_model(self) -> InteractionModel:
+        """How this agent interacts with the user.
+
+        Headless agents need tak to relay permission requests.
+        Terminal agents handle their own UI.
+        """
+        return InteractionModel.HEADLESS
+
     @abstractmethod
     async def spawn(
         self,
         agent_name: str,
         project_path: Path | None = None,
+        model: str | None = None,
     ) -> asyncio.subprocess.Process:
-        """Start an agent subprocess. Returns the process handle."""
+        """Start an agent subprocess.
+
+        Args:
+            agent_name: Name for this agent instance.
+            project_path: Optional project directory.
+            model: Optional model name to use.
+
+        Returns:
+            The subprocess handle.
+        """
 
     @abstractmethod
     async def send(self, handle: AgentHandle, message: str) -> str:
@@ -56,3 +91,11 @@ class BaseProvider(ABC):
         if handle.process is None:
             return False
         return handle.process.returncode is None
+
+    async def list_models(self) -> list[str]:
+        """Return available model names for this provider.
+
+        Default returns an empty list. Override for providers that
+        support model selection (e.g. ``cursor agent models``).
+        """
+        return []

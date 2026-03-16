@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from tak.core.agent_manager import AgentManager, AgentStatus
+from tak.core.agent_manager import AgentManager, AgentStatus, validate_agent_name
+from tak.core.session_registry import SessionRegistry
+from tak.core.state import StateManager
 
 
 class TestAgentManagerSpawn:
@@ -21,7 +23,7 @@ class TestAgentManagerSpawn:
     async def test_spawn_with_project_path(
         self, agent_manager: AgentManager
     ) -> None:
-        project = Path("/tmp/myproject")
+        project = Path("/tmp/myproject")  # noqa: S108
         handle = await agent_manager.spawn("test-agent", "mock", project_path=project)
         assert handle.project_path == project
 
@@ -81,3 +83,149 @@ class TestAgentManagerListing:
         self, agent_manager: AgentManager
     ) -> None:
         assert agent_manager.get("nonexistent") is None
+
+
+class TestNameValidation:
+    def test_valid_names_accepted(self) -> None:
+        for name in ["abc", "my-agent", "agent123", "a" * 50, "cursor-docs"]:
+            validate_agent_name(name)  # should not raise
+
+    def test_reserved_names_pass(self) -> None:
+        validate_agent_name("_adhoc")  # leading _ is reserved, always passes
+
+    def test_name_too_short_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("ab")
+
+    def test_name_too_long_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("a" * 51)
+
+    def test_leading_hyphen_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("-agent")
+
+    def test_trailing_hyphen_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("agent-")
+
+    def test_uppercase_raises(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("MyAgent")
+
+    def test_special_chars_raise(self) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            validate_agent_name("agent@1")
+
+    async def test_spawn_with_invalid_name_raises(
+        self, agent_manager: AgentManager
+    ) -> None:
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            await agent_manager.spawn("-bad", "mock")
+
+
+class TestAgentManagerRename:
+    async def test_rename_changes_name(self, agent_manager: AgentManager) -> None:
+        await agent_manager.spawn("old-name", "mock")
+        handle = await agent_manager.rename("old-name", "new-name")
+        assert handle.name == "new-name"
+        assert agent_manager.get("new-name") is handle
+        assert agent_manager.get("old-name") is None
+
+    async def test_rename_nonexistent_raises(
+        self, agent_manager: AgentManager
+    ) -> None:
+        with pytest.raises(ValueError, match="No agent named"):
+            await agent_manager.rename("ghost", "new-name")
+
+    async def test_rename_to_existing_name_raises(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("agent-a", "mock")
+        await agent_manager.spawn("agent-b", "mock")
+        with pytest.raises(ValueError, match="already exists"):
+            await agent_manager.rename("agent-a", "agent-b")
+
+    async def test_rename_with_invalid_new_name_raises(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("my-agent", "mock")
+        with pytest.raises(ValueError, match="Invalid agent name"):
+            await agent_manager.rename("my-agent", "BAD_NAME!")
+
+
+class TestGetByProvider:
+    async def test_get_by_provider_returns_matching(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("agent-1", "mock")
+        await agent_manager.spawn("agent-2", "mock")
+        results = agent_manager.get_by_provider("mock")
+        assert len(results) == 2
+        assert all(h.provider_name == "mock" for h in results)
+
+    async def test_get_by_provider_returns_empty_for_unknown(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("agent-1", "mock")
+        assert agent_manager.get_by_provider("nonexistent") == []
+
+    async def test_get_by_provider_filters_by_provider(
+        self, agent_manager: AgentManager, mock_provider: object
+    ) -> None:
+        # Create a second provider instance of the same type via the fixture type
+        second_provider = type(mock_provider)()  # type: ignore[call-arg]
+        agent_manager.register_provider("second", second_provider)  # type: ignore[arg-type]
+
+        await agent_manager.spawn("mock-agent", "mock")
+        await agent_manager.spawn("second-agent", "second")
+
+        mock_agents = agent_manager.get_by_provider("mock")
+        second_agents = agent_manager.get_by_provider("second")
+
+        assert len(mock_agents) == 1
+        assert mock_agents[0].name == "mock-agent"
+        assert len(second_agents) == 1
+        assert second_agents[0].name == "second-agent"
+
+
+class TestStateSaveCallbacks:
+    async def test_spawn_triggers_state_save(
+        self, agent_manager: AgentManager, tmp_state_dir: Path
+    ) -> None:
+        state_mgr = StateManager(state_dir=tmp_state_dir)
+        registry = SessionRegistry()
+        agent_manager.set_state_manager(state_mgr, registry)
+
+        await agent_manager.spawn("my-agent", "mock")
+
+        loaded = state_mgr.load()
+        assert "my-agent" in loaded["agents"]
+
+    async def test_stop_triggers_state_save(
+        self, agent_manager: AgentManager, tmp_state_dir: Path
+    ) -> None:
+        state_mgr = StateManager(state_dir=tmp_state_dir)
+        registry = SessionRegistry()
+        agent_manager.set_state_manager(state_mgr, registry)
+
+        await agent_manager.spawn("my-agent", "mock")
+        await agent_manager.stop("my-agent")
+
+        loaded = state_mgr.load()
+        # Stopped agents are not persisted
+        assert "my-agent" not in loaded["agents"]
+
+    async def test_rename_triggers_state_save(
+        self, agent_manager: AgentManager, tmp_state_dir: Path
+    ) -> None:
+        state_mgr = StateManager(state_dir=tmp_state_dir)
+        registry = SessionRegistry()
+        agent_manager.set_state_manager(state_mgr, registry)
+
+        await agent_manager.spawn("old-name", "mock")
+        await agent_manager.rename("old-name", "new-name")
+
+        loaded = state_mgr.load()
+        assert "new-name" in loaded["agents"]
+        assert "old-name" not in loaded["agents"]

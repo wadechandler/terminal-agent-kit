@@ -1,6 +1,8 @@
 # Terminal Agent Kit (tak) -- Task Manifest
 # Tracks all phases, tasks, and research questions.
 # Status: not_started | in_progress | research | done | blocked | deferred
+#
+# Last updated: 2026-03-16
 
 project:
   name: Terminal Agent Kit
@@ -13,32 +15,38 @@ phases:
 
   - id: phase-0
     name: Scaffold & Research
-    status: in_progress
+    status: done
     tasks:
       - id: p0-scaffold
         name: Project structure and initial files
         status: done
       - id: p0-research-iterm2
         name: Deep-dive iTerm2 Python API capabilities
-        status: research
+        status: done
         notes: >
-          Key question: can triggers intercept input before shell?
-          Need to test trigger behavior with @ai prefix patterns.
+          Triggers are output-only (cannot intercept input).
+          KeystrokeFilter identified as alternative (deferred).
+          StatusBarComponent is text-only, uses "Call Script Function"
+          for clicks. user.tak_* variable namespace chosen. Split pane,
+          tab activation, defaults write, Preferences API all validated.
         doc: docs/research/iterm2-api-capabilities.md
       - id: p0-research-acp
         name: Cursor CLI ACP protocol exploration
-        status: research
+        status: done
         notes: >
-          Need to discover exact JSON-RPC method names, streaming
-          support, session resumption, startup latency.
+          Full ACP session flow documented. JSON-RPC methods: initialize,
+          authenticate, session/new, session/prompt, session/update,
+          session/request_permission, session/cancel. --model flag and
+          agent models command confirmed. Session modes: ask, plan, agent.
         doc: docs/research/cursor-acp-integration.md
       - id: p0-research-routing
         name: Agent routing approaches (input interception vs keybinding)
-        status: not_started
+        status: done
         notes: >
-          How to distinguish @ai queries from shell commands.
-          Options: triggers, shell function wrapper, readline hook,
-          keybinding RPC, coprocess.
+          Decision: defer @ai interception. Users interact via
+          tak ask (CLI to daemon over IPC). @ai as shell alias is
+          interim. KeystrokeFilter for future polish.
+        doc: docs/research/architecture-decisions.md
       - id: p0-prior-art
         name: Survey existing tools
         status: done
@@ -49,203 +57,624 @@ phases:
         doc: docs/research/architecture-decisions.md
       - id: p0-ux-design
         name: UI/TUI/UX design for overlays, panels, tab management
-        status: not_started
+        status: done
         notes: >
-          Research what iTerm2 API can render (split panes, status bar,
-          annotations). Design overlay concepts for agent panels, tab
-          switcher, session details. Consider Rich library for CLI output.
+          Status bar component, RPC functions, keybinding actions,
+          TUI dashboard all designed. No native overlays -- split panes
+          and Textual TUI chosen instead.
       - id: p0-keyboard-commands
         name: Design keyboard shortcuts and command vocabulary
-        status: not_started
+        status: done
         notes: >
-          Map out keybindings for common actions: spawn agent, switch
-          agent, show status, tab overlay, quick ask. Balance between
-          @tak commands, tak CLI, and direct keybindings.
+          Keybinding RPCs designed: tak_list_agents (Cmd+Shift+L),
+          tak_switch_to_agent (Cmd+Shift+G), tak_spawn_agent (Cmd+Shift+N),
+          tak_stop_agent (Cmd+Shift+X), tak_agent_menu (Cmd+Shift+A).
+          All have CLI equivalents.
+      - id: p0-research-security
+        name: Dependency security audit and iTerm2 security review
+        status: done
+        doc: docs/research/dependency-security-audit.md
+      - id: p0-research-acp-ecosystem
+        name: ACP ecosystem landscape (Cursor, Goose, Claude)
+        status: done
+        doc: docs/research/acp-ecosystem.md
+      - id: p0-research-terminal-setup
+        name: Terminal environment setup research (Starship, fonts, bash)
+        status: done
+        doc: docs/research/terminal-setup.md
+      - id: p0-research-future-vision
+        name: Agent session mode future vision (Warp-like)
+        status: done
+        doc: docs/research/future-agent-session-mode.md
 
   - id: phase-1
     name: "MVP: Talk to an Agent"
-    status: not_started
+    status: done
+    notes: >
+      Core skeleton complete. CLI, IPC, daemon, providers, state,
+      session registry, status bar, RPCs all implemented and tested.
     tasks:
       - id: p1-core-config
         name: Config loading from YAML
-        status: not_started
+        status: done
+        notes: src/tak/core/config.py -- loads default.yaml + user overlay
       - id: p1-core-agent-manager
         name: AgentManager -- spawn, stop, list agents
-        status: not_started
+        status: done
+        notes: >
+          src/tak/core/agent_manager.py -- AgentHandle with model param,
+          spawn/stop/list/running_agents methods
       - id: p1-provider-cursor-acp
-        name: Cursor ACP provider implementation
-        status: not_started
+        name: Cursor ACP provider (basic skeleton)
+        status: done
+        notes: >
+          src/tak/providers/cursor_acp.py -- spawn with --model, list_models,
+          basic send/stop. Full ACP session lifecycle is Phase F.
       - id: p1-core-agent-bus
         name: AgentBus -- route messages from tab to agent
-        status: not_started
+        status: done
+        notes: src/tak/core/agent_bus.py
       - id: p1-core-session-registry
         name: SessionRegistry -- tab-agent associations
-        status: not_started
+        status: done
+        notes: src/tak/core/session_registry.py
       - id: p1-driver-iterm2-daemon
         name: iTerm2 daemon script (AutoLaunch)
-        status: not_started
+        status: done
+        notes: >
+          src/tak/drivers/iterm2/daemon.py -- AgentManager + SessionRegistry +
+          StateManager + IPC server + status bar + RPCs
       - id: p1-driver-iterm2-trigger
         name: iTerm2 @ai trigger or keybinding RPC
-        status: not_started
+        status: deferred
+        notes: >
+          Triggers cannot intercept input. Deferred; see
+          phase-input-interception.
       - id: p1-driver-iterm2-statusbar
         name: iTerm2 status bar component (active agent)
-        status: not_started
+        status: done
+        notes: src/tak/drivers/iterm2/status_bar.py
       - id: p1-cli-basic
-        name: "tak CLI: spawn, stop, status, ask"
-        status: not_started
+        name: "tak CLI: spawn, stop, status, ask, agents, switch, menu"
+        status: done
+        notes: >
+          src/tak/cli/main.py -- all commands wired to daemon via IPC.
       - id: p1-state-persistence
         name: State persistence to ~/.tak/state.yaml
-        status: not_started
+        status: done
+        notes: src/tak/core/state.py -- save/load/clear
+      - id: p1-ipc
+        name: Unix socket IPC server and client
+        status: done
+        notes: >
+          src/tak/ipc/ -- protocol.py (length-prefixed JSON), server.py,
+          client.py. Daemon serves, CLI connects.
+      - id: p1-rpc-functions
+        name: iTerm2 RPC functions for keybinding actions
+        status: done
+        notes: >
+          src/tak/drivers/iterm2/rpc.py -- tak_list_agents, tak_switch_to_agent,
+          tak_stop_agent, tak_agent_menu
+      - id: p1-driver-extensions
+        name: BaseDriver and ITerm2Driver activate_session + split_pane
+        status: done
+        notes: >
+          src/tak/drivers/base.py -- TAK_VAR_* constants, abstract methods.
+          src/tak/drivers/iterm2/driver.py -- implementations.
+      - id: p1-model-selection
+        name: Model param in AgentHandle, spawn, providers
+        status: done
+        notes: >
+          model param flows through AgentHandle -> AgentManager.spawn() ->
+          provider.spawn() -> --model CLI flag
+      - id: p1-probe-script
+        name: iTerm2 API probe script
+        status: done
+        notes: >
+          scripts/iterm2_probe.py -- validates list sessions, set/get vars,
+          activate tab, split pane, register RPC, status bar. All 8 tests pass.
       - id: p1-ad-hoc-mode
         name: "Ad-hoc mode: agent without a project folder"
-        status: not_started
+        status: done
         notes: >
-          User wants to just spin up an agent for quick questions
-          without associating a project. System admin, brew help, etc.
+          Implemented in Phase K (multi-agent resilience).
+          src/tak/core/adhoc.py -- AdHocManager with auto-stop.
 
-  - id: phase-2
-    name: Project & Setup Tooling
-    status: not_started
+  - id: phase-f
+    name: ACP Permission and Interaction Relay
+    status: done
+    task_file: docs/tasks/phase-f-acp-permissions.md
+    notes: >
+      Full ACP session lifecycle: initialize, authenticate, session/new,
+      prompt, permission relay, streaming, cancel.
     tasks:
-      - id: p2-scaffold-agents-md
-        name: "tak scaffold agents -- generate AGENTS.md"
-        status: not_started
-      - id: p2-scaffold-rules
-        name: "tak scaffold rules -- generate .cursor/rules/"
-        status: not_started
-      - id: p2-scaffold-skills
-        name: "tak scaffold skills -- generate SKILL.md"
-        status: not_started
-      - id: p2-new-project
-        name: "tak new project -- interactive or quick project creation"
-        status: not_started
+      - id: pf-acp-session
+        name: ACP session manager (JSON-RPC lifecycle over stdio)
+        status: done
+        notes: src/tak/providers/acp_session.py
+      - id: pf-cursor-acp-update
+        name: Update CursorACPProvider with full ACP flow
+        status: done
+        notes: src/tak/providers/cursor_acp.py
+      - id: pf-permission-relay
+        name: Permission relay in daemon (request_permission to user)
+        status: done
         notes: >
-          Interactive mode: planning session to create project.
-          Quick mode: just a folder to do stuff and ask questions.
-      - id: p2-setup-starship
-        name: "tak setup starship -- install and configure"
-        status: not_started
-      - id: p2-setup-fonts
-        name: "tak setup fonts -- JetBrains Mono Nerd Font"
-        status: not_started
-      - id: p2-setup-profiles
-        name: "tak setup profiles -- iTerm2 profiles via API"
-        status: not_started
-      - id: p2-multi-agent
+          daemon.py _wire_permission_relay + KeystrokeMonitor for y/n/a
+      - id: pf-ipc-ask
+        name: IPC extension for tak ask to stream through daemon
+        status: done
+        notes: IPCServer.ask method in server.py
+
+  - id: phase-g
+    name: Terminal Environment Setup
+    status: done
+    task_file: docs/tasks/phase-g-setup-commands.md
+    notes: >
+      All tak setup commands. Idempotent. Tested with mocks.
+    tasks:
+      - id: pg-setup-iterm2
+        name: "tak setup iterm2: enable API, install daemon, configure prefs"
+        status: done
+        notes: src/tak/setup/iterm2.py
+      - id: pg-setup-fonts
+        name: "tak setup fonts: JetBrainsMono Nerd Font via brew"
+        status: done
+        notes: src/tak/setup/fonts.py
+      - id: pg-setup-starship
+        name: "tak setup starship: install, configure, tak custom module"
+        status: done
+        notes: src/tak/setup/starship.py + config/starship.toml
+      - id: pg-setup-shell
+        name: "tak setup shell: .bashrc with managed markers"
+        status: done
+        notes: src/tak/setup/shell.py
+      - id: pg-setup-profiles
+        name: "tak setup profiles: opinionated iTerm2 profiles"
+        status: done
+        notes: src/tak/setup/profiles.py
+      - id: pg-setup-tak
+        name: "tak setup tak: all-in-one orchestrator"
+        status: done
+        notes: src/tak/setup/tak_setup.py
+
+  - id: phase-h
+    name: Generic ACP Provider
+    status: done
+    task_file: docs/tasks/phase-h-generic-acp.md
+    notes: >
+      Refactored CursorACPProvider to generic ACPProvider. Added
+      TerminalSessionProvider. Config-driven provider loading.
+    tasks:
+      - id: ph-generic-acp
+        name: Generic ACPProvider for any ACP-compliant agent
+        status: done
+        notes: src/tak/providers/acp.py
+      - id: ph-terminal-session
+        name: TerminalSessionProvider for agents with own TUI
+        status: done
+        notes: src/tak/providers/terminal_session.py
+      - id: ph-cursor-compat
+        name: CursorACPProvider backwards-compat alias
+        status: done
+        notes: src/tak/providers/cursor_acp.py inherits ACPProvider
+      - id: ph-config-providers
+        name: Load providers from config in daemon
+        status: done
+        notes: >
+          config/agents.yaml + daemon.py _build_providers_from_config
+
+  - id: phase-i
+    name: Agent Management TUI
+    status: done
+    task_file: docs/tasks/phase-i-agent-tui.md
+    notes: >
+      Textual-based dashboard with agent table and keybindings.
+    tasks:
+      - id: pi-textual-app
+        name: Textual app with agent table and keybindings
+        status: done
+        notes: src/tak/tui/app.py
+      - id: pi-stylesheet
+        name: TUI stylesheet and visual design
+        status: done
+        notes: src/tak/tui/tak.tcss
+      - id: pi-wire-cli
+        name: Wire tak menu to launch TUI
+        status: done
+        notes: src/tak/cli/main.py menu command
+
+  - id: phase-j-scaffold
+    name: Scaffold & Project Creation
+    status: done
+    task_file: docs/tasks/phase-j-scaffold-project.md
+    notes: >
+      tak scaffold commands + tak new project. Template-driven.
+    tasks:
+      - id: pj-scaffold-agents
+        name: "tak scaffold agents: generate AGENTS.md from templates"
+        status: done
+        notes: src/tak/scaffold/agents_md.py
+      - id: pj-scaffold-rules
+        name: "tak scaffold rules: generate .cursor/rules/ structure"
+        status: done
+        notes: src/tak/scaffold/rules.py
+      - id: pj-scaffold-skills
+        name: "tak scaffold skills: generate SKILL.md"
+        status: done
+        notes: src/tak/scaffold/skills.py
+      - id: pj-new-project
+        name: "tak new project: interactive or quick project creation"
+        status: done
+        notes: src/tak/scaffold/new_project.py
+      - id: pj-templates
+        name: Template files for scaffold generation
+        status: done
+        notes: src/tak/scaffold/templates/
+
+  - id: phase-k-resilience
+    name: Multi-Agent & Resilience
+    status: done
+    task_file: docs/tasks/phase-l-multi-agent-resilience.md
+    notes: >
+      Multi-agent named instances, restart recovery, ad-hoc mode.
+    tasks:
+      - id: pk-multi-agent
         name: Multiple simultaneous agents with named instances
+        status: done
+        notes: >
+          AgentManager validate_agent_name, rename, get_by_provider.
+      - id: pk-restart-recovery
+        name: Re-spawn agents on iTerm2 restart from state.yaml
+        status: done
+        notes: >
+          daemon.py _restore_full_state, StateManager auto_save.
+      - id: pk-ad-hoc-mode
+        name: Ad-hoc agent without project folder
+        status: done
+        notes: src/tak/core/adhoc.py -- AdHocManager
+
+  - id: phase-tryout-fixes
+    name: Tryout Walkthrough Fixes
+    status: in_progress
+    notes: >
+      Issues discovered during the first end-to-end tryout (2026-03-16).
+      Some fixes applied inline; remaining items listed below.
+    tasks:
+      - id: ptf-daemon-syspath
+        name: "Daemon sys.path fix for iTerm2's bundled Python"
+        status: done
+        notes: >
+          daemon.py _ensure_tak_importable() resolves symlink back to src/.
+      - id: ptf-iterm2env-install
+        name: "Install tak into iTerm2's iterm2env (python3 -m pip, not bare pip)"
+        status: done
+        notes: >
+          pip shebang in iterm2env/ points to iterm2env-79/, a stale env.
+          Must use python3 -m pip. tak setup should automate this.
+      - id: ptf-subprocess-path
+        name: "Extend subprocess PATH in daemon (cursor, claude not found)"
+        status: done
+        notes: >
+          _subprocess_env() in acp.py adds /usr/local/bin, /opt/homebrew/bin,
+          ~/.local/bin. shutil.which resolves command before exec.
+      - id: ptf-acp-protocol-version
+        name: "ACP initialize: send protocolVersion, clientInfo, clientCapabilities"
+        status: done
+        notes: Previously sent empty params; Cursor requires protocolVersion=1.
+      - id: ptf-acp-session-params
+        name: "ACP session/new: pass cwd, model, mcpServers via protocol not CLI flags"
+        status: done
+        notes: >
+          cursor agent acp accepts no CLI flags. --project and --model
+          must go through session/new params. mcpServers=[] is required.
+      - id: ptf-daemon-diag-logging
+        name: "Daemon startup diagnostic logging (PATH, Python version, CLIs)"
+        status: done
+      - id: ptf-adopt-acp-sdk
+        name: "Adopt official agent-client-protocol Python SDK (v0.6.2)"
         status: not_started
-      - id: p2-restart-recovery
-        name: Restart recovery -- re-spawn agents on iTerm2 restart
+        notes: >
+          Replaces hand-rolled ACPSessionManager with typed Pydantic models,
+          spawn_agent_process helper, and protocol-version-aware handshake.
+          Prevents the class of protocol errors found during tryout.
+      - id: ptf-ask-empty-response
+        name: "tak ask returns empty response (streaming/prompt collection)"
+        status: not_started
+        notes: >
+          Agent spawns and runs but tak ask --agent returns empty text.
+          Likely IPC streaming or prompt response collection issue.
+      - id: ptf-setup-iterm-pip
+        name: "tak setup should auto-install tak into iterm2env"
+        status: not_started
+        notes: >
+          Detect active iterm2env Python, run python3 -m pip install -e.
+          Needs to handle multiple iterm2env-* directories.
+      - id: ptf-profile-api-compat
+        name: "tak setup profiles: Profile.async_create not found"
+        status: not_started
+        notes: >
+          iterm2 Python package v2.11+ removed Profile.async_create.
+          Needs updated API call or alternative approach.
+      - id: ptf-signal-handling
+        name: "Daemon SIGTERM handler for graceful agent shutdown"
+        status: not_started
+        notes: >
+          Currently relies on finally block which may not run if killed.
+          Register asyncio signal handler for SIGTERM.
+      - id: ptf-tryout-guide-fixes
+        name: "Tryout guide corrections (socket path, cleanup, asdf note)"
+        status: not_started
+        notes: >
+          Socket path is ~/.tak/daemon.sock not /tmp/tak.sock.
+          Cleanup needs iterm2env uninstall step.
+          Document asdf set -u python for global resolution.
+      - id: ptf-custom-scripts-folder
+        name: "Daemon deploy should check iTerm2 custom scripts folder setting"
+        status: not_started
+      - id: ptf-troubleshooting-guide
+        name: "Add troubleshooting guide (Script Console, common errors)"
         status: not_started
 
-  - id: phase-3
-    name: Multi-Agent & Remote
+  # ------------------------------------------------------------------
+  # New phases identified during gap analysis (2026-03-16)
+  # ------------------------------------------------------------------
+
+  - id: phase-m-conversation
+    name: Conversation and Context
     status: not_started
+    task_file: docs/tasks/phase-m-conversation.md
+    notes: >
+      Session persistence so tak ask is multi-turn, CWD awareness,
+      mode selection (ask/plan/agent), session reset. Level 1 of the
+      graduated conversation design (ADR-016).
     tasks:
-      - id: p3-provider-claude-code
-        name: Claude Code provider
+      - id: pm-session-persistence
+        name: Daemon keeps ACP sessions alive; tak ask reuses sessions
         status: not_started
-      - id: p3-provider-goose
-        name: Goose provider
+      - id: pm-cwd-awareness
+        name: "tak ask sends CWD; daemon attaches to bus messages"
         status: not_started
-      - id: p3-provider-llm-api
+      - id: pm-mode-selection
+        name: "--mode ask|plan|agent flag on tak ask"
+        status: not_started
+      - id: pm-session-end
+        name: "tak session end [agent] command to reset conversation"
+        status: not_started
+
+  - id: phase-n-streaming
+    name: Streaming and IPC Enhancement
+    status: not_started
+    notes: >
+      Level 2 of conversation design (ADR-016). IPC protocol streaming
+      so tak ask prints text as chunks arrive from the agent.
+    tasks:
+      - id: pn-streaming-ipc
+        name: IPC protocol streaming support
+        status: not_started
+      - id: pn-streaming-cli
+        name: "tak ask prints streaming output as it arrives"
+        status: not_started
+
+  - id: phase-o-conversation-pane
+    name: Conversation Pane (Warp-like)
+    status: not_started
+    notes: >
+      Level 3 of conversation design (ADR-016). Textual TUI in an
+      iTerm2 split pane as the dedicated conversation surface.
+    tasks:
+      - id: po-conversation-tui
+        name: Textual conversation widget in split pane
+        status: not_started
+      - id: po-free-text-input
+        name: Free-text responses to agent questions
+        status: not_started
+      - id: po-plan-display
+        name: Dedicated plan/todo rendering in conversation pane
+        status: not_started
+
+  - id: phase-r-remote
+    name: Remote Agents
+    status: not_started
+    notes: >
+      SSH tunnel for ACP, SSH + tmux for terminal sessions. Context
+      dict with remote CWD and host info. See ADR-017.
+    tasks:
+      - id: pr-ssh-acp
+        name: ACP over SSH tunnel
+        status: not_started
+      - id: pr-ssh-terminal
+        name: Terminal sessions over SSH + tmux
+        status: not_started
+      - id: pr-remote-context
+        name: "Context dict: remote CWD, ssh_host, is_remote"
+        status: not_started
+
+  - id: phase-s-security
+    name: Security Practice
+    status: not_started
+    notes: >
+      SECURITY.md, pip-audit in CI, vulnerability reporting process.
+    tasks:
+      - id: ps-security-md
+        name: Create SECURITY.md
+        status: not_started
+      - id: ps-pip-audit-ci
+        name: pip-audit in CI pipeline
+        status: not_started
+      - id: ps-vuln-reporting
+        name: GitHub Security Advisories setup
+        status: not_started
+
+  - id: phase-ci
+    name: Continuous Integration
+    status: not_started
+    notes: >
+      GitHub Actions on ubuntu-latest. Free for public repos.
+    tasks:
+      - id: pci-github-actions
+        name: "GitHub Actions: ruff + pytest + pip-audit"
+        status: not_started
+
+  # ------------------------------------------------------------------
+  # Existing deferred/future phases (unchanged)
+  # ------------------------------------------------------------------
+
+  - id: phase-input-interception
+    name: "@ai Interception (Deferred)"
+    status: deferred
+    notes: >
+      KeystrokeFilter or shell alias approach. Depends on proven
+      daemon + IPC foundation. Shell alias (simple bash function
+      delegating to tak ask) is an interim step -- see phase-m task
+      or Wave D.
+    tasks:
+      - id: pinput-keystroke-filter
+        name: iTerm2 KeystrokeFilter for @ai prefix interception
+        status: deferred
+      - id: pinput-shell-alias
+        name: "@ai shell alias/function delegating to tak ask"
+        status: not_started
+        notes: >
+          Simple bash function; can be implemented independently of
+          KeystrokeFilter. Part of tak setup shell.
+
+  - id: phase-agent-session
+    name: "Agent Session Mode (Future Vision)"
+    status: deferred
+    notes: >
+      Warp-like per-tab bash/agent mode toggle. Depends on input
+      interception. Phase 4+ territory.
+    tasks:
+      - id: psession-mode-toggle
+        name: Per-tab bash mode vs agent mode toggle
+        status: deferred
+      - id: psession-routing
+        name: Command vs prompt routing (small local model research)
+        status: deferred
+
+  - id: phase-providers
+    name: Additional Providers
+    status: not_started
+    notes: >
+      After generic ACP provider (Phase H) is solid. Claude Code and
+      Goose via ACP; direct LLM API and generic stdio separate.
+    tasks:
+      - id: pprov-claude-code
+        name: Claude Code provider (via claude-agent-acp adapter)
+        status: not_started
+      - id: pprov-goose
+        name: Goose provider (via goose-acp)
+        status: not_started
+      - id: pprov-llm-api
         name: Direct LLM API provider (OpenAI, Anthropic HTTP)
         status: not_started
-      - id: p3-provider-generic-stdio
+      - id: pprov-generic-stdio
         name: Generic stdio provider for arbitrary CLI agents
         status: not_started
-      - id: p3-remote-ssh
-        name: Remote agent management via SSH + tmux
-        status: not_started
-      - id: p3-driver-kitty
+
+  - id: phase-drivers
+    name: Additional Terminal Drivers
+    status: not_started
+    notes: After iTerm2 driver is proven.
+    tasks:
+      - id: pdrv-kitty
         name: Kitty terminal driver
         status: not_started
-      - id: p3-driver-tmux
+      - id: pdrv-tmux
         name: tmux driver
         status: not_started
-      - id: p3-tab-overlay
-        name: Tab management overlay UI
-        status: not_started
-      - id: p3-agent-panel
-        name: Agent session panel (side panel concept)
+      - id: pdrv-wezterm
+        name: WezTerm driver
         status: not_started
 
-  - id: phase-4
+  - id: phase-enterprise
     name: Enterprise & IDE (Future Vision)
     status: deferred
     tasks:
-      - id: p4-vscode-extension
+      - id: pent-vscode-extension
         name: VS Code / Cursor extension
         status: deferred
-      - id: p4-jetbrains-plugin
+      - id: pent-jetbrains-plugin
         name: JetBrains plugin
         status: deferred
-      - id: p4-azure-devops
+      - id: pent-azure-devops
         name: Azure DevOps work breakdown integration
         status: deferred
-      - id: p4-coder-integration
+      - id: pent-coder-integration
         name: Coder.com remote environment integration
         status: deferred
-      - id: p4-multi-agent-orchestration
+      - id: pent-multi-agent-orchestration
         name: Multi-agent orchestration (Stripe Minions-style)
-        status: deferred
-      - id: p4-pi-agent
-        name: Pi coding agent / framework support
         status: deferred
 
 research_questions:
   - id: rq-trigger-interception
     question: Can iTerm2 triggers intercept input before the shell processes it?
-    status: open
+    status: answered
     priority: high
-    notes: >
-      Triggers match on terminal output (post-echo). We may need shell
-      integration hooks, a custom shell function, or readline wrapper
-      to catch @ai before bash tries to execute it.
+    answer: >
+      No. Triggers match terminal output only. KeystrokeFilter is the
+      alternative for input interception but adds complexity. Deferred.
+    doc: docs/research/iterm2-api-capabilities.md
 
   - id: rq-overlay-rendering
     question: Can iTerm2 API create floating overlays or popups?
-    status: open
+    status: answered
     priority: medium
-    notes: >
-      Likely no native overlay support. Alternatives: split pane that
-      auto-closes, status bar for brief info, Rich-rendered output in
-      a temporary pane, or a separate companion TUI window.
+    answer: >
+      No native overlay support. Alternatives: split panes, status bar,
+      Rich-rendered output in temporary pane, Textual TUI in tab/pane.
 
   - id: rq-acp-methods
     question: What are the exact JSON-RPC method names for Cursor ACP?
-    status: open
+    status: answered
     priority: high
+    answer: >
+      initialize, authenticate, session/new, session/load, session/prompt,
+      session/update, session/request_permission, session/cancel,
+      cursor/ask_question, cursor/create_plan, cursor/update_todos.
+    doc: docs/research/cursor-acp-integration.md
 
   - id: rq-acp-streaming
     question: Does ACP support streaming responses?
-    status: open
+    status: answered
     priority: medium
+    answer: >
+      Yes, via session/update notifications with text chunks.
+    doc: docs/research/acp-ecosystem.md
 
   - id: rq-acp-session-resume
     question: Can Cursor ACP sessions be resumed after restart?
-    status: open
+    status: answered
     priority: medium
+    answer: >
+      Yes, via session/load with a previous session ID.
+    doc: docs/research/cursor-acp-integration.md
 
   - id: rq-session-var-persistence
     question: Do iTerm2 user-defined variables survive session restoration?
     status: open
-    priority: medium
+    priority: low
+    notes: >
+      Not yet tested. If they don't, the daemon restores them from
+      state.yaml on startup anyway. Low priority.
 
   - id: rq-input-vs-output-hooks
     question: "Best approach for @ai routing: shell function, coprocess, trigger, or keybinding?"
-    status: open
+    status: answered
     priority: high
-    notes: >
-      Shell function approach: alias @ai to a function that pipes to tak.
-      Coprocess approach: background process connected to shell.
-      Keybinding approach: Cmd+Enter sends current line to agent via RPC.
-      Each has different tradeoffs for UX, latency, and portability.
+    answer: >
+      Decision: tak ask (CLI to daemon via IPC). @ai as shell alias
+      interim. KeystrokeFilter deferred. See ADR in
+      architecture-decisions.md.
+    doc: docs/research/architecture-decisions.md
 
   - id: rq-security-deps
     question: Which dependencies have known CVEs or low bus factor?
-    status: open
+    status: answered
     priority: medium
-    notes: >
-      Need to audit iterm2, click, rich, pyyaml, httpx.
-      Set up pip-audit or safety in CI.
+    answer: >
+      Full audit completed March 2026. PyYAML safe with safe_load,
+      h11 needs pinning for httpx, iTerm2 app needs >=3.5.11.
+    doc: docs/research/dependency-security-audit.md

@@ -73,14 +73,29 @@ class CursorACPProvider(BaseProvider):
 
 ## Open Research Questions
 
-- [ ] What are the exact JSON-RPC method names for ACP? (Need to test or
-      find detailed protocol docs beyond the overview page.)
-- [ ] Does ACP support streaming responses? (Likely yes given stream-json
-      exists in non-ACP mode.)
-- [ ] Can we pass context (file contents, terminal output) in ACP requests?
-- [ ] Does Cursor CLI ACP support session resumption? (Critical for restart
-      recovery.)
-- [ ] What happens to the ACP subprocess when the parent process dies?
-      Does it clean up or orphan?
-- [ ] Can multiple ACP sessions share a single Cursor authentication token?
-- [ ] What's the ACP startup time? Relevant for "quick agent" use case.
+- **Exact JSON-RPC method names**: initialize, authenticate, session/new,
+  session/load, session/prompt, session/update, session/request_permission,
+  session/cancel, session/set_config_option
+- **Streaming**: Yes, via session/update notifications with AgentMessageChunk
+  containing text
+- **Context in requests**: session/prompt accepts prompt array with
+  `{type: "text", text: "..."}` objects
+- **Session resumption**: Yes, via session/load with sessionId
+- **Subprocess cleanup**: Needs testing
+- **Multiple sessions sharing auth**: Yes, pre-auth via --api-key or
+  CURSOR_API_KEY env var
+- **ACP startup time**: Needs testing in probe
+
+## ACP Protocol Details (Discovered)
+
+- **Full session flow**: initialize -> authenticate (cursor_login) ->
+  session/new -> session/prompt -> handle session/update -> handle
+  session/request_permission -> session/cancel
+- **Session modes**: ask (read-only), plan (read-only), agent (full tool access)
+- **Permission responses**: reject-once, allow-once, allow-always. Agent blocks
+  until answered.
+- **Cursor extension methods**: cursor/ask_question, cursor/create_plan,
+  cursor/update_todos, cursor/task, cursor/generate_image
+- **CLI flags**: --model, --mode, --list-models, --api-key, --workspace,
+  --sandbox, --approve-mcps, --trust, -e endpoint, -k shorthand
+- **Commands**: Both `cursor agent acp` and `agent acp` work as commands

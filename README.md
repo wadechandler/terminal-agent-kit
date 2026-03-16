@@ -10,9 +10,12 @@ your command line.
 
 ## Status
 
-**Pre-alpha / Research phase.** This project is actively being designed and prototyped.
-See [docs/tasks/manifest.yaml](docs/tasks/manifest.yaml) for current status and
-[docs/research/](docs/research/) for design decisions.
+**Alpha.** Core agent management, ACP session lifecycle, CLI, IPC, TUI dashboard,
+scaffold generators, and setup commands are implemented and tested (357 unit tests,
+zero lint errors). End-to-end integration with a real iTerm2 daemon and Cursor CLI
+has not yet been validated. See [docs/tasks/manifest.yaml](docs/tasks/manifest.yaml)
+for detailed phase status and [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) for
+a quick orientation.
 
 ## Vision
 
@@ -54,15 +57,34 @@ tak (CLI command)  ──┐
                             └── tmux (control mode, scripting)
 ```
 
+## Prerequisites
+
+- **Python 3.11+** (3.12 or 3.13 recommended)
+- **iTerm2 >= 3.5.11** (for the daemon and terminal integration)
+- **Homebrew** (for font and Starship installation via `tak setup`)
+- **Cursor CLI** (optional, for the Cursor ACP provider)
+
 ## Quick Start
 
-> Not yet functional -- scaffolding and research phase.
-
 ```bash
-pip install terminal-agent-kit
-tak spawn cursor --name my-project --project ~/code/myapp
-tak status
+# Install in development mode
+git clone https://github.com/wadechandler/terminal-agent-kit.git
+cd terminal-agent-kit
+pip install -e ".[dev]"
+
+# Try standalone commands (no daemon needed)
+tak scaffold agents               # Generate AGENTS.md for current project
+tak scaffold rules                # Generate .cursor/rules/
+tak new project my-app --quick    # Create a new project skeleton
+tak menu                          # Launch the agent management TUI
+
+# Setup commands (configures iTerm2, fonts, shell, etc.)
+tak setup tak                     # All-in-one opinionated setup
 ```
+
+For daemon-dependent commands (`tak spawn`, `tak ask`, `tak agents`, `tak stop`,
+`tak switch`), the iTerm2 daemon must be running. See
+[docs/tryout-guide.md](docs/tryout-guide.md) for the full walkthrough.
 
 ## Project Structure
 
@@ -70,16 +92,18 @@ tak status
 terminal-agent-kit/
   src/tak/               # Python package
     core/                # Terminal-agnostic agent management
-    providers/           # Agent protocol implementations (ACP, stdio, LLM API)
+    providers/           # Agent protocol implementations (ACP, stdio, terminal)
     drivers/             # Terminal-specific integrations (iTerm2, Kitty, tmux)
+    ipc/                 # Daemon-CLI communication (Unix socket, JSON protocol)
+    tui/                 # Textual-based agent management dashboard
     scaffold/            # Standards file generators (AGENTS.md, rules, skills)
+    setup/               # Environment bootstrap (iTerm2, fonts, Starship, shell)
     cli/                 # CLI entry point (the `tak` command)
   config/                # Default configuration files
-  setup/                 # Environment bootstrap scripts
   docs/
-    research/            # Design decisions and API research
-    tasks/               # Task tracking and project manifest
-  tests/
+    research/            # Design decisions (ADRs) and API research
+    tasks/               # Task tracking (manifest.yaml) and phase specs
+  tests/                 # Mirrors src/ structure
 ```
 
 ## Security
@@ -88,7 +112,8 @@ terminal-agent-kit/
 - We prefer dependencies with healthy bus factors and active maintenance.
 - Remote agents execute on the remote machine only; responses return through
   the SSH tunnel without exposing your local system.
-- See [SECURITY.md](SECURITY.md) (planned) for our full security posture.
+- The iTerm2 daemon communicates via a local-only Unix socket with cookie-based
+  authentication.
 
 ## License
 

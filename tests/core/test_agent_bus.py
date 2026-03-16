@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from tak.core.agent_bus import AgentBus, BusMessage
-from tak.core.agent_manager import AgentManager
-from tak.core.session_registry import SessionRegistry
-from tests.conftest import MockProvider
+
+if TYPE_CHECKING:
+    from tak.core.agent_manager import AgentManager
+    from tak.core.session_registry import SessionRegistry
+    from tests.conftest import MockProvider
 
 
 class TestAgentBusRouting:

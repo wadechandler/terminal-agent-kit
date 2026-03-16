@@ -87,13 +87,37 @@ Available as the `iterm2` package on PyPI. Requires Python 3.
 
 ## Open Research Questions
 
-- [ ] Can triggers intercept text BEFORE it reaches the shell? (Triggers match
-      on output, which happens after shell echo. May need shell integration
-      hooks or a custom readline wrapper instead.)
-- [ ] What's the latency of session.async_inject() for response display?
-- [ ] Can we create floating/overlay windows via the API? (Likely no --
-      may need a complementary approach like a split pane or popup.)
-- [ ] How does the API behave when iTerm2 is restarted? Does it cleanly
-      signal daemon scripts to shut down?
-- [ ] Can user-defined variables survive iTerm2 restart if session
-      restoration is enabled?
+- **Triggers and input interception**: Triggers CANNOT intercept input before the
+  shell. They match OUTPUT only (text written to the screen). For @ai
+  interception, need KeystrokeFilter/KeystrokeMonitor or shell integration hooks.
+- **session.async_inject() latency**: Needs testing in Phase A probe script.
+- **Floating overlays**: NOT possible via API. Alternatives: split pane
+  (`session.async_split_pane()`), status bar, Rich-rendered output in temp pane.
+- **API on iTerm2 restart**: Needs testing.
+- **User-defined variables and session restoration**: Needs testing.
+
+## Additional Capabilities Discovered
+
+- **Tab/session activation**: `session.async_activate(select_tab=True,
+  order_window_front=True)` or `tab.async_activate(order_window_front=True)`
+- **Split panes**: `session.async_split_pane(vertical=True/False,
+  before=True/False)`
+- **StatusBarComponent**: Custom components are TEXT ONLY (return string). For
+  clickable actions, use the built-in "Call Script Function" component.
+- **RPC functions**: `@iterm2.RPC` decorator + `async_register(connection)`.
+  Context-aware via `iterm2.Reference("id")`. Bind in Preferences > Keys >
+  Invoke Script Function.
+- **Preferences API**: `async_set_preference(connection, key, value)` for global
+  settings. PreferenceKey enum + arbitrary string keys.
+- **Profile API**: Create/modify profiles programmatically. Non-destructive
+  approach recommended.
+- **Enable API programmatically**: `defaults write com.googlecode.iterm2
+  EnableAPIServer -bool true` + restart.
+- **Listing sessions**: `app.windows -> window.tabs -> tab.sessions`. Lookup
+  helpers: `app.get_session_by_id()`, `app.get_tab_by_id()`,
+  `app.get_window_and_tab_for_session()`.
+- **User variables**: Must start with `user.`. Decision: use `user.tak_*` flat
+  namespace (e.g. user.tak_agent_id). Dots after user. not clearly documented.
+- **Python runtime options**: iTerm2 bundled runtime OR user's own Python
+  (asdf/homebrew) with `pip install iterm2`. For AutoLaunch, bundled Python is
+  default; user Python via launchd or thin wrapper.

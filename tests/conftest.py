@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from tak.core.agent_manager import AgentHandle, AgentManager, AgentStatus
 from tak.core.agent_bus import AgentBus
+from tak.core.agent_manager import AgentHandle, AgentManager
 from tak.core.session_registry import SessionRegistry
 from tak.providers.base import BaseProvider
+
+if TYPE_CHECKING:
+    import asyncio
+    from pathlib import Path
 
 
 class MockProcess:
@@ -81,9 +83,16 @@ class MockProvider(BaseProvider):
         return "mock"
 
     async def spawn(
-        self, agent_name: str, project_path: Path | None = None
+        self,
+        agent_name: str,
+        project_path: Path | None = None,
+        model: str | None = None,
     ) -> asyncio.subprocess.Process:
-        self.spawn_calls.append({"name": agent_name, "project": project_path})
+        self.spawn_calls.append({
+            "name": agent_name,
+            "project": project_path,
+            "model": model,
+        })
         return MockProcess()  # type: ignore[return-value]
 
     async def send(self, handle: AgentHandle, message: str) -> str:

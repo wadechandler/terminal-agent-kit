@@ -1,0 +1,13 @@
+---
+description: Testing conventions for pytest
+globs: "tests/**/*.py"
+alwaysApply: false
+---
+
+# Testing Conventions
+
+- Use pytest for all tests
+- Mirror source structure: `tests/core/test_foo.py` tests `src/pkg/core/foo.py`
+- Use `tmp_path` fixture for all temporary file operations
+- Async tests use `pytest-asyncio` with `asyncio_mode = 'auto'`
+- `S101` (assert) and `D` (docstring) rules are suppressed in test files

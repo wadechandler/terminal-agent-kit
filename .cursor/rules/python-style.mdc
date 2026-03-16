@@ -1,0 +1,60 @@
+---
+description: Google Python Style Guide conventions for all Python files
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python Style — Google Python Style Guide
+
+Follow the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+Ruff and mypy enforce these rules; run `ruff check` and `mypy` before considering code complete.
+
+## Docstrings
+
+Google-style docstrings required on all public modules, classes, and functions.
+
+```python
+def send(self, handle: AgentHandle, text: str) -> str:
+    """Send a message to an agent and return the response.
+
+    Args:
+        handle: The agent handle identifying the target agent.
+        text: The message text to send.
+
+    Returns:
+        The agent's response text.
+
+    Raises:
+        ProviderError: If the agent is unreachable.
+    """
+```
+
+## Naming
+
+- `snake_case` for functions, methods, variables, modules.
+- `CamelCase` for classes.
+- `UPPER_CASE` for module-level constants.
+
+## Imports
+
+- One import per line, no wildcards.
+- Group: stdlib, third-party, local. Ruff `I` (isort) enforces order.
+- Use `TYPE_CHECKING` guards for imports needed only by type annotations.
+
+## Exceptions
+
+- Never use bare `except:`. Catch specific exception types.
+- Minimize the scope of `try` blocks.
+
+## Dependencies
+
+When adding or updating a dependency:
+
+- Search MITRE CVE / NVD for known vulnerabilities before adopting any package.
+- Verify the package is actively maintained (recent commits, bus factor > 1).
+- Always use the latest stable release — look it up on PyPI, do not guess or use stale versions.
+- Pin minimum versions explicitly with `>=X.Y` reflecting the version you verified.
+
+## Line Length
+
+100 characters (project override of Google's 80-char default).

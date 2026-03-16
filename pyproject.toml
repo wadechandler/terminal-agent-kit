@@ -32,6 +32,7 @@ dependencies = [
     "pyyaml>=6.0",
     "click>=8.1",
     "rich>=13.0",
+    "textual>=8.1",
 ]
 
 [project.optional-dependencies]
@@ -61,7 +62,18 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "SIM", "TCH"]
+select = [
+    "E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "SIM", "TCH",
+    "D", "RUF", "PIE", "RET", "PT",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "S101"]
+"**/__init__.py" = ["D104"]
+"src/tak/setup/starship.py" = ["RUF001"]
 
 [tool.mypy]
 python_version = "3.11"
