@@ -1,4 +1,4 @@
-"""Tests for tak setup iterm2 — defaults read/write, connection test, idempotency."""
+"""Tests for tak setup iterm2 — defaults read/write, connection test, pip install."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from rich.console import Console
 
-from tak.setup.iterm2 import _test_connection, setup_iterm2
+from tak.setup.iterm2 import _test_connection, setup_iterm2, setup_iterm2_pip
 
 
 def _make_console() -> tuple[Console, StringIO]:
@@ -138,3 +138,73 @@ class TestConnectionTest:
             _test_connection(con)
 
         assert "not available" in buf.getvalue()
+
+
+class TestSetupIterm2Pip:
+    """Tests for setup_iterm2_pip — install tak into iterm2env."""
+
+    def test_no_iterm2env_skips(self) -> None:
+        con, buf = _make_console()
+
+        with patch("tak.setup.iterm2.glob.glob", return_value=[]):
+            ok = setup_iterm2_pip(con)
+
+        assert ok is True
+        assert "iterm2env not found" in buf.getvalue()
+
+    def test_dry_run_shows_command(self) -> None:
+        con, buf = _make_console()
+        fake_python = "/Users/test/.config/iterm2/AppSupport/iterm2env/versions/3.11.4/bin/python3"
+
+        with patch("tak.setup.iterm2.glob.glob", return_value=[fake_python]):
+            ok = setup_iterm2_pip(con, dry_run=True)
+
+        assert ok is True
+        out = buf.getvalue()
+        assert "would run" in out
+        assert "pip install -e" in out
+
+    def test_successful_install(self) -> None:
+        con, buf = _make_console()
+        fake_python = "/Users/test/.config/iterm2/AppSupport/iterm2env/versions/3.11.4/bin/python3"
+
+        with (
+            patch("tak.setup.iterm2.glob.glob", return_value=[fake_python]),
+            patch("tak.setup.iterm2.subprocess.run", return_value=_completed()),
+        ):
+            ok = setup_iterm2_pip(con)
+
+        assert ok is True
+        assert "installed into iterm2env" in buf.getvalue()
+
+    def test_failed_install(self) -> None:
+        con, buf = _make_console()
+        fake_python = "/Users/test/.config/iterm2/AppSupport/iterm2env/versions/3.11.4/bin/python3"
+
+        with (
+            patch("tak.setup.iterm2.glob.glob", return_value=[fake_python]),
+            patch(
+                "tak.setup.iterm2.subprocess.run",
+                return_value=_completed(returncode=1),
+            ),
+        ):
+            ok = setup_iterm2_pip(con)
+
+        assert ok is False
+        assert "pip install failed" in buf.getvalue()
+
+    def test_exception_during_install(self) -> None:
+        con, buf = _make_console()
+        fake_python = "/Users/test/.config/iterm2/AppSupport/iterm2env/versions/3.11.4/bin/python3"
+
+        with (
+            patch("tak.setup.iterm2.glob.glob", return_value=[fake_python]),
+            patch(
+                "tak.setup.iterm2.subprocess.run",
+                side_effect=OSError("permission denied"),
+            ),
+        ):
+            ok = setup_iterm2_pip(con)
+
+        assert ok is False
+        assert "pip install error" in buf.getvalue()

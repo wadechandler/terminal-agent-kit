@@ -1,14 +1,10 @@
-"""Tests for ACPSessionManager JSON-RPC lifecycle."""
+"""Tests for ACPSessionManager backed by the ACP SDK."""
 
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock
-
-if TYPE_CHECKING:
-    from collections.abc import Coroutine
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -16,153 +12,73 @@ from tak.providers.acp_session import (
     ACPSessionManager,
     ACPSessionState,
     PermissionRequest,
+    TakACPClient,
 )
 
-_background_tasks: set[asyncio.Task[Any]] = set()
+
+def _make_conn_mock() -> AsyncMock:
+    """Create a mock ClientSideConnection with standard ACP methods."""
+    conn = AsyncMock()
+    conn.initialize = AsyncMock(return_value=MagicMock(
+        protocol_version=1,
+        agent_capabilities=MagicMock(load_session=False),
+    ))
+    conn.authenticate = AsyncMock(return_value=MagicMock())
+    conn.new_session = AsyncMock(return_value=MagicMock(session_id="sess-abc-123"))
+    conn.load_session = AsyncMock(return_value=MagicMock(session_id="resumed-sess"))
+    conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
+    conn.cancel = AsyncMock()
+    conn.close = AsyncMock()
+    conn.set_session_model = AsyncMock()
+    conn.set_session_mode = AsyncMock()
+    return conn
 
 
-def _bg(coro: Coroutine[Any, Any, Any]) -> asyncio.Task[Any]:
-    """Create a background task and prevent it from being garbage-collected."""
-    task = asyncio.create_task(coro)
-    _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
-    return task
-
-
-class MockStdio:
-    """Simulates an async subprocess stdin/stdout for ACP testing.
-
-    Write messages to ``outgoing`` to simulate ACP server responses.
-    Read from ``incoming`` to see what the session manager sent.
-    """
-
-    def __init__(self) -> None:
-        self._read_buffer = asyncio.Queue[bytes]()
-        self.incoming: list[dict[str, Any]] = []
-
-    def write(self, data: bytes) -> None:
-        for line in data.split(b"\n"):
-            line = line.strip()
-            if line:
-                self.incoming.append(json.loads(line))
-
-    async def drain(self) -> None:
-        pass
-
-    def feed_json(self, obj: dict[str, Any]) -> None:
-        """Queue a JSON-RPC message to be read by the session manager."""
-        self._read_buffer.put_nowait(json.dumps(obj).encode() + b"\n")
-
-    async def readline(self) -> bytes:
-        try:
-            return await asyncio.wait_for(self._read_buffer.get(), timeout=2.0)
-        except TimeoutError:
-            return b""
-
-
-class MockACPProcess:
-    """Simulates the subprocess for an ACP agent."""
-
-    def __init__(self) -> None:
-        self.stdin = MockStdio()
-        self.stdout = MockStdio()
-        self.returncode: int | None = None
-
-    def feed_response(self, req_id: int, result: dict[str, Any]) -> None:
-        self.stdout.feed_json({"jsonrpc": "2.0", "id": req_id, "result": result})
-
-    def feed_notification(self, method: str, params: dict[str, Any]) -> None:
-        self.stdout.feed_json({"jsonrpc": "2.0", "method": method, "params": params})
-
-    def feed_error(self, req_id: int, code: int, message: str) -> None:
-        self.stdout.feed_json({
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "error": {"code": code, "message": message},
-        })
-
-
-@pytest.fixture
-def mock_process() -> MockACPProcess:
-    return MockACPProcess()
-
-
-@pytest.fixture
-def session(mock_process: MockACPProcess) -> ACPSessionManager:
-    return ACPSessionManager(mock_process)
+def _make_session(
+    conn: AsyncMock | None = None,
+    agent_name: str | None = None,
+    permission_callback: Any = None,
+    ask_question_callback: Any = None,
+) -> tuple[ACPSessionManager, AsyncMock, TakACPClient]:
+    """Create a session manager with a mock connection."""
+    if conn is None:
+        conn = _make_conn_mock()
+    client = TakACPClient(
+        agent_name=agent_name,
+        permission_callback=permission_callback,
+        ask_question_callback=ask_question_callback,
+    )
+    session = ACPSessionManager(conn, client, agent_name=agent_name)
+    return session, conn, client
 
 
 class TestInitializeAuthenticateHandshake:
-    async def test_initialize_sends_request(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_after_delay() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
+    async def test_initialize_calls_sdk(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
 
-        _bg(respond_after_delay())
-        result = await session.initialize()
-
-        assert result == {"capabilities": {}}
+        conn.initialize.assert_called_once()
+        call_kwargs = conn.initialize.call_args
+        assert call_kwargs[1]["protocol_version"] >= 1 or call_kwargs[0][0] >= 1
         assert session.state == ACPSessionState.INITIALIZING
-        sent = mock_process.stdin.incoming
-        assert len(sent) == 1
-        assert sent[0]["method"] == "initialize"
 
-    async def test_initialize_sends_protocol_version_and_client_info(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_after_delay() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"protocolVersion": 1, "capabilities": {}})
-
-        _bg(respond_after_delay())
+    async def test_authenticate_calls_sdk(self) -> None:
+        session, conn, _ = _make_session()
         await session.initialize()
+        await session.authenticate()
 
-        sent = mock_process.stdin.incoming
-        params = sent[0]["params"]
-        assert params["protocolVersion"] == 1
-        assert "clientInfo" in params
-        assert params["clientInfo"]["name"] == "tak"
-        assert "version" in params["clientInfo"]
-        assert "clientCapabilities" in params
-
-    async def test_authenticate_sends_method_id(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_init() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-
-        _bg(respond_init())
-        await session.initialize()
-
-        async def respond_auth() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {"authenticated": True})
-
-        _bg(respond_auth())
-        result = await session.authenticate()
-
-        assert result == {"authenticated": True}
+        conn.authenticate.assert_called_once_with(method_id="cursor_login")
         assert session.state == ACPSessionState.AUTHENTICATED
-        sent = mock_process.stdin.incoming
-        assert sent[1]["method"] == "authenticate"
-        assert sent[1]["params"]["methodId"] == "cursor_login"
 
-    async def test_new_session_returns_session_id(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_all() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {"authenticated": True})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "sess-abc-123"})
+    async def test_authenticate_custom_method_id(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate(method_id="env")
 
-        _bg(respond_all())
+        conn.authenticate.assert_called_once_with(method_id="env")
 
+    async def test_new_session_returns_session_id(self) -> None:
+        session, _conn, _ = _make_session()
         await session.initialize()
         await session.authenticate()
         sid = await session.new_session(mode="agent")
@@ -171,54 +87,59 @@ class TestInitializeAuthenticateHandshake:
         assert session.session_id == "sess-abc-123"
         assert session.state == ACPSessionState.SESSION_ACTIVE
 
+    async def test_new_session_passes_cwd(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(cwd="/tmp/proj")  # noqa: S108
+
+        conn.new_session.assert_called_once_with(cwd="/tmp/proj", mcp_servers=[])  # noqa: S108
+
+    async def test_new_session_sets_model(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(model="claude-sonnet-4")
+
+        conn.set_session_model.assert_called_once_with(
+            model_id="claude-sonnet-4",
+            session_id="sess-abc-123",
+        )
+
 
 class TestPromptAndUpdate:
-    async def test_prompt_collects_update_chunks(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def handshake_and_prompt() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {"authenticated": True})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification("session/update", {"text": "Hello "})
-            mock_process.feed_notification("session/update", {"text": "world!"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(4, {"done": True})
-
-        _bg(handshake_and_prompt())
-
+    async def test_prompt_collects_update_chunks(self) -> None:
+        session, conn, client = _make_session()
         await session.initialize()
         await session.authenticate()
         await session.new_session()
+
+        async def fake_prompt(**kwargs: Any) -> MagicMock:
+            await asyncio.sleep(0.01)
+            client._update_chunks.put_nowait("Hello ")
+            client._update_chunks.put_nowait("world!")
+            await asyncio.sleep(0.01)
+            return MagicMock(stop_reason="end_turn")
+
+        conn.prompt = fake_prompt
 
         result = await session.prompt("Hi")
         assert result == "Hello world!"
 
-    async def test_prompt_streaming_yields_chunks(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def handshake_and_prompt() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {"authenticated": True})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification("session/update", {"text": "chunk1"})
-            mock_process.feed_notification("session/update", {"text": "chunk2"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(4, {"done": True})
-
-        _bg(handshake_and_prompt())
-
+    async def test_prompt_streaming_yields_chunks(self) -> None:
+        session, conn, client = _make_session()
         await session.initialize()
         await session.authenticate()
         await session.new_session()
+
+        async def fake_prompt(**kwargs: Any) -> MagicMock:
+            await asyncio.sleep(0.01)
+            client._update_chunks.put_nowait("chunk1")
+            client._update_chunks.put_nowait("chunk2")
+            await asyncio.sleep(0.01)
+            return MagicMock(stop_reason="end_turn")
+
+        conn.prompt = fake_prompt
 
         chunks = []
         async for chunk in session.prompt_streaming("test"):
@@ -226,277 +147,161 @@ class TestPromptAndUpdate:
 
         assert chunks == ["chunk1", "chunk2"]
 
-    async def test_update_with_chunk_field(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def handshake_and_prompt() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification(
-                "session/update", {"chunk": {"text": "from-chunk"}}
-            )
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(4, {})
+    async def test_prompt_without_session_raises(self) -> None:
+        session, _conn, _ = _make_session()
+        with pytest.raises(RuntimeError, match="No active session"):
+            await session.prompt("test")
 
-        _bg(handshake_and_prompt())
 
-        await session.initialize()
-        await session.authenticate()
-        await session.new_session()
+class TestSessionUpdate:
+    async def test_agent_message_chunk_extracts_text(self) -> None:
+        from acp.schema import AgentMessageChunk, TextContentBlock
 
-        result = await session.prompt("test")
-        assert result == "from-chunk"
+        _, _, client = _make_session()
+        update = AgentMessageChunk(
+            session_update="agent_message_chunk",
+            content=TextContentBlock(type="text", text="hello"),
+        )
+        await client.session_update(session_id="s1", update=update)
+
+        chunk = client._update_chunks.get_nowait()
+        assert chunk == "hello"
+
+    async def test_non_text_update_ignored(self) -> None:
+        from acp.schema import AgentThoughtChunk, TextContentBlock
+
+        _, _, client = _make_session()
+        update = AgentThoughtChunk(
+            session_update="agent_thought_chunk",
+            content=TextContentBlock(type="text", text="thinking..."),
+        )
+        await client.session_update(session_id="s1", update=update)
+
+        assert client._update_chunks.empty()
 
 
 class TestPermissionCallback:
-    async def test_permission_callback_invoked(
-        self, mock_process: MockACPProcess
-    ) -> None:
+    async def test_permission_callback_invoked(self) -> None:
+        from acp.schema import PermissionOption, ToolCallUpdate
+
         callback = AsyncMock(return_value="allow-once")
-        mgr = ACPSessionManager(mock_process, permission_callback=callback)
+        _, _, client = _make_session(permission_callback=callback)
 
-        async def handshake_and_permission() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification(
-                "session/request_permission",
-                {"toolName": "edit_file", "description": "Edit src/foo.py", "id": 99},
-            )
-            await asyncio.sleep(0.1)
-            mock_process.feed_response(4, {})
+        tool_call = ToolCallUpdate(
+            session_update="tool_call_update",
+            tool_call_id="tc-1",
+            title="edit_file",
+        )
+        options = [PermissionOption(
+            kind="allow_once",
+            name="Allow",
+            option_id="opt-1",
+        )]
 
-        _bg(handshake_and_permission())
-
-        await mgr.initialize()
-        await mgr.authenticate()
-        await mgr.new_session()
-        await mgr.prompt("do something")
+        result = await client.request_permission(
+            options=options,
+            session_id="s1",
+            tool_call=tool_call,
+        )
 
         callback.assert_called_once()
         req: PermissionRequest = callback.call_args[0][0]
         assert req.tool_name == "edit_file"
-        assert req.description == "Edit src/foo.py"
-        assert req.request_id == 99
+        assert result.outcome.outcome == "selected"
 
-        permission_responses = [
-            m for m in mock_process.stdin.incoming
-            if m.get("method") == "session/permission_response"
-        ]
-        assert len(permission_responses) == 1
-        assert permission_responses[0]["params"]["decision"] == "allow-once"
+    async def test_no_callback_auto_rejects(self) -> None:
+        from acp.schema import PermissionOption, ToolCallUpdate
 
-    async def test_no_callback_auto_rejects(
-        self, mock_process: MockACPProcess
-    ) -> None:
-        mgr = ACPSessionManager(mock_process)
+        _, _, client = _make_session()
 
-        async def handshake_and_permission() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification(
-                "session/request_permission",
-                {"toolName": "run_cmd", "description": "Run rm -rf /", "id": 42},
-            )
-            await asyncio.sleep(0.1)
-            mock_process.feed_response(4, {})
+        tool_call = ToolCallUpdate(
+            session_update="tool_call_update",
+            tool_call_id="tc-1",
+            title="run_cmd",
+        )
+        options = [PermissionOption(kind="allow_once", name="Allow", option_id="opt-1")]
 
-        _bg(handshake_and_permission())
-
-        await mgr.initialize()
-        await mgr.authenticate()
-        await mgr.new_session()
-        await mgr.prompt("do it")
-
-        permission_responses = [
-            m for m in mock_process.stdin.incoming
-            if m.get("method") == "session/permission_response"
-        ]
-        assert len(permission_responses) == 1
-        assert permission_responses[0]["params"]["decision"] == "reject-once"
-
-
-class TestRequestIdCorrelation:
-    async def test_responses_matched_to_correct_future(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_out_of_order() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"step": "init"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {"step": "auth"})
-
-        _bg(respond_out_of_order())
-
-        init_result = await session.initialize()
-        auth_result = await session.authenticate()
-
-        assert init_result == {"step": "init"}
-        assert auth_result == {"step": "auth"}
-
-
-class TestLoadSession:
-    async def test_load_session_resumes(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_handshake_and_load() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {"capabilities": {}})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "resumed-sess"})
-
-        _bg(respond_handshake_and_load())
-
-        await session.initialize()
-        await session.authenticate()
-        sid = await session.load_session("old-sess-id")
-
-        assert sid == "resumed-sess"
-        assert session.session_id == "resumed-sess"
-        assert session.state == ACPSessionState.SESSION_ACTIVE
-
-        sent = mock_process.stdin.incoming
-        load_msg = sent[2]
-        assert load_msg["method"] == "session/load"
-        assert load_msg["params"]["sessionId"] == "old-sess-id"
-
-
-class TestCancel:
-    async def test_cancel_sends_request(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_handshake_and_cancel() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(4, {"cancelled": True})
-
-        _bg(respond_handshake_and_cancel())
-
-        await session.initialize()
-        await session.authenticate()
-        await session.new_session()
-        result = await session.cancel()
-
-        assert result == {"cancelled": True}
-        sent = mock_process.stdin.incoming
-        cancel_msg = sent[3]
-        assert cancel_msg["method"] == "session/cancel"
-
-
-class TestFinishedFlag:
-    async def test_finished_true_ends_stream(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        """When session/update has finished=true, streaming ends without
-        needing the prompt response to arrive first."""
-
-        async def handshake_and_finished() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification("session/update", {"text": "done!"})
-            mock_process.feed_notification(
-                "session/update", {"text": "", "finished": True}
-            )
-            await asyncio.sleep(0.1)
-            mock_process.feed_response(4, {})
-
-        _bg(handshake_and_finished())
-
-        await session.initialize()
-        await session.authenticate()
-        await session.new_session()
-
-        chunks = []
-        async for chunk in session.prompt_streaming("test"):
-            chunks.append(chunk)
-
-        assert chunks == ["done!"]
-
-
-class TestAgentNameOnPermissionRequest:
-    async def test_permission_request_includes_agent_name(
-        self, mock_process: MockACPProcess
-    ) -> None:
-        callback = AsyncMock(return_value="reject-once")
-        mgr = ACPSessionManager(
-            mock_process, agent_name="my-agent", permission_callback=callback
+        result = await client.request_permission(
+            options=options,
+            session_id="s1",
+            tool_call=tool_call,
         )
 
-        async def handshake_and_permission() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(2, {})
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(3, {"sessionId": "s1"})
-            await asyncio.sleep(0.05)
-            mock_process.feed_notification(
-                "session/request_permission",
-                {"toolName": "run_cmd", "description": "ls", "id": 7},
-            )
-            await asyncio.sleep(0.1)
-            mock_process.feed_response(4, {})
+        assert result.outcome.outcome == "cancelled"
 
-        _bg(handshake_and_permission())
+    async def test_permission_request_includes_agent_name(self) -> None:
+        from acp.schema import PermissionOption, ToolCallUpdate
 
-        await mgr.initialize()
-        await mgr.authenticate()
-        await mgr.new_session()
-        await mgr.prompt("go")
+        callback = AsyncMock(return_value="reject-once")
+        _, _, client = _make_session(
+            agent_name="my-agent", permission_callback=callback
+        )
+
+        tool_call = ToolCallUpdate(
+            session_update="tool_call_update",
+            tool_call_id="tc-1",
+            title="run_cmd",
+        )
+        options = [PermissionOption(kind="allow_once", name="Allow", option_id="opt-1")]
+
+        await client.request_permission(
+            options=options,
+            session_id="s1",
+            tool_call=tool_call,
+        )
 
         callback.assert_called_once()
         req: PermissionRequest = callback.call_args[0][0]
         assert req.agent_name == "my-agent"
 
 
-class TestErrorHandling:
-    async def test_acp_error_response_raises(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond_error() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_error(1, -32600, "Invalid request")
-
-        _bg(respond_error())
-
-        with pytest.raises(RuntimeError, match="ACP error -32600"):
-            await session.initialize()
-
-    async def test_close_cancels_reader(
-        self, session: ACPSessionManager, mock_process: MockACPProcess
-    ) -> None:
-        async def respond() -> None:
-            await asyncio.sleep(0.05)
-            mock_process.feed_response(1, {})
-
-        _bg(respond())
+class TestLoadSession:
+    async def test_load_session_resumes(self) -> None:
+        session, conn, _ = _make_session()
         await session.initialize()
+        await session.authenticate()
+        sid = await session.load_session("old-sess-id", cwd="/tmp/proj")  # noqa: S108
 
+        assert sid == "old-sess-id"
+        assert session.session_id == "old-sess-id"
+        assert session.state == ACPSessionState.SESSION_ACTIVE
+        conn.load_session.assert_called_once_with(
+            cwd="/tmp/proj",  # noqa: S108
+            session_id="old-sess-id",
+            mcp_servers=[],
+        )
+
+
+class TestCancel:
+    async def test_cancel_calls_sdk(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session()
+        await session.cancel()
+
+        conn.cancel.assert_called_once_with(session_id="sess-abc-123")
+
+
+class TestClose:
+    async def test_close_calls_sdk(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
         await session.close()
+
         assert session.state == ACPSessionState.CLOSED
+        conn.close.assert_called_once()
+
+
+class TestCallbackProperties:
+    def test_permission_callback_property(self) -> None:
+        session, _, _ = _make_session()
+        callback = AsyncMock(return_value="allow-once")
+        session.permission_callback = callback
+        assert session.permission_callback is callback
+
+    def test_ask_question_callback_property(self) -> None:
+        session, _, _ = _make_session()
+        callback = AsyncMock(return_value="option-a")
+        session.ask_question_callback = callback
+        assert session.ask_question_callback is callback

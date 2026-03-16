@@ -442,6 +442,17 @@ def setup_iterm2_cmd(dry_run: bool) -> None:
         sys.exit(1)
 
 
+@setup.command("iterm2-pip")
+@click.option("--dry-run", is_flag=True, help="Show what would happen without making changes")
+def setup_iterm2_pip_cmd(dry_run: bool) -> None:
+    """Install tak into iTerm2's bundled Python environment."""
+    from tak.setup.iterm2 import setup_iterm2_pip
+
+    ok = setup_iterm2_pip(console, dry_run=dry_run)
+    if not ok:
+        sys.exit(1)
+
+
 @setup.command("fonts")
 @click.option("--dry-run", is_flag=True, help="Show what would happen without making changes")
 def setup_fonts_cmd(dry_run: bool) -> None:

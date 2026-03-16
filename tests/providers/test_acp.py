@@ -1,12 +1,11 @@
-"""Tests for the generic ACPProvider."""
+"""Tests for the generic ACPProvider backed by the ACP SDK."""
 
 from __future__ import annotations
 
 import asyncio
-import json
-import os
+from contextlib import asynccontextmanager
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -15,87 +14,35 @@ from tak.providers.acp import ACPProvider
 from tak.providers.base import InteractionModel
 
 
-class MockACPStdio:
-    """Mock stdin/stdout that auto-responds to ACP handshake messages."""
+def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
+    """Create a mock for spawn_agent_process that returns a mock conn and process."""
+    mock_conn = AsyncMock()
+    mock_conn.initialize = AsyncMock(return_value=MagicMock(
+        protocol_version=1,
+        agent_capabilities=MagicMock(load_session=False),
+    ))
+    mock_conn.authenticate = AsyncMock(return_value=MagicMock())
+    mock_conn.new_session = AsyncMock(return_value=MagicMock(session_id="test-session-id"))
+    mock_conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
+    mock_conn.cancel = AsyncMock()
+    mock_conn.close = AsyncMock()
+    mock_conn.set_session_model = AsyncMock()
+    mock_conn.set_session_mode = AsyncMock()
 
-    def __init__(self) -> None:
-        self._read_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        self.written: list[dict[str, Any]] = []
+    mock_process = MagicMock()
+    mock_process.returncode = None
+    mock_process.terminate = MagicMock()
+    mock_process.kill = MagicMock()
+    mock_process.wait = AsyncMock(return_value=0)
 
-    def write(self, data: bytes) -> None:
-        """Capture written bytes and auto-respond to ACP handshake methods."""
-        for line in data.split(b"\n"):
-            line = line.strip()
-            if not line:
-                continue
-            msg = json.loads(line)
-            self.written.append(msg)
-            self._auto_respond(msg)
+    @asynccontextmanager
+    async def fake_spawn(client, cmd, *args, **kwargs):
+        yield mock_conn, mock_process
 
-    async def drain(self) -> None:
-        """No-op drain."""
-
-    def feed_json(self, obj: dict[str, Any]) -> None:
-        """Enqueue a response line for readline() to return."""
-        self._read_queue.put_nowait(json.dumps(obj).encode() + b"\n")
-
-    async def readline(self) -> bytes:
-        """Return the next queued response line."""
-        try:
-            return await asyncio.wait_for(self._read_queue.get(), timeout=5.0)
-        except TimeoutError:
-            return b""
-
-    def _auto_respond(self, msg: dict[str, Any]) -> None:
-        req_id = msg.get("id")
-        method = msg.get("method", "")
-        if method == "initialize":
-            self.feed_json({"jsonrpc": "2.0", "id": req_id, "result": {"capabilities": {}}})
-        elif method == "authenticate":
-            self.feed_json({"jsonrpc": "2.0", "id": req_id, "result": {"ok": True}})
-        elif method == "session/new":
-            self.feed_json({
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {"sessionId": "test-session-id"},
-            })
-
-
-class MockACPProcess:
-    """A mock subprocess whose stdio auto-responds to the ACP handshake."""
-
-    def __init__(self) -> None:
-        self._stdio = MockACPStdio()
-        self.stdin = self._stdio
-        self.stdout = self._stdio
-        self.stderr = MockACPStdio()
-        self.returncode: int | None = None
-        self._terminated = False
-
-    def terminate(self) -> None:
-        """Record termination."""
-        self._terminated = True
-        self.returncode = -15
-
-    def kill(self) -> None:
-        """Record kill."""
-        self._terminated = True
-        self.returncode = -9
-
-    async def wait(self) -> int:
-        """Return exit code."""
-        self.returncode = self.returncode or 0
-        return self.returncode
-
-    @property
-    def written(self) -> list[dict[str, Any]]:
-        """All messages written to stdin."""
-        return self._stdio.written
+    return fake_spawn, mock_conn, mock_process
 
 
 class TestACPProviderProperties:
-    """Tests for ACPProvider property accessors."""
-
     def test_name_is_set(self) -> None:
         provider = ACPProvider(name="Test ACP", command=["test-agent", "acp"])
         assert provider.name == "Test ACP"
@@ -110,112 +57,22 @@ class TestACPProviderProperties:
 
 
 class TestACPProviderSpawn:
-    """Tests for ACPProvider.spawn()."""
+    async def test_spawn_completes_handshake(self) -> None:
+        fake_spawn, mock_conn, mock_process = _mock_spawn_agent_process()
 
-    async def test_spawn_builds_correct_command(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
-            provider = ACPProvider(name="Goose", command=["goose", "acp"])
-            process = await provider.spawn("my-agent", model="llama3")
-
-            call_args = mock_asyncio.create_subprocess_exec.call_args
-            cmd = call_args[0]
-            assert os.path.basename(cmd[0]) == "goose"
-            assert cmd[1] == "acp"
-            assert process is mock_proc
-
-            session_new = next(
-                m for m in mock_proc.written if m.get("method") == "session/new"
-            )
-            assert session_new["params"].get("model") == "llama3"
-
-    async def test_spawn_with_arbitrary_command(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
-            provider = ACPProvider(name="Claude ACP", command=["claude-agent-acp"])
-            await provider.spawn("claude-1")
-
-            call_args = mock_asyncio.create_subprocess_exec.call_args
-            cmd = call_args[0]
-            assert os.path.basename(cmd[0]) == "claude-agent-acp"
-
-    async def test_spawn_with_project_path(self) -> None:
-        from pathlib import Path
-
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
             provider = ACPProvider(name="Test", command=["test-acp"])
-            await provider.spawn("my-agent", project_path=Path("/tmp/proj"))  # noqa: S108
+            process = await provider.spawn("test-agent")
 
-            session_new = next(
-                m for m in mock_proc.written if m.get("method") == "session/new"
-            )
-            assert session_new["params"].get("cwd") == "/tmp/proj"  # noqa: S108
-
-    async def test_spawn_completes_handshake_with_env_auth(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
-            provider = ACPProvider(name="Test", command=["test-acp"], auth_method="env")
-            await provider.spawn("test-agent")
-
-            methods = [m["method"] for m in mock_proc.written]
-            assert "initialize" in methods
-            assert "authenticate" in methods
-            assert "session/new" in methods
-
-    async def test_spawn_skips_authenticate_when_auth_none(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
-            provider = ACPProvider(name="Test", command=["test-acp"], auth_method="none")
-            await provider.spawn("test-agent")
-
-            methods = [m["method"] for m in mock_proc.written]
-            assert "initialize" in methods
-            assert "authenticate" not in methods
-            assert "session/new" in methods
-
-    async def test_spawn_login_auth_sends_cursor_login_method_id(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
-            provider = ACPProvider(name="Test", command=["test-acp"], auth_method="login")
-            await provider.spawn("test-agent")
-
-            auth_msg = next(
-                m for m in mock_proc.written if m.get("method") == "authenticate"
-            )
-            assert auth_msg["params"]["methodId"] == "cursor_login"
+            assert process is mock_process
+            mock_conn.initialize.assert_called_once()
+            mock_conn.authenticate.assert_called_once()
+            mock_conn.new_session.assert_called_once()
 
     async def test_spawn_creates_session_manager(self) -> None:
-        mock_proc = MockACPProcess()
+        fake_spawn, _mock_conn, _ = _mock_spawn_agent_process()
 
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
             provider = ACPProvider(name="Test", command=["test-acp"])
             await provider.spawn("test-agent")
 
@@ -223,10 +80,53 @@ class TestACPProviderSpawn:
             assert session is not None
             assert session.session_id == "test-session-id"
 
+    async def test_spawn_with_project_path(self) -> None:
+        from pathlib import Path
+
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"])
+            await provider.spawn("my-agent", project_path=Path("/tmp/proj"))  # noqa: S108
+
+            mock_conn.new_session.assert_called_once_with(
+                cwd="/tmp/proj", mcp_servers=[]  # noqa: S108
+            )
+
+    async def test_spawn_with_model(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Goose", command=["goose", "acp"])
+            await provider.spawn("my-agent", model="llama3")
+
+            mock_conn.set_session_model.assert_called_once_with(
+                model_id="llama3",
+                session_id="test-session-id",
+            )
+
+    async def test_spawn_skips_authenticate_when_auth_none(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"], auth_method="none")
+            await provider.spawn("test-agent")
+
+            mock_conn.initialize.assert_called_once()
+            mock_conn.authenticate.assert_not_called()
+            mock_conn.new_session.assert_called_once()
+
+    async def test_spawn_login_auth_sends_cursor_login(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"], auth_method="login")
+            await provider.spawn("test-agent")
+
+            mock_conn.authenticate.assert_called_once_with(method_id="cursor_login")
+
 
 class TestACPProviderListModels:
-    """Tests for ACPProvider.list_models()."""
-
     async def test_list_models_uses_configured_command(self) -> None:
         mock_proc = AsyncMock()
         mock_proc.returncode = 0
@@ -245,9 +145,6 @@ class TestACPProviderListModels:
 
         assert "llama3" in models
         assert "mistral" in models
-        call_args = mock_asyncio.create_subprocess_exec.call_args
-        assert os.path.basename(call_args[0][0]) == "goose"
-        assert call_args[0][1] == "models"
 
     async def test_list_models_returns_empty_when_no_command(self) -> None:
         provider = ACPProvider(name="Test", command=["test-acp"])
@@ -274,16 +171,10 @@ class TestACPProviderListModels:
 
 
 class TestACPProviderStop:
-    """Tests for ACPProvider.stop()."""
+    async def test_stop_closes_session_and_stack(self) -> None:
+        fake_spawn, mock_conn, mock_process = _mock_spawn_agent_process()
 
-    async def test_stop_terminates_process(self) -> None:
-        mock_proc = MockACPProcess()
-
-        with patch("tak.providers.acp.asyncio") as mock_asyncio:
-            mock_asyncio.create_subprocess_exec = AsyncMock(return_value=mock_proc)
-            mock_asyncio.subprocess = asyncio.subprocess
-            mock_asyncio.wait_for = AsyncMock(return_value=0)
-
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
             provider = ACPProvider(name="Test", command=["test-acp"])
             await provider.spawn("stop-test")
 
@@ -292,11 +183,11 @@ class TestACPProviderStop:
                 provider_name="test",
                 project_path=None,
                 status=AgentStatus.RUNNING,
-                process=mock_proc,  # type: ignore[arg-type]
+                process=mock_process,
             )
             await provider.stop(handle)
 
-            assert mock_proc._terminated
+            mock_conn.close.assert_called_once()
             assert provider.get_session("stop-test") is None
 
     async def test_stop_with_no_process(self) -> None:
@@ -312,8 +203,6 @@ class TestACPProviderStop:
 
 
 class TestACPProviderSend:
-    """Tests for ACPProvider.send() error handling."""
-
     async def test_send_without_session_raises(self) -> None:
         provider = ACPProvider(name="Test", command=["test-acp"])
         handle = AgentHandle(
@@ -324,3 +213,17 @@ class TestACPProviderSend:
         )
         with pytest.raises(RuntimeError, match="No ACP session"):
             await provider.send(handle, "hello")
+
+
+class TestACPProviderCallbacks:
+    def test_set_permission_callback(self) -> None:
+        provider = ACPProvider(name="Test", command=["test-acp"])
+        callback = AsyncMock(return_value="allow-always")
+        provider.set_permission_callback(callback)
+        assert provider._permission_callback is callback
+
+    def test_set_ask_question_callback(self) -> None:
+        provider = ACPProvider(name="Test", command=["test-acp"])
+        callback = AsyncMock(return_value="option-a")
+        provider.set_ask_question_callback(callback)
+        assert provider._ask_question_callback is callback

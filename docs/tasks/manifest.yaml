@@ -372,24 +372,27 @@ phases:
         name: "Daemon startup diagnostic logging (PATH, Python version, CLIs)"
         status: done
       - id: ptf-adopt-acp-sdk
-        name: "Adopt official agent-client-protocol Python SDK (v0.6.2)"
-        status: not_started
+        name: "Adopt official agent-client-protocol Python SDK (v0.8.1)"
+        status: done
         notes: >
-          Replaces hand-rolled ACPSessionManager with typed Pydantic models,
-          spawn_agent_process helper, and protocol-version-aware handshake.
-          Prevents the class of protocol errors found during tryout.
+          Replaced hand-rolled ACPSessionManager with SDK-backed wrapper.
+          TakACPClient implements acp.Client protocol for session_update and
+          request_permission callbacks. spawn_agent_process wires stdio.
+          session_id persisted in state.yaml for future session/load support.
       - id: ptf-ask-empty-response
         name: "tak ask returns empty response (streaming/prompt collection)"
-        status: not_started
+        status: done
         notes: >
-          Agent spawns and runs but tak ask --agent returns empty text.
-          Likely IPC streaming or prompt response collection issue.
+          Fixed by SDK adoption. TakACPClient.session_update() extracts text
+          from AgentMessageChunk.content.text. prompt() waits for SDK's
+          conn.prompt() to complete, draining all queued chunks.
       - id: ptf-setup-iterm-pip
         name: "tak setup should auto-install tak into iterm2env"
-        status: not_started
+        status: done
         notes: >
-          Detect active iterm2env Python, run python3 -m pip install -e.
-          Needs to handle multiple iterm2env-* directories.
+          setup_iterm2_pip() in iterm2.py globs iterm2env/versions/*/bin/python3,
+          runs python3 -m pip install -e. Wired into tak setup tak and
+          standalone tak setup iterm2-pip. Tested with mocks.
       - id: ptf-profile-api-compat
         name: "tak setup profiles: Profile.async_create not found"
         status: not_started
@@ -404,11 +407,10 @@ phases:
           Register asyncio signal handler for SIGTERM.
       - id: ptf-tryout-guide-fixes
         name: "Tryout guide corrections (socket path, cleanup, asdf note)"
-        status: not_started
+        status: done
         notes: >
-          Socket path is ~/.tak/daemon.sock not /tmp/tak.sock.
-          Cleanup needs iterm2env uninstall step.
-          Document asdf set -u python for global resolution.
+          Fixed socket path refs to ~/.tak/daemon.sock. Added iterm2env
+          cleanup step (1b). Added asdf set -u python note in Prerequisites.
       - id: ptf-custom-scripts-folder
         name: "Daemon deploy should check iTerm2 custom scripts folder setting"
         status: not_started

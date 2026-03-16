@@ -1,19 +1,28 @@
 """Configure iTerm2 Python API for tak integration.
 
 Enables the iTerm2 Python API via ``defaults write``, verifies connectivity
-with a short-lived connection test, and prints follow-up instructions the
-user must complete manually (restart, keybindings).
+with a short-lived connection test, installs tak into iTerm2's bundled Python
+environment, and prints follow-up instructions the user must complete manually.
 """
 
 from __future__ import annotations
 
 import asyncio
+import glob
+import subprocess
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from tak.setup._cmd import has_command, run_cmd
 
 if TYPE_CHECKING:
     from rich.console import Console
+
+_ITERM2ENV_GLOB = str(
+    Path.home()
+    / ".config" / "iterm2" / "AppSupport" / "iterm2env"
+    / "versions" / "*" / "bin" / "python3"
+)
 
 _CONNECTION_TIMEOUT = 3.0
 
@@ -86,3 +95,67 @@ def _test_connection(console: Console) -> None:
         console.print(
             "[yellow]⚠[/yellow] Could not connect to iTerm2 — restart may be needed"
         )
+
+
+def _find_iterm2env_python() -> str | None:
+    """Locate the Python interpreter inside iTerm2's bundled environment.
+
+    Uses the unnumbered ``iterm2env/`` directory (not ``iterm2env-NN/``).
+
+    Returns:
+        Absolute path to the ``python3`` binary, or ``None`` if not found.
+    """
+    matches = sorted(glob.glob(_ITERM2ENV_GLOB))
+    return matches[0] if matches else None
+
+
+def setup_iterm2_pip(console: Console, *, dry_run: bool = False) -> bool:
+    """Install tak into iTerm2's bundled Python environment.
+
+    Finds the ``python3`` inside ``~/.config/iterm2/AppSupport/iterm2env/``
+    and runs ``python3 -m pip install -e <project_root>``.  Uses ``-m pip``
+    rather than bare ``pip`` because the pip shebang may point to a stale env.
+
+    Args:
+        console: Rich console for output.
+        dry_run: If True, print what would happen without making changes.
+
+    Returns:
+        True if the install succeeded or was skipped (no iterm2env found).
+    """
+    python_path = _find_iterm2env_python()
+
+    if python_path is None:
+        console.print(
+            "[yellow]⚠[/yellow] iterm2env not found — skipping pip install. "
+            "Run iTerm2 once to create the Python environment."
+        )
+        return True
+
+    project_root = Path(__file__).resolve().parents[3]
+
+    cmd = [python_path, "-m", "pip", "install", "-e", str(project_root)]
+
+    if dry_run:
+        console.print(f"[dim]would run:[/dim] {' '.join(cmd)}")
+        return True
+
+    console.print(f"[dim]Installing tak into iterm2env ({python_path})…[/dim]")
+    try:
+        result = subprocess.run(  # noqa: S603
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            console.print("[green]✓[/green] tak installed into iterm2env")
+            return True
+        console.print(f"[red]✗[/red] pip install failed (exit {result.returncode})")
+        if result.stderr:
+            for line in result.stderr.strip().splitlines()[-3:]:
+                console.print(f"  {line}")
+        return False
+    except Exception as exc:
+        console.print(f"[red]✗[/red] pip install error: {exc}")
+        return False

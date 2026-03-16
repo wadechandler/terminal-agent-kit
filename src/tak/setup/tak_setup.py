@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from tak.setup.fonts import setup_fonts
-from tak.setup.iterm2 import setup_iterm2
+from tak.setup.iterm2 import setup_iterm2, setup_iterm2_pip
 from tak.setup.profiles import setup_profiles
 from tak.setup.shell import setup_shell
 from tak.setup.starship import setup_starship
@@ -37,6 +37,7 @@ def setup_tak(console: Console, *, dry_run: bool = False) -> bool:
 
     for label, fn in (
         ("iTerm2 API", setup_iterm2),
+        ("iTerm2 pip install", setup_iterm2_pip),
         ("Fonts", setup_fonts),
         ("Starship", setup_starship),
         ("Shell config", setup_shell),

@@ -18,6 +18,14 @@ Steps marked **(agent)** can be executed by an AI agent. Steps marked
 Cursor CLI is only needed for the ACP provider. All other commands work without
 it.
 
+> **asdf users**: If you use [asdf](https://asdf-vm.com/) for Python version
+> management, make sure a global Python is set so that `python3` resolves
+> correctly outside of project directories:
+>
+> ```bash
+> asdf set -u python <version>   # e.g. asdf set -u python 3.13.5
+> ```
+
 ## Install
 
 **(agent)**
@@ -134,7 +142,7 @@ approve the script's API access.
 
 ```bash
 # Check if the IPC socket exists
-ls /tmp/tak.sock
+ls ~/.tak/daemon.sock
 
 # List agents (should return empty list if daemon is running)
 tak agents
@@ -181,6 +189,20 @@ rm -f ~/Library/Application\ Support/iTerm2/Scripts/AutoLaunch/tak_daemon.py
 
 **(human)** Restart iTerm2.
 
+### 1b. Uninstall tak from iterm2env
+
+**(agent)**
+
+If you ran `tak setup iterm2-pip` (or `tak setup tak`), tak was installed into
+iTerm2's bundled Python. Remove it:
+
+```bash
+pip_python=$(ls ~/.config/iterm2/AppSupport/iterm2env/versions/*/bin/python3 2>/dev/null | head -1)
+if [ -n "$pip_python" ]; then
+    "$pip_python" -m pip uninstall -y terminal-agent-kit
+fi
+```
+
 ### 2. Revert iTerm2 API Setting
 
 **(agent)**
@@ -221,7 +243,6 @@ sed -i.bak '/# -- tak managed start --/,/# -- tak managed end --/d' ~/.bashrc
 
 ```bash
 rm -rf ~/.tak
-rm -f /tmp/tak.sock
 ```
 
 ### 6. Uninstall tak
@@ -243,7 +264,7 @@ brew uninstall starship
 
 ## Troubleshooting
 
-**"daemon not running"**: The IPC socket at `/tmp/tak.sock` doesn't exist.
+**"daemon not running"**: The IPC socket at `~/.tak/daemon.sock` doesn't exist.
 Verify the daemon symlink exists and iTerm2 has been restarted with API enabled.
 
 **Connection test fails during `tak setup iterm2`**: iTerm2 may need a restart

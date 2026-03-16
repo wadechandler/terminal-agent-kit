@@ -59,6 +59,7 @@ class StateManager:
                     "model": a.model,
                     "status": a.status.value,
                     "tabs": a.associated_tabs,
+                    "acp_session_id": a.acp_session_id,
                 }
                 for a in agents
                 if a.status == AgentStatus.RUNNING

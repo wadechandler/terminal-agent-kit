@@ -2,9 +2,9 @@
 
 ACP (Agent Client Protocol) uses JSON-RPC 2.0 over stdio. This provider
 can spawn any ACP-compatible agent binary and manage the full session
-lifecycle: initialize, authenticate, session/new, session/prompt.
+lifecycle via the official ``agent-client-protocol`` SDK.
 
-Reference: https://cursor.com/docs/cli/acp
+Reference: https://agentclientprotocol.com/protocol
 """
 
 from __future__ import annotations
@@ -13,12 +13,16 @@ import asyncio
 import logging
 import os
 import shutil
+from contextlib import AsyncExitStack
 from typing import TYPE_CHECKING
+
+from acp import spawn_agent_process
 
 from tak.providers.acp_session import (
     ACPSessionManager,
     AskQuestionCallback,
     PermissionCallback,
+    TakACPClient,
 )
 from tak.providers.base import BaseProvider, InteractionModel
 
@@ -58,9 +62,9 @@ def _subprocess_env() -> dict[str, str]:
 class ACPProvider(BaseProvider):
     """Generic ACP provider for any ACP-compliant agent.
 
-    Each spawned agent gets its own ``ACPSessionManager`` that handles
-    the JSON-RPC session lifecycle, streamed updates, and permission
-    request relay.
+    Each spawned agent gets its own ``ACPSessionManager`` backed by the
+    official ACP SDK, handling the JSON-RPC session lifecycle, streamed
+    updates, and permission request relay.
 
     Args:
         name: Human-readable provider name (e.g. ``"Cursor (ACP)"``).
@@ -101,6 +105,7 @@ class ACPProvider(BaseProvider):
         self._permission_callback = permission_callback
         self._ask_question_callback = ask_question_callback
         self._sessions: dict[str, ACPSessionManager] = {}
+        self._exit_stacks: dict[str, AsyncExitStack] = {}
 
     @property
     def name(self) -> str:
@@ -125,7 +130,7 @@ class ACPProvider(BaseProvider):
         """
         self._permission_callback = callback
         for session in self._sessions.values():
-            session._permission_callback = callback
+            session.permission_callback = callback
 
     def set_ask_question_callback(self, callback: AskQuestionCallback) -> None:
         """Set the ask-question callback for all future and existing sessions.
@@ -135,7 +140,7 @@ class ACPProvider(BaseProvider):
         """
         self._ask_question_callback = callback
         for session in self._sessions.values():
-            session._ask_question_callback = callback
+            session.ask_question_callback = callback
 
     async def spawn(
         self,
@@ -147,8 +152,8 @@ class ACPProvider(BaseProvider):
     ) -> asyncio.subprocess.Process:
         """Spawn the ACP subprocess and complete the ACP handshake.
 
-        Runs ``initialize`` → ``authenticate`` (unless ``auth_method="none"``)
-        → ``session/new`` before returning.
+        Uses the SDK's ``spawn_agent_process`` to wire stdio and manage
+        the connection lifecycle.
 
         Args:
             agent_name: Name for this agent instance.
@@ -168,20 +173,19 @@ class ACPProvider(BaseProvider):
         if resolved:
             cmd[0] = resolved
 
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            env=env,
-        )
-
-        session = ACPSessionManager(
-            process,
+        client = TakACPClient(
             agent_name=agent_name,
             permission_callback=self._permission_callback,
             ask_question_callback=self._ask_question_callback,
         )
+
+        stack = AsyncExitStack()
+        conn, process = await stack.enter_async_context(
+            spawn_agent_process(client, cmd[0], *cmd[1:], env=env)
+        )
+        self._exit_stacks[agent_name] = stack
+
+        session = ACPSessionManager(conn, client, agent_name=agent_name)
         self._sessions[agent_name] = session
 
         await session.initialize()
@@ -264,7 +268,7 @@ class ACPProvider(BaseProvider):
             await session.cancel()
 
     async def stop(self, handle: AgentHandle) -> None:
-        """Terminate the ACP subprocess gracefully, with kill fallback.
+        """Terminate the ACP subprocess gracefully via the SDK.
 
         Args:
             handle: The agent to stop.
@@ -273,14 +277,16 @@ class ACPProvider(BaseProvider):
         if session is not None:
             await session.close()
 
-        if handle.process is None:
-            return
-        handle.process.terminate()
-        try:
-            await asyncio.wait_for(handle.process.wait(), timeout=10.0)
-        except TimeoutError:
-            handle.process.kill()
-            await handle.process.wait()
+        stack = self._exit_stacks.pop(handle.name, None)
+        if stack is not None:
+            await stack.aclose()
+        elif handle.process is not None:
+            handle.process.terminate()
+            try:
+                await asyncio.wait_for(handle.process.wait(), timeout=10.0)
+            except TimeoutError:
+                handle.process.kill()
+                await handle.process.wait()
 
     async def list_models(self) -> list[str]:
         """Query the models command for available model names.

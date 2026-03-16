@@ -73,6 +73,17 @@ class AgentHandle:
     status: AgentStatus = AgentStatus.STOPPED
     process: asyncio.subprocess.Process | None = None
     associated_tabs: list[str] = field(default_factory=list)
+    acp_session_id: str | None = None
+
+
+def _extract_session_id(provider: BaseProvider, agent_name: str) -> str | None:
+    """Extract the ACP session ID from a provider after spawn, if available."""
+    get_session = getattr(provider, "get_session", None)
+    if get_session is not None:
+        session = get_session(agent_name)
+        if session is not None:
+            return getattr(session, "session_id", None)
+    return None
 
 
 class AgentManager:
@@ -158,6 +169,7 @@ class AgentManager:
                 name, project_path=project_path, model=model
             )
             handle.status = AgentStatus.RUNNING
+            handle.acp_session_id = _extract_session_id(provider, name)
         except Exception:
             handle.status = AgentStatus.ERROR
             raise
@@ -239,6 +251,7 @@ class AgentManager:
             project_path = _Path(project_path_str) if project_path_str else None
             model: str | None = agent_data.get("model")
             tabs: list[str] = list(agent_data.get("tabs", []))
+            acp_session_id: str | None = agent_data.get("acp_session_id")
 
             handle = AgentHandle(
                 name=name,
@@ -247,6 +260,7 @@ class AgentManager:
                 model=model,
                 status=AgentStatus.STARTING,
                 associated_tabs=tabs,
+                acp_session_id=acp_session_id,
             )
             self._agents[name] = handle
 
@@ -255,6 +269,7 @@ class AgentManager:
                     name, project_path=project_path, model=model
                 )
                 handle.status = AgentStatus.RUNNING
+                handle.acp_session_id = _extract_session_id(provider, name)
                 logger.info("Restored agent %r (provider=%s)", name, provider_name)
             except Exception as exc:
                 logger.error("Failed to restore agent %r: %s", name, exc)
