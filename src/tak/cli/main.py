@@ -29,7 +29,7 @@ def _daemon_available() -> bool:
 # ---------------------------------------------------------------------------
 
 
-@click.group()
+@click.group(context_settings={"max_content_width": 120})
 @click.version_option(package_name="terminal-agent-kit")
 def cli() -> None:
     """Terminal Agent Kit (tak) -- Forging your terminal into an agentic environment."""
@@ -40,13 +40,46 @@ def cli() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _detect_session_id() -> str | None:
+    """Detect the terminal session ID via the active driver."""
+    from tak.drivers.iterm2.driver import ITerm2Driver
+
+    return ITerm2Driver.detect_session_id()
+
+
+_PERMISSION_CHOICES = ["prompt", "reject", "auto-allow", "yolo"]
+
+
 @cli.command()
 @click.argument("provider", default="cursor-acp")
 @click.option("--name", "-n", required=True, help="Name for this agent instance")
 @click.option("--project", "-p", default=None, help="Project folder path")
 @click.option("--model", "-m", default=None, help="Model name (e.g. claude-sonnet-4)")
-def spawn(provider: str, name: str, project: str | None, model: str | None) -> None:
+@click.option(
+    "--no-associate", is_flag=True, default=False,
+    help="Do not auto-associate the current terminal tab",
+)
+@click.option(
+    "--permissions", "permission_policy", default="prompt",
+    type=click.Choice(_PERMISSION_CHOICES, case_sensitive=False),
+    help="Permission policy for tool calls (default: prompt)",
+)
+def spawn(
+    provider: str,
+    name: str,
+    project: str | None,
+    model: str | None,
+    no_associate: bool,
+    permission_policy: str,
+) -> None:
     """Spawn a new agent instance."""
+    if permission_policy == "yolo":
+        click.echo(
+            "Warning: yolo mode grants irrevocable per-tool permissions "
+            "for this session.",
+            err=True,
+        )
+
     if not _daemon_available():
         click.echo(f"Spawning agent '{name}' with provider '{provider}'...")
         if project:
@@ -58,11 +91,23 @@ def spawn(provider: str, name: str, project: str | None, model: str | None) -> N
 
     from tak.ipc.client import send_request
 
-    params = {"name": name, "provider": provider}
+    params: dict[str, object] = {"name": name, "provider": provider}
     if project:
         params["project_path"] = project
     if model:
         params["model"] = model
+    params["permission_policy"] = permission_policy
+
+    if not no_associate:
+        session_id = _detect_session_id()
+        if session_id:
+            params["session_id"] = session_id
+        else:
+            click.echo(
+                "Note: No terminal session detected; "
+                "skipping tab auto-association.",
+                err=True,
+            )
 
     resp = _run_async(send_request("spawn", params))
     if resp.success:
@@ -134,7 +179,10 @@ def stop(name: str) -> None:
 @click.argument("query", nargs=-1, required=True)
 @click.option("--agent", "-a", default=None, help="Target a specific agent by name")
 def ask(query: tuple[str, ...], agent: str | None) -> None:
-    """Send a question to an agent (uses ad-hoc agent if --agent is omitted)."""
+    """Send a question to an agent.
+
+    Uses the agent associated with the current tab, or ad-hoc if none.
+    """
     full_query = " ".join(query)
 
     if not _daemon_available():
@@ -148,7 +196,11 @@ def ask(query: tuple[str, ...], agent: str | None) -> None:
     if agent:
         params["agent"] = agent
     else:
-        params["use_adhoc"] = True
+        session_id = _detect_session_id()
+        if session_id:
+            params["session_id"] = session_id
+        else:
+            params["use_adhoc"] = True
 
     resp = _run_async(send_request("ask", params))
     if resp.success:
@@ -224,6 +276,74 @@ def rename(old_name: str, new_name: str) -> None:
     if resp.success:
         data = resp.data or {}
         click.echo(f"Renamed '{data.get('old_name')}' → '{data.get('new_name')}'")
+    else:
+        click.echo(f"Error: {resp.error}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument("agent_name")
+@click.option(
+    "--session-id", "-s", default=None,
+    help="iTerm2 session ID (defaults to $ITERM_SESSION_ID)",
+)
+def associate(agent_name: str, session_id: str | None) -> None:
+    """Associate the current terminal tab with a named agent."""
+    effective_session_id = session_id or _detect_session_id() or ""
+    if not effective_session_id:
+        click.echo(
+            "Error: No session ID. Run this inside iTerm2 "
+            "(needs $ITERM_SESSION_ID) or pass --session-id.",
+            err=True,
+        )
+        sys.exit(1)
+
+    if not _daemon_available():
+        click.echo("Error: daemon not running.", err=True)
+        sys.exit(1)
+
+    from tak.ipc.client import send_request
+
+    resp = _run_async(
+        send_request("associate", {"agent": agent_name, "session_id": effective_session_id})
+    )
+    if resp.success:
+        click.echo(f"Associated this tab with agent '{agent_name}'.")
+    else:
+        click.echo(f"Error: {resp.error}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument("agent_name")
+@click.argument(
+    "policy",
+    type=click.Choice(_PERMISSION_CHOICES, case_sensitive=False),
+)
+def permissions(agent_name: str, policy: str) -> None:
+    """Set the permission policy for a running agent.
+
+    POLICY is one of: prompt, reject, auto-allow, yolo.
+    """
+    if policy == "yolo":
+        click.echo(
+            "Warning: yolo mode grants irrevocable per-tool permissions. "
+            "Already-allowed tools cannot be revoked without restarting the agent.",
+            err=True,
+        )
+
+    if not _daemon_available():
+        click.echo("Error: daemon not running.", err=True)
+        sys.exit(1)
+
+    from tak.ipc.client import send_request
+
+    resp = _run_async(
+        send_request("set_permissions", {"agent": agent_name, "policy": policy})
+    )
+    if resp.success:
+        data = resp.data or {}
+        click.echo(f"Permission policy for '{agent_name}' set to '{data.get('policy')}'.")
     else:
         click.echo(f"Error: {resp.error}", err=True)
         sys.exit(1)

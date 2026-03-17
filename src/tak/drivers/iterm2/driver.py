@@ -9,6 +9,7 @@ as required by iTerm2's user-defined variable scope.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from tak.drivers.base import BaseDriver
@@ -125,6 +126,11 @@ class ITerm2Driver(BaseDriver):
         """Send text to a session as simulated keystrokes."""
         session = await self._get_session(session_id)
         await session.async_send_text(text)
+
+    @staticmethod
+    def detect_session_id() -> str | None:
+        """Detect the iTerm2 session ID from ``$ITERM_SESSION_ID``."""
+        return os.environ.get("ITERM_SESSION_ID")
 
     def _ensure_connected(self) -> None:
         """Raise if not connected to iTerm2."""

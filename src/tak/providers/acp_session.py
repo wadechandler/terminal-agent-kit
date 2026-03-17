@@ -218,6 +218,8 @@ class ACPSessionManager:
         self._agent_name = agent_name
         self._state = ACPSessionState.DISCONNECTED
         self._session_id: str | None = None
+        self._current_model_id: str | None = None
+        self._current_model_name: str | None = None
 
     @property
     def state(self) -> ACPSessionState:
@@ -228,6 +230,16 @@ class ACPSessionManager:
     def session_id(self) -> str | None:
         """Return the active session ID, if any."""
         return self._session_id
+
+    @property
+    def current_model_id(self) -> str | None:
+        """Return the model ID reported by the agent, if known."""
+        return self._current_model_id
+
+    @property
+    def current_model_name(self) -> str | None:
+        """Return the human-readable model name, if known."""
+        return self._current_model_name
 
     @property
     def permission_callback(self) -> PermissionCallback | None:
@@ -295,14 +307,40 @@ class ACPSessionManager:
         self._session_id = result.session_id or ""
         self._state = ACPSessionState.SESSION_ACTIVE
 
+        models_by_id: dict[str, str] = {}
+        if result.models is not None:
+            self._current_model_id = result.models.current_model_id
+            models_by_id = {
+                m.model_id: m.name for m in result.models.available_models
+            }
+            self._current_model_name = models_by_id.get(
+                self._current_model_id, self._current_model_id
+            )
+            logger.info(
+                "Agent %s: model=%s, available=%s",
+                self._agent_name or "?",
+                self._current_model_name,
+                list(models_by_id.values()),
+            )
+
         if model and self._session_id:
             try:
                 await self._conn.set_session_model(
                     model_id=model,
                     session_id=self._session_id,
                 )
-            except (RequestError, Exception):
-                logger.debug("set_session_model not supported; model param ignored")
+                self._current_model_id = model
+                self._current_model_name = models_by_id.get(model, model)
+            except RequestError as exc:
+                if exc.code == -32601:
+                    logger.debug("set_session_model not supported; model param ignored")
+                else:
+                    logger.warning(
+                        "Failed to set model %r: %s (code=%d)",
+                        model, exc, exc.code,
+                    )
+            except Exception:
+                logger.debug("set_session_model failed unexpectedly", exc_info=True)
 
         if mode != "agent" and self._session_id:
             try:

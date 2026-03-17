@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tak.core.agent_manager import AgentHandle, AgentStatus
+from tak.core.agent_manager import AgentHandle, AgentStatus, PermissionPolicy
 from tak.core.state import StateManager
 
 
@@ -213,3 +213,49 @@ class TestAutoSave:
         manager.auto_save(agents, {})
         loaded = manager.load()
         assert loaded["agents"][name]["model"] == "gpt-4o"
+
+
+class TestStateSavesPermissionPolicy:
+    def test_save_includes_permission_policy(self, tmp_state_dir: Path) -> None:
+        manager = StateManager(state_dir=tmp_state_dir)
+        agents = [
+            AgentHandle(
+                name="policy-agent",
+                provider_name="mock",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+                permission_policy=PermissionPolicy.AUTO_ALLOW,
+            ),
+        ]
+        manager.save(agents, {})
+        loaded = manager.load()
+        assert loaded["agents"]["policy-agent"]["permission_policy"] == "auto-allow"
+
+    def test_save_default_policy_is_prompt(self, tmp_state_dir: Path) -> None:
+        manager = StateManager(state_dir=tmp_state_dir)
+        agents = [
+            AgentHandle(
+                name="default-agent",
+                provider_name="mock",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+            ),
+        ]
+        manager.save(agents, {})
+        loaded = manager.load()
+        assert loaded["agents"]["default-agent"]["permission_policy"] == "prompt"
+
+    def test_save_yolo_policy(self, tmp_state_dir: Path) -> None:
+        manager = StateManager(state_dir=tmp_state_dir)
+        agents = [
+            AgentHandle(
+                name="yolo-agent",
+                provider_name="mock",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+                permission_policy=PermissionPolicy.YOLO,
+            ),
+        ]
+        manager.save(agents, {})
+        loaded = manager.load()
+        assert loaded["agents"]["yolo-agent"]["permission_policy"] == "yolo"

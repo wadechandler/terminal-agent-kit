@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 
-from tak.core.agent_manager import AgentManager, AgentStatus
+from tak.core.agent_manager import AgentManager, AgentStatus, PermissionPolicy
 from tak.core.session_registry import SessionRegistry
 from tak.core.state import StateManager
 from tak.drivers.iterm2.daemon import _restore_full_state
@@ -180,6 +180,55 @@ class TestRestoreFullState:
         await _restore_full_state(agent_manager, registry, state_manager, set())
 
         assert agent_manager.get("orphan-agent") is None
+
+    async def test_restores_permission_policy(
+        self,
+        agent_manager: AgentManager,
+        registry: SessionRegistry,
+        state_manager: StateManager,
+    ) -> None:
+        _write_state(state_manager, {
+            "agents": {
+                "yolo-agent": {
+                    "provider": "mock",
+                    "project_path": None,
+                    "model": None,
+                    "tabs": [],
+                    "permission_policy": "yolo",
+                }
+            },
+            "associations": {},
+        })
+
+        await _restore_full_state(agent_manager, registry, state_manager, set())
+
+        handle = agent_manager.get("yolo-agent")
+        assert handle is not None
+        assert handle.permission_policy == PermissionPolicy.YOLO
+
+    async def test_missing_permission_policy_defaults_to_prompt(
+        self,
+        agent_manager: AgentManager,
+        registry: SessionRegistry,
+        state_manager: StateManager,
+    ) -> None:
+        _write_state(state_manager, {
+            "agents": {
+                "old-agent": {
+                    "provider": "mock",
+                    "project_path": None,
+                    "model": None,
+                    "tabs": [],
+                }
+            },
+            "associations": {},
+        })
+
+        await _restore_full_state(agent_manager, registry, state_manager, set())
+
+        handle = agent_manager.get("old-agent")
+        assert handle is not None
+        assert handle.permission_policy == PermissionPolicy.PROMPT
 
     async def test_state_file_updated_after_recovery(
         self,

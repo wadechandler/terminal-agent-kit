@@ -109,3 +109,13 @@ class BaseDriver(ABC):
     async def register_trigger(self, pattern: str, callback_name: str) -> None:
         """Register a trigger pattern that invokes a callback. Optional."""
         raise NotImplementedError
+
+    @staticmethod
+    def detect_session_id() -> str | None:
+        """Detect the terminal session ID from the environment.
+
+        Each driver overrides this to check its specific env var
+        (e.g. ``$ITERM_SESSION_ID`` for iTerm2). Returns ``None``
+        if not running inside that terminal.
+        """
+        return None

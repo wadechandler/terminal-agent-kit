@@ -123,11 +123,159 @@ class TestAskCommand:
         resp = MagicMock(
             success=True, data={"agent": "my-agent", "response": "42"}
         )
-        result = _invoke_with_daemon(
-            ["ask", "meaning", "of", "life"], ipc_response=resp
-        )
+        with patch("tak.cli.main._detect_session_id", return_value=None):
+            result = _invoke_with_daemon(
+                ["ask", "meaning", "of", "life"], ipc_response=resp
+            )
         assert result.exit_code == 0
         assert "42" in result.output
+
+    def test_ask_with_session_id_resolves_agent(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "tab-agent", "response": "hello"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value="sess-abc"),
+        ):
+            result = CliRunner().invoke(cli, ["ask", "hi"])
+        assert result.exit_code == 0
+        assert "hello" in result.output
+
+
+class TestAssociateCommand:
+    def test_associate_no_session_id_no_env_fails(self) -> None:
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._detect_session_id", return_value=None),
+        ):
+            result = CliRunner().invoke(cli, ["associate", "my-agent"])
+        assert result.exit_code != 0
+        combined = result.output + str(result.exception or "")
+        assert "session ID" in result.output or "session ID" in combined
+
+    def test_associate_no_daemon_fails(self) -> None:
+        with patch("tak.cli.main._detect_session_id", return_value="sess-123"):
+            result = _invoke_no_daemon(["associate", "my-agent"])
+        assert result.exit_code != 0
+
+    def test_associate_with_daemon_success(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "session_id": "sess-123"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value="sess-123"),
+        ):
+            result = CliRunner().invoke(cli, ["associate", "my-agent"])
+        assert result.exit_code == 0
+        assert "Associated" in result.output
+
+    def test_associate_with_explicit_session_id(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "session_id": "explicit-id"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+        ):
+            result = CliRunner().invoke(
+                cli, ["associate", "my-agent", "--session-id", "explicit-id"]
+            )
+        assert result.exit_code == 0
+
+
+class TestPermissionsCommand:
+    def test_permissions_no_daemon_fails(self) -> None:
+        result = _invoke_no_daemon(["permissions", "my-agent", "reject"])
+        assert result.exit_code != 0
+
+    def test_permissions_with_daemon_success(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "policy": "auto-allow"}
+        )
+        result = _invoke_with_daemon(
+            ["permissions", "my-agent", "auto-allow"], ipc_response=resp
+        )
+        assert result.exit_code == 0
+        assert "auto-allow" in result.output
+
+    def test_permissions_yolo_prints_warning(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "policy": "yolo"}
+        )
+        result = _invoke_with_daemon(
+            ["permissions", "my-agent", "yolo"], ipc_response=resp
+        )
+        assert result.exit_code == 0
+        assert "irrevocable" in result.output
+
+    def test_permissions_invalid_choice_fails(self) -> None:
+        result = CliRunner().invoke(cli, ["permissions", "my-agent", "invalid"])
+        assert result.exit_code != 0
+
+
+class TestSpawnAutoAssociation:
+    def test_spawn_no_associate_flag(self) -> None:
+        resp = MagicMock(
+            success=True, data={"name": "test-agent", "status": "running"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+        ):
+            result = CliRunner().invoke(
+                cli, ["spawn", "--name", "test-agent", "--no-associate"]
+            )
+        assert result.exit_code == 0
+        assert "spawned" in result.output
+
+    def test_spawn_with_permissions_yolo_warns(self) -> None:
+        resp = MagicMock(
+            success=True, data={"name": "test-agent", "status": "running"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value=None),
+        ):
+            result = CliRunner().invoke(
+                cli,
+                ["spawn", "--name", "test-agent", "--permissions", "yolo"],
+            )
+        assert result.exit_code == 0
+        assert "irrevocable" in result.output
+
+    def test_spawn_auto_detects_session(self) -> None:
+        resp = MagicMock(
+            success=True, data={"name": "test-agent", "status": "running"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value="sess-auto"),
+        ):
+            result = CliRunner().invoke(
+                cli, ["spawn", "--name", "test-agent"]
+            )
+        assert result.exit_code == 0
+
+    def test_spawn_no_session_warns(self) -> None:
+        resp = MagicMock(
+            success=True, data={"name": "test-agent", "status": "running"}
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value=None),
+        ):
+            result = CliRunner().invoke(
+                cli, ["spawn", "--name", "test-agent"]
+            )
+        assert result.exit_code == 0
+        assert "No terminal session" in result.output
 
 
 class TestSwitchCommand:

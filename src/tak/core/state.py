@@ -60,6 +60,7 @@ class StateManager:
                     "status": a.status.value,
                     "tabs": a.associated_tabs,
                     "acp_session_id": a.acp_session_id,
+                    "permission_policy": a.permission_policy.value,
                 }
                 for a in agents
                 if a.status == AgentStatus.RUNNING

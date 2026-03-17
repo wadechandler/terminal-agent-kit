@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from tak.core.agent_manager import AgentManager, AgentStatus, validate_agent_name
+from tak.core.agent_manager import (
+    AgentManager,
+    AgentStatus,
+    PermissionPolicy,
+    validate_agent_name,
+)
 from tak.core.session_registry import SessionRegistry
 from tak.core.state import StateManager
 
@@ -187,6 +192,44 @@ class TestGetByProvider:
         assert mock_agents[0].name == "mock-agent"
         assert len(second_agents) == 1
         assert second_agents[0].name == "second-agent"
+
+
+class TestPermissionPolicy:
+    async def test_default_policy_is_prompt(
+        self, agent_manager: AgentManager
+    ) -> None:
+        handle = await agent_manager.spawn("test-agent", "mock")
+        assert handle.permission_policy == PermissionPolicy.PROMPT
+
+    async def test_spawn_with_custom_policy(
+        self, agent_manager: AgentManager
+    ) -> None:
+        handle = await agent_manager.spawn(
+            "yolo-agent", "mock", permission_policy=PermissionPolicy.YOLO
+        )
+        assert handle.permission_policy == PermissionPolicy.YOLO
+
+    async def test_spawn_with_auto_allow_policy(
+        self, agent_manager: AgentManager
+    ) -> None:
+        handle = await agent_manager.spawn(
+            "auto-agent", "mock", permission_policy=PermissionPolicy.AUTO_ALLOW
+        )
+        assert handle.permission_policy == PermissionPolicy.AUTO_ALLOW
+
+    async def test_spawn_with_reject_policy(
+        self, agent_manager: AgentManager
+    ) -> None:
+        handle = await agent_manager.spawn(
+            "reject-agent", "mock", permission_policy=PermissionPolicy.REJECT
+        )
+        assert handle.permission_policy == PermissionPolicy.REJECT
+
+    def test_permission_policy_values(self) -> None:
+        assert PermissionPolicy.PROMPT.value == "prompt"
+        assert PermissionPolicy.REJECT.value == "reject"
+        assert PermissionPolicy.AUTO_ALLOW.value == "auto-allow"
+        assert PermissionPolicy.YOLO.value == "yolo"
 
 
 class TestStateSaveCallbacks:

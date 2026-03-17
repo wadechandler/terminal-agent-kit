@@ -38,7 +38,9 @@ def _ensure_tak_importable() -> None:
 
     real_path = os.path.realpath(__file__)
     # daemon.py lives at <project>/src/tak/drivers/iterm2/daemon.py
-    src_dir = os.path.normpath(os.path.join(os.path.dirname(real_path), os.pardir, os.pardir, os.pardir))
+    src_dir = os.path.normpath(
+        os.path.join(os.path.dirname(real_path), os.pardir, os.pardir, os.pardir)
+    )
     if os.path.isdir(os.path.join(src_dir, "tak")) and src_dir not in sys.path:
         sys.path.insert(0, src_dir)
 
@@ -115,8 +117,6 @@ async def main(connection: Any) -> None:
 
     manager = AgentManager()
     for provider_name, provider in providers.items():
-        if isinstance(provider, ACPProvider):
-            _wire_permission_relay(provider, registry, connection)
         manager.register_provider(provider_name, provider)
 
     if not providers:
@@ -126,9 +126,12 @@ async def main(connection: Any) -> None:
         from tak.providers.cursor_acp import CursorACPProvider
 
         fallback = CursorACPProvider()
-        _wire_permission_relay(fallback, registry, connection)
         manager.register_provider("cursor-acp", fallback)
         providers = {"cursor-acp": fallback}
+
+    for _provider_name, provider in providers.items():
+        if isinstance(provider, ACPProvider):
+            _wire_permission_relay(provider, registry, connection, manager)
 
     state_mgr = StateManager()
     manager.set_state_manager(state_mgr, registry)
@@ -157,6 +160,7 @@ async def main(connection: Any) -> None:
         agent_manager=manager,
         providers=providers,
         adhoc_manager=adhoc_mgr,
+        session_registry=registry,
     )
     await ipc.start()
 
@@ -257,42 +261,79 @@ def _wire_permission_relay(
     provider: ACPProvider,
     registry: SessionRegistry,
     connection: Any,
+    agent_manager: AgentManager,
 ) -> None:
-    """Set up callbacks so headless ACP permission requests are relayed to the terminal.
+    """Set up callbacks so headless ACP permission requests use per-agent policy.
 
-    When an ACP agent sends ``session/request_permission``, the callback:
-    1. Finds the terminal session associated with the requesting agent
-    2. Injects a prompt asking the user to allow/deny/always
-    3. Reads the user's keystroke via ``iterm2.KeystrokeMonitor``
-    4. Returns the decision to the ACP subprocess
+    The callback consults the agent's ``permission_policy`` to decide how to
+    respond.  Only the ``PROMPT`` policy actually relays to the terminal tab;
+    the others respond automatically with appropriate logging.
 
     Args:
         provider: An :class:`~tak.providers.acp.ACPProvider` instance.
         registry: The session registry for tab-agent lookups.
         connection: The ``iterm2.Connection`` for keystroke monitoring.
+        agent_manager: The ``AgentManager`` for looking up agent handles.
     """
+    from tak.core.agent_manager import PermissionPolicy
 
     async def handle_permission(request: PermissionRequest) -> str:
         import iterm2
 
         description = request.description or request.tool_name
         agent_name = request.agent_name
+        handle = agent_manager.get(agent_name) if agent_name else None
+        policy = handle.permission_policy if handle else PermissionPolicy.REJECT
+
         logger.info(
-            "Permission request from %s: %s (tool=%s)",
+            "Permission request from %s: %s (tool=%s, policy=%s)",
             agent_name or "unknown",
             description,
             request.tool_name,
+            policy.value,
         )
+
+        if policy == PermissionPolicy.YOLO:
+            logger.warning(
+                "yolo: granting allow-always for %s on agent %s "
+                "(irrevocable this session)",
+                request.tool_name,
+                agent_name,
+            )
+            return "allow-always"
+
+        if policy == PermissionPolicy.AUTO_ALLOW:
+            logger.info(
+                "auto-allow: granting %s on agent %s",
+                request.tool_name,
+                agent_name,
+            )
+            return "allow-once"
+
+        if policy == PermissionPolicy.REJECT:
+            logger.info(
+                "reject: denying %s on agent %s",
+                request.tool_name,
+                agent_name,
+            )
+            return "reject-once"
 
         session_id = _find_session_for_agent(registry, agent_name)
         if session_id is None:
-            logger.warning("No terminal session for agent %s; auto-rejecting", agent_name)
+            logger.warning(
+                "No tab for agent %s (policy=prompt); rejecting",
+                agent_name,
+            )
             return "reject-once"
 
         app = await iterm2.async_get_app(connection)
         session = app.get_session_by_id(session_id)
         if session is None:
-            logger.warning("Session %s not found; auto-rejecting", session_id)
+            logger.warning(
+                "Session %s not found for agent %s; rejecting",
+                session_id,
+                agent_name,
+            )
             return "reject-once"
 
         prompt_text = (

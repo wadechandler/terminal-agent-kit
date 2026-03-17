@@ -62,6 +62,18 @@ class AgentStatus(Enum):
     ERROR = "error"
 
 
+class PermissionPolicy(Enum):
+    """Per-agent permission policy for tool-call requests.
+
+    Controls how the daemon responds to ACP ``request_permission`` calls.
+    """
+
+    PROMPT = "prompt"
+    REJECT = "reject"
+    AUTO_ALLOW = "auto-allow"
+    YOLO = "yolo"
+
+
 @dataclass
 class AgentHandle:
     """Tracks a managed agent instance."""
@@ -74,6 +86,7 @@ class AgentHandle:
     process: asyncio.subprocess.Process | None = None
     associated_tabs: list[str] = field(default_factory=list)
     acp_session_id: str | None = None
+    permission_policy: PermissionPolicy = PermissionPolicy.PROMPT
 
 
 def _extract_session_id(provider: BaseProvider, agent_name: str) -> str | None:
@@ -83,6 +96,23 @@ def _extract_session_id(provider: BaseProvider, agent_name: str) -> str | None:
         session = get_session(agent_name)
         if session is not None:
             return getattr(session, "session_id", None)
+    return None
+
+
+def _extract_model_display(provider: BaseProvider, agent_name: str) -> str | None:
+    """Extract a display-friendly model name from the agent's session.
+
+    Prefers the human-readable ``current_model_name`` (e.g. "Claude Sonnet 4")
+    over the raw ``current_model_id`` (e.g. "default[]").
+    """
+    get_session = getattr(provider, "get_session", None)
+    if get_session is not None:
+        session = get_session(agent_name)
+        if session is not None:
+            name = getattr(session, "current_model_name", None)
+            if name:
+                return name
+            return getattr(session, "current_model_id", None)
     return None
 
 
@@ -128,6 +158,7 @@ class AgentManager:
         provider_name: str,
         project_path: Path | None = None,
         model: str | None = None,
+        permission_policy: PermissionPolicy | None = None,
     ) -> AgentHandle:
         """Spawn a new agent subprocess.
 
@@ -136,6 +167,8 @@ class AgentManager:
             provider_name: Registered provider to use.
             project_path: Optional project directory for the agent.
             model: Optional model name (e.g. ``claude-sonnet-4``).
+            permission_policy: Permission policy for tool-call requests.
+                Defaults to ``PermissionPolicy.PROMPT``.
 
         Returns:
             The ``AgentHandle`` for the new agent.
@@ -161,6 +194,7 @@ class AgentManager:
             project_path=project_path,
             model=model,
             status=AgentStatus.STARTING,
+            permission_policy=permission_policy or PermissionPolicy.PROMPT,
         )
         self._agents[name] = handle
 
@@ -170,6 +204,8 @@ class AgentManager:
             )
             handle.status = AgentStatus.RUNNING
             handle.acp_session_id = _extract_session_id(provider, name)
+            if not handle.model:
+                handle.model = _extract_model_display(provider, name)
         except Exception:
             handle.status = AgentStatus.ERROR
             raise
@@ -253,6 +289,12 @@ class AgentManager:
             tabs: list[str] = list(agent_data.get("tabs", []))
             acp_session_id: str | None = agent_data.get("acp_session_id")
 
+            policy_str = agent_data.get("permission_policy", "prompt")
+            try:
+                policy = PermissionPolicy(policy_str)
+            except ValueError:
+                policy = PermissionPolicy.PROMPT
+
             handle = AgentHandle(
                 name=name,
                 provider_name=provider_name,
@@ -261,6 +303,7 @@ class AgentManager:
                 status=AgentStatus.STARTING,
                 associated_tabs=tabs,
                 acp_session_id=acp_session_id,
+                permission_policy=policy,
             )
             self._agents[name] = handle
 
@@ -270,6 +313,8 @@ class AgentManager:
                 )
                 handle.status = AgentStatus.RUNNING
                 handle.acp_session_id = _extract_session_id(provider, name)
+                if not handle.model:
+                    handle.model = _extract_model_display(provider, name)
                 logger.info("Restored agent %r (provider=%s)", name, provider_name)
             except Exception as exc:
                 logger.error("Failed to restore agent %r: %s", name, exc)

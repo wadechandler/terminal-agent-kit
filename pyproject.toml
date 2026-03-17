@@ -75,6 +75,7 @@ convention = "google"
 "tests/**" = ["D", "S101"]
 "**/__init__.py" = ["D104"]
 "src/tak/setup/starship.py" = ["RUF001"]
+"src/tak/drivers/iterm2/daemon.py" = ["I001"]  # imports split by _ensure_tak_importable()
 
 [tool.mypy]
 python_version = "3.11"

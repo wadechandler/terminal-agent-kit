@@ -8,12 +8,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from tak.core.agent_manager import PermissionPolicy
 from tak.ipc.server import IPCServer
 
 if TYPE_CHECKING:
     from conftest import MockProvider
 
     from tak.core.agent_manager import AgentManager
+    from tak.core.session_registry import SessionRegistry
 
 
 @pytest.fixture
@@ -44,6 +46,22 @@ def ipc_server_with_provider(
         agent_manager=agent_manager,
         socket_path=socket_path,
         providers={"mock": mock_provider},
+    )
+
+
+@pytest.fixture
+def ipc_server_with_registry(
+    agent_manager: AgentManager,
+    session_registry: SessionRegistry,
+    mock_provider: MockProvider,
+    short_tmp: Path,
+) -> IPCServer:
+    socket_path = short_tmp / "tr.sock"
+    return IPCServer(
+        agent_manager=agent_manager,
+        socket_path=socket_path,
+        providers={"mock": mock_provider},
+        session_registry=session_registry,
     )
 
 
@@ -323,6 +341,54 @@ class TestIPCServerAsk:
         finally:
             await ipc_server_with_provider.stop()
 
+    async def test_ask_resolves_agent_from_session_id(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+        session_registry: SessionRegistry,
+    ) -> None:
+        await agent_manager.spawn("tab-agent", "mock")
+        session_registry.associate("sess-lookup", "tab-agent")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "hi", "session_id": "sess-lookup"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "tab-agent"
+            assert resp.data["response"] == "mock response"
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_ask_resolves_agent_from_handle_tabs_fallback(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+        session_registry: SessionRegistry,
+    ) -> None:
+        """Registry doesn't have the mapping but handle.associated_tabs does."""
+        handle = await agent_manager.spawn("orphan-tab-agent", "mock")
+        handle.associated_tabs.append("sess-orphan")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "ask",
+                params={"message": "hi", "session_id": "sess-orphan"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "orphan-tab-agent"
+
+            assert session_registry.get_agent("sess-orphan") == "orphan-tab-agent"
+        finally:
+            await ipc_server_with_registry.stop()
+
 
 class TestIPCServerAdHocAsk:
     async def test_ask_adhoc_spawns_and_responds(
@@ -362,3 +428,235 @@ class TestIPCServerAdHocAsk:
             assert "Ad-hoc" in (resp.error or "")
         finally:
             await ipc_server.stop()
+
+
+class TestIPCServerAssociate:
+    async def test_associate_links_session_to_agent(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("assoc-agent", "mock")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "associate",
+                params={"agent": "assoc-agent", "session_id": "sess-abc"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "assoc-agent"
+            assert resp.data["session_id"] == "sess-abc"
+
+            handle = agent_manager.get("assoc-agent")
+            assert handle is not None
+            assert "sess-abc" in handle.associated_tabs
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_associate_missing_agent_returns_error(
+        self,
+        ipc_server_with_registry: IPCServer,
+    ) -> None:
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "associate",
+                params={"agent": "ghost", "session_id": "sess-abc"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert not resp.success
+            assert "ghost" in (resp.error or "")
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_associate_missing_session_id_returns_error(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("assoc-agent", "mock")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "associate",
+                params={"agent": "assoc-agent"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert not resp.success
+            assert "session_id" in (resp.error or "")
+        finally:
+            await ipc_server_with_registry.stop()
+
+
+class TestIPCServerSetPermissions:
+    async def test_set_permissions_updates_policy(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("perm-agent", "mock")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "set_permissions",
+                params={"agent": "perm-agent", "policy": "auto-allow"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+            assert resp.data["policy"] == "auto-allow"
+
+            handle = agent_manager.get("perm-agent")
+            assert handle is not None
+            assert handle.permission_policy == PermissionPolicy.AUTO_ALLOW
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_set_permissions_yolo(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("yolo-agent", "mock")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "set_permissions",
+                params={"agent": "yolo-agent", "policy": "yolo"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+            assert resp.data["policy"] == "yolo"
+
+            handle = agent_manager.get("yolo-agent")
+            assert handle is not None
+            assert handle.permission_policy == PermissionPolicy.YOLO
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_set_permissions_invalid_policy_returns_error(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await agent_manager.spawn("perm-agent", "mock")
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "set_permissions",
+                params={"agent": "perm-agent", "policy": "invalid"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert not resp.success
+            assert "Invalid policy" in (resp.error or "")
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_set_permissions_missing_agent_returns_error(
+        self,
+        ipc_server_with_registry: IPCServer,
+    ) -> None:
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "set_permissions",
+                params={"agent": "ghost", "policy": "reject"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert not resp.success
+            assert "ghost" in (resp.error or "")
+        finally:
+            await ipc_server_with_registry.stop()
+
+
+class TestIPCServerSpawnWithAssociation:
+    async def test_spawn_with_session_id_auto_associates(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "spawn",
+                params={
+                    "name": "auto-agent",
+                    "provider": "mock",
+                    "session_id": "sess-xyz",
+                    "permission_policy": "auto-allow",
+                },
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+
+            handle = agent_manager.get("auto-agent")
+            assert handle is not None
+            assert "sess-xyz" in handle.associated_tabs
+            assert handle.permission_policy == PermissionPolicy.AUTO_ALLOW
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_spawn_without_session_id_no_association(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "spawn",
+                params={"name": "plain-agent", "provider": "mock"},
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+
+            handle = agent_manager.get("plain-agent")
+            assert handle is not None
+            assert handle.associated_tabs == []
+            assert handle.permission_policy == PermissionPolicy.PROMPT
+        finally:
+            await ipc_server_with_registry.stop()
+
+    async def test_spawn_with_yolo_policy(
+        self,
+        ipc_server_with_registry: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        await ipc_server_with_registry.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "spawn",
+                params={
+                    "name": "yolo-spawn",
+                    "provider": "mock",
+                    "permission_policy": "yolo",
+                },
+                socket_path=ipc_server_with_registry.socket_path,
+            )
+            assert resp.success
+
+            handle = agent_manager.get("yolo-spawn")
+            assert handle is not None
+            assert handle.permission_policy == PermissionPolicy.YOLO
+        finally:
+            await ipc_server_with_registry.stop()

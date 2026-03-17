@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=
 # Terminal Agent Kit (tak) -- Task Manifest
 # Tracks all phases, tasks, and research questions.
 # Status: not_started | in_progress | research | done | blocked | deferred
@@ -417,6 +418,99 @@ phases:
       - id: ptf-troubleshooting-guide
         name: "Add troubleshooting guide (Script Console, common errors)"
         status: not_started
+      - id: ptf-relay-context-object
+        name: "Refactor _wire_permission_relay to accept a context dataclass"
+        status: not_started
+        notes: >
+          Replace growing parameter list (registry, connection, agent_manager, ...)
+          with a single context dataclass. Avoids adding a new param every time
+          a new dependency is needed by the permission callback.
+      - id: ptf-active-driver-registry
+        name: "Introduce active driver concept for multi-terminal support"
+        status: not_started
+        notes: >
+          Today the daemon hardcodes iTerm2 and the CLI hardcodes
+          ITerm2Driver.detect_session_id(). When a second terminal driver is
+          added, the daemon should register its driver type on startup (e.g.
+          via state file or IPC driver_info response) so the CLI can discover
+          which driver is active and call the right detect_session_id() without
+          hardcoding.
+      - id: ptf-cross-terminal-safety
+        name: "Defensive handling for cross-terminal CLI/daemon mismatches"
+        status: not_started
+        notes: >
+          Scenarios: (1) daemon is iTerm2 but CLI runs from Kitty/Terminal.app --
+          session IDs are meaningless cross-terminal, permissions can't be relayed;
+          (2) multiple daemons from different terminals fighting over the socket;
+          (3) CLI from a non-terminal context (VS Code, SSH, CI). The daemon
+          should expose its driver type via IPC so the CLI can detect mismatches
+          and warn clearly. Consider socket namespacing per driver
+          (daemon-iterm2.sock) if multi-daemon support is needed. Graceful
+          degradation: commands that don't need tab association should still
+          work cross-terminal.
+      - id: ptf-invalid-model-feedback
+        name: "Surface invalid model errors back to the CLI user"
+        status: not_started
+        notes: >
+          When tak spawn --model <bad-id> is given and set_session_model fails
+          (e.g. -32602 Invalid params), the daemon logs a warning but the CLI
+          user sees no indication the model switch failed. The IPC spawn
+          response should carry a warnings list so the CLI can print
+          "Warning: model 'bad-id' not accepted by agent; using default
+          <actual-model>." Requires extending IPCResponse with an optional
+          warnings field and updating the CLI to display them.
+      - id: ptf-models-command
+        name: "tak models command to list available models for a provider/agent"
+        status: not_started
+        notes: >
+          Add a tak models [agent|provider] command. For a running agent, query
+          the ACP session's NewSessionResponse.models.available_models to list
+          model IDs the agent supports. For a provider not yet spawned, use the
+          agent CLI's list-models command if available (e.g. cursor agent models).
+          Display as a table with model ID and whether it's the current model.
+          Requires an IPC handler and possibly caching the available_models list
+          on ACPSessionManager after new_session().
+      - id: ptf-prompt-policy-rejects-unexpectedly
+        name: "PROMPT policy rejects tool calls when tab lookup fails"
+        status: not_started
+        priority: high
+        notes: >
+          Observed with a named agent (test-agent) that had a tab association.
+          Under PROMPT policy, handle_permission calls _find_session_for_agent
+          which checks the SessionRegistry. If the registry lookup returns None
+          (e.g. race during restore, stale registry after daemon restart, or
+          iTerm2 session ID changed), the callback rejects even though the
+          agent has a tab in handle.associated_tabs. Two sub-issues:
+          (1) The permission callback only checks SessionRegistry, not
+          handle.associated_tabs as a fallback (unlike _resolve_agent_for_session
+          in server.py which does both). Fix: mirror the fallback logic.
+          (2) The _adhoc agent is spawned with no tab at all -- under PROMPT it
+          will always reject. Fix: ad-hoc should default to AUTO_ALLOW or the
+          ask command should auto-associate the caller's tab.
+          (3) Race during restore: agent process spawns and may request
+          permissions before _restore_full_state finishes re-populating the
+          registry. Fix: restore associations before spawning agent processes,
+          or queue permission requests until restore completes.
+      - id: ptf-spawn-cwd-default
+        name: "Default CWD to caller's directory when --project is omitted"
+        status: not_started
+        priority: high
+        notes: >
+          When tak spawn or tak ask runs without --project, no project_path is
+          sent to the daemon. acp_session.new_session() falls back to cwd="."
+          which resolves to the daemon's CWD (typically / for iTerm2 AutoLaunch).
+          Fix: CLI should send os.getcwd() as project_path when --project is not
+          given. Also applies to the ad-hoc agent flow in tak ask -- the ask
+          command should forward the caller's CWD so the agent operates in the
+          right directory.
+      - id: ptf-model-display-name
+        name: "Show human-readable model name instead of raw model ID"
+        status: done
+        notes: >
+          ACP NewSessionResponse.models.available_models carries both model_id
+          (e.g. "default[]") and name (e.g. "Default"). Updated
+          ACPSessionManager to capture current_model_name and agent_manager to
+          prefer it for display. tak agents now shows the readable name.
 
   # ------------------------------------------------------------------
   # New phases identified during gap analysis (2026-03-16)
