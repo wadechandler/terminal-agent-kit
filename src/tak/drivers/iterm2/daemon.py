@@ -18,6 +18,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
+import signal
 import sys
 from typing import TYPE_CHECKING, Any
 
@@ -55,6 +57,8 @@ if TYPE_CHECKING:
     from tak.providers.base import BaseProvider
 
 logger = logging.getLogger(__name__)
+
+_ITERM_SESSION_PREFIX_RE = re.compile(r"^w\d+t\d+p\d+:")
 
 _PERMISSION_TIMEOUT = 120.0
 _PERIODIC_SAVE_INTERVAL = 30.0
@@ -143,6 +147,11 @@ async def main(connection: Any) -> None:
         for tab in window.tabs
         for session in tab.sessions
     }
+    logger.info(
+        "iTerm2 app: %d window(s), %d session(s)",
+        len(app.windows),
+        len(available_sessions),
+    )
     await _restore_full_state(manager, registry, state_mgr, available_sessions)
 
     adhoc_config = default_config.get("adhoc", {})
@@ -156,11 +165,19 @@ async def main(connection: Any) -> None:
         auto_stop_after=adhoc_auto_stop,
     )
 
+    async def _activate_tab(session_id: str) -> None:
+        app = await iterm2.async_get_app(connection)
+        target = app.get_session_by_id(session_id)
+        if target is None:
+            raise ValueError(f"Tab session {session_id} no longer exists")
+        await target.async_activate(select_tab=True, order_window_front=True)
+
     ipc = IPCServer(
         agent_manager=manager,
         providers=providers,
         adhoc_manager=adhoc_mgr,
         session_registry=registry,
+        activate_tab=_activate_tab,
     )
     await ipc.start()
 
@@ -181,10 +198,21 @@ async def main(connection: Any) -> None:
         len(providers),
     )
 
+    shutdown_event = asyncio.Event()
+
+    def _request_shutdown(sig: int) -> None:
+        logger.info("Received %s, initiating graceful shutdown", signal.Signals(sig).name)
+        shutdown_event.set()
+
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, _request_shutdown, sig)
+
     try:
-        await asyncio.Event().wait()
+        await shutdown_event.wait()
     finally:
         periodic_task.cancel()
+        await _graceful_shutdown(manager, ipc)
         state_mgr.save(manager.list_agents(), registry.all_associations())
         logger.info("tak daemon stopped")
 
@@ -208,6 +236,34 @@ async def _periodic_save(
             logger.debug("Periodic state save complete")
         except Exception as exc:
             logger.warning("Periodic state save failed: %s", exc)
+
+
+async def _graceful_shutdown(
+    manager: AgentManager,
+    ipc: Any,
+) -> None:
+    """Stop all running agents and shut down the IPC server.
+
+    Called during graceful shutdown (SIGTERM/SIGINT). Each agent is stopped
+    with a short timeout so the daemon doesn't hang indefinitely.
+
+    Args:
+        manager: The ``AgentManager`` with running agents to stop.
+        ipc: The ``IPCServer`` to shut down.
+    """
+    for handle in list(manager.running_agents()):
+        try:
+            await asyncio.wait_for(manager.stop(handle.name), timeout=5.0)
+            logger.info("Stopped agent %r", handle.name)
+        except TimeoutError:
+            logger.warning("Timed out stopping agent %r; abandoning", handle.name)
+        except Exception:
+            logger.exception("Error stopping agent %r", handle.name)
+
+    try:
+        await ipc.stop()
+    except Exception:
+        logger.debug("Error stopping IPC server", exc_info=True)
 
 
 def _build_providers_from_config(
@@ -319,6 +375,12 @@ def _wire_permission_relay(
             return "reject-once"
 
         session_id = _find_session_for_agent(registry, agent_name)
+        if session_id is None and handle is not None and handle.associated_tabs:
+            session_id = handle.associated_tabs[0]
+            logger.debug(
+                "Registry miss for %s; using handle.associated_tabs[0]=%s",
+                agent_name, session_id,
+            )
         if session_id is None:
             logger.warning(
                 "No tab for agent %s (policy=prompt); rejecting",
@@ -451,6 +513,22 @@ async def _read_keystroke_decision(connection: Any, session_id: str) -> str:
     return "reject-once"
 
 
+def _strip_session_prefix(session_id: str) -> str:
+    """Strip the ``w0t0p0:`` prefix from an iTerm2 session ID.
+
+    ``$ITERM_SESSION_ID`` uses the form ``w<W>t<T>p<P>:<UUID>`` but the
+    iTerm2 Python API's ``session.session_id`` returns just the UUID.
+    This helper normalises both forms to the bare UUID so they can be
+    compared reliably.
+    """
+    return _ITERM_SESSION_PREFIX_RE.sub("", session_id)
+
+
+def _session_exists(session_id: str, available_uuids: set[str]) -> bool:
+    """Check whether *session_id* (possibly prefixed) exists in iTerm2."""
+    return _strip_session_prefix(session_id) in available_uuids
+
+
 async def _restore_full_state(
     manager: AgentManager,
     registry: SessionRegistry,
@@ -464,6 +542,10 @@ async def _restore_full_state(
     associations are restored only for sessions that still exist in the
     current iTerm2 app.  Missing sessions are logged as warnings.
 
+    Session IDs from ``$ITERM_SESSION_ID`` include a ``w0t0p0:`` prefix
+    while the Python API returns bare UUIDs.  Comparisons are normalised
+    via :func:`_session_exists` so both forms match.
+
     After recovery ``StateManager.save()`` is called to update the state
     file to reflect any changes (e.g. disappeared tabs).
 
@@ -471,16 +553,32 @@ async def _restore_full_state(
         manager: The ``AgentManager`` to populate.
         registry: The session registry to restore associations into.
         state_mgr: The ``StateManager`` for loading and saving state.
-        available_sessions: Set of currently active iTerm2 session IDs.
+        available_sessions: Set of currently active iTerm2 session IDs
+            (bare UUIDs as returned by the Python API).
     """
     state = state_mgr.load()
     agents_state: dict[str, Any] = state.get("agents", {})
     associations: dict[str, str] = state.get("associations", {})
 
+    logger.info(
+        "State file: %d agent(s), %d association(s)",
+        len(agents_state),
+        len(associations),
+    )
+    for sid, aname in associations.items():
+        logger.info("  association: session=%s -> agent=%s", sid, aname)
+    for aname, adata in agents_state.items():
+        logger.info(
+            "  agent state: %s, tabs=%s",
+            aname, adata.get("tabs", []),
+        )
+
+    available_uuids = {_strip_session_prefix(s) for s in available_sessions}
+
     await manager.restore(agents_state)
 
     for session_id, agent_name in associations.items():
-        if session_id in available_sessions:
+        if _session_exists(session_id, available_uuids):
             registry.associate(session_id, agent_name)
             handle = manager.get(agent_name)
             if handle is not None and session_id not in handle.associated_tabs:
@@ -490,6 +588,18 @@ async def _restore_full_state(
                 "Session %s no longer exists; skipping re-association for agent %s",
                 session_id,
                 agent_name,
+            )
+
+    for handle in manager.running_agents():
+        before = len(handle.associated_tabs)
+        handle.associated_tabs = [
+            t for t in handle.associated_tabs
+            if _session_exists(t, available_uuids)
+        ]
+        pruned = before - len(handle.associated_tabs)
+        if pruned:
+            logger.info(
+                "Pruned %d stale tab(s) from agent %r", pruned, handle.name
             )
 
     state_mgr.save(manager.list_agents(), registry.all_associations())

@@ -20,7 +20,9 @@ _MARKER_END = "# -- tak managed end --"
 
 _MANAGED_BLOCK = f"""\
 {_MARKER_START}
-eval "$(starship init bash)"
+if [[ $- == *i* ]]; then
+    eval "$(starship init bash)"
+fi
 {_MARKER_END}
 """
 
@@ -50,9 +52,19 @@ def setup_shell(
     if bashrc_path.exists():
         content = bashrc_path.read_text()
         if _MARKER_START in content:
-            console.print(
-                "[green]✓[/green] .bashrc already configured (tak marker found)"
-            )
+            existing_block = _extract_managed_block(content)
+            expected_block = _MANAGED_BLOCK.strip()
+            if existing_block == expected_block:
+                console.print(
+                    "[green]✓[/green] .bashrc already configured (tak marker found)"
+                )
+                return True
+            if dry_run:
+                console.print("[dim]would update:[/dim] tak managed block in .bashrc")
+            else:
+                updated = _replace_managed_block(content, _MANAGED_BLOCK.strip())
+                bashrc_path.write_text(updated)
+                console.print("[green]✓[/green] Updated tak managed block in .bashrc")
             return True
         if dry_run:
             console.print(f"[dim]would append:[/dim] tak managed block to {bashrc_path}")
@@ -67,6 +79,26 @@ def setup_shell(
         console.print("[green]✓[/green] Created .bashrc with tak managed block")
 
     return True
+
+
+def _extract_managed_block(content: str) -> str:
+    """Extract the managed block (markers included) from bashrc content."""
+    start = content.find(_MARKER_START)
+    end = content.find(_MARKER_END)
+    if start == -1 or end == -1:
+        return ""
+    return content[start:end + len(_MARKER_END)].strip()
+
+
+def _replace_managed_block(content: str, new_block: str) -> str:
+    """Replace the managed block in bashrc content with a new version."""
+    start = content.find(_MARKER_START)
+    end = content.find(_MARKER_END)
+    if start == -1 or end == -1:
+        return content
+    before = content[:start]
+    after = content[end + len(_MARKER_END):]
+    return before + new_block + after
 
 
 def _check_bash_version(console: Console) -> None:

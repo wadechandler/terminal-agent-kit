@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,6 +15,25 @@ from tak.providers.acp import ACPProvider
 from tak.providers.base import InteractionModel
 
 
+def _model(model_id: str, display_name: str) -> SimpleNamespace:
+    return SimpleNamespace(model_id=model_id, name=display_name)
+
+
+_REALISTIC_MODELS = SimpleNamespace(
+    current_model_id="default[]",
+    available_models=[
+        _model("default[]", "Auto"),
+        _model("claude-sonnet-4-6[thinking=true,context=200k,effort=medium]", "Sonnet 4.6"),
+        _model("gpt-5.4[reasoning=medium,context=272k,fast=false]", "GPT-5.4"),
+    ],
+)
+
+_REALISTIC_MODES = SimpleNamespace(
+    current_mode_id="agent",
+    available_modes=[SimpleNamespace(id="agent", name="Agent")],
+)
+
+
 def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
     """Create a mock for spawn_agent_process that returns a mock conn and process."""
     mock_conn = AsyncMock()
@@ -22,7 +42,11 @@ def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
         agent_capabilities=MagicMock(load_session=False),
     ))
     mock_conn.authenticate = AsyncMock(return_value=MagicMock())
-    mock_conn.new_session = AsyncMock(return_value=MagicMock(session_id="test-session-id"))
+    mock_conn.new_session = AsyncMock(return_value=SimpleNamespace(
+        session_id="test-session-id",
+        models=_REALISTIC_MODELS,
+        modes=_REALISTIC_MODES,
+    ))
     mock_conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     mock_conn.cancel = AsyncMock()
     mock_conn.close = AsyncMock()
@@ -98,12 +122,24 @@ class TestACPProviderSpawn:
 
         with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
             provider = ACPProvider(name="Goose", command=["goose", "acp"])
-            await provider.spawn("my-agent", model="llama3")
+            await provider.spawn("my-agent", model="gpt-5.4")
 
             mock_conn.set_session_model.assert_called_once_with(
-                model_id="llama3",
+                model_id="gpt-5.4[reasoning=medium,context=272k,fast=false]",
                 session_id="test-session-id",
             )
+
+    async def test_spawn_resolves_model_name(self) -> None:
+        fake_spawn, _mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"])
+            await provider.spawn("my-agent")
+
+            session = provider.get_session("my-agent")
+            assert session is not None
+            assert session.current_model_name == "Auto"
+            assert session.current_model_id == "default[]"
 
     async def test_spawn_skips_authenticate_when_auth_none(self) -> None:
         fake_spawn, mock_conn, _ = _mock_spawn_agent_process()

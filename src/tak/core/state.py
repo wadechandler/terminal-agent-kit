@@ -57,6 +57,7 @@ class StateManager:
                     "provider": a.provider_name,
                     "project_path": str(a.project_path) if a.project_path else None,
                     "model": a.model,
+                    "model_id": a.model_id,
                     "status": a.status.value,
                     "tabs": a.associated_tabs,
                     "acp_session_id": a.acp_session_id,

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
     from tak.core.agent_manager import AgentManager
     from tak.core.session_registry import SessionRegistry
     from tak.providers.base import BaseProvider
+
+ActivateTabCallback = Callable[[str], Coroutine[Any, Any, None]]
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,7 @@ class IPCServer:
         providers: dict[str, BaseProvider] | None = None,
         adhoc_manager: AdHocManager | None = None,
         session_registry: SessionRegistry | None = None,
+        activate_tab: ActivateTabCallback | None = None,
     ) -> None:
         """Create an IPC server.
 
@@ -45,6 +49,8 @@ class IPCServer:
                 the ``ask`` method to send prompts directly to a provider session.
             adhoc_manager: Optional ``AdHocManager`` for ad-hoc ask requests.
             session_registry: Optional session registry for tab-agent associations.
+            activate_tab: Optional async callback to bring a terminal session
+                to the foreground.  Accepts a session ID string.
         """
         self._manager = agent_manager
         self._socket_path = socket_path or DEFAULT_SOCKET_PATH
@@ -52,6 +58,7 @@ class IPCServer:
         self._providers = providers or {}
         self._adhoc_manager = adhoc_manager
         self._registry = session_registry
+        self._activate_tab = activate_tab
 
     @property
     def socket_path(self) -> Path:
@@ -111,13 +118,17 @@ class IPCServer:
         """Route a request to the appropriate handler."""
         handlers: dict[str, Any] = {
             "list_agents": self._handle_list_agents,
+            "list_providers": self._handle_list_providers,
             "spawn": self._handle_spawn,
             "stop": self._handle_stop,
+            "remove": self._handle_remove,
             "status": self._handle_status,
             "ask": self._handle_ask,
+            "prompt": self._handle_ask,
             "rename_agent": self._handle_rename_agent,
             "associate": self._handle_associate,
             "set_permissions": self._handle_set_permissions,
+            "switch": self._handle_switch,
         }
 
         handler = handlers.get(request.method)
@@ -169,6 +180,12 @@ class IPCServer:
             for h in agents
         ]
 
+    async def _handle_list_providers(
+        self, params: dict[str, Any]
+    ) -> list[dict[str, str]]:
+        """Return metadata for all registered providers."""
+        return self._manager.list_providers()
+
     async def _handle_spawn(self, params: dict[str, Any]) -> dict[str, str]:
         """Spawn a new agent.
 
@@ -215,6 +232,12 @@ class IPCServer:
         handle = self._manager.get(name)
         status = handle.status.value if handle else "unknown"
         return {"name": name, "status": status}
+
+    async def _handle_remove(self, params: dict[str, Any]) -> dict[str, str]:
+        """Remove an agent entirely (stops it first if running)."""
+        name = params["name"]
+        await self._manager.remove(name)
+        return {"name": name, "status": "removed"}
 
     async def _handle_status(self, params: dict[str, Any]) -> dict[str, Any] | None:
         """Get status of a specific agent."""
@@ -338,6 +361,7 @@ class IPCServer:
         if session_id not in handle.associated_tabs:
             handle.associated_tabs.append(session_id)
 
+        self._manager._auto_save()
         logger.info("Associated session %s with agent %s", session_id, agent_name)
         return {"agent": agent_name, "session_id": session_id}
 
@@ -370,3 +394,31 @@ class IPCServer:
         self._manager._auto_save()
         logger.info("Set permission policy for %s to %s", agent_name, policy.value)
         return {"agent": agent_name, "policy": policy.value}
+
+    async def _handle_switch(self, params: dict[str, Any]) -> dict[str, str]:
+        """Switch to a terminal tab associated with the named agent.
+
+        When multiple tabs are associated, activates the most recently
+        associated one (last in the list).
+
+        Params:
+            name: The agent name to switch to.
+        """
+        agent_name = params.get("name", "")
+        if not agent_name:
+            raise ValueError("agent name is required")
+
+        handle = self._manager.get(agent_name)
+        if handle is None:
+            raise ValueError(f"No agent named '{agent_name}'")
+
+        if not handle.associated_tabs:
+            raise ValueError(f"Agent '{agent_name}' has no associated tabs")
+
+        if self._activate_tab is None:
+            raise ValueError("Tab activation not available (no terminal driver)")
+
+        target_session = handle.associated_tabs[-1]
+        await self._activate_tab(target_session)
+        logger.info("Switched to tab %s for agent %s", target_session, agent_name)
+        return {"agent": agent_name, "session_id": target_session}

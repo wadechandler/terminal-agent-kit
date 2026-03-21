@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from rich.console import Console
 
-from tak.setup.shell import _MARKER_END, _MARKER_START, setup_shell
+from tak.setup.shell import _MANAGED_BLOCK, _MARKER_END, _MARKER_START, setup_shell
 
 
 def _make_console() -> tuple[Console, StringIO]:
@@ -38,9 +38,9 @@ def _bash3() -> subprocess.CompletedProcess[str]:
 
 
 class TestSetupShell:
-    def test_marker_already_present(self, tmp_path: Path) -> None:
+    def test_marker_already_present_and_current(self, tmp_path: Path) -> None:
         bashrc = tmp_path / ".bashrc"
-        bashrc.write_text(f"{_MARKER_START}\neval ...\n{_MARKER_END}\n")
+        bashrc.write_text(_MANAGED_BLOCK)
         con, buf = _make_console()
 
         with (
@@ -51,6 +51,24 @@ class TestSetupShell:
 
         assert ok is True
         assert "already configured" in buf.getvalue()
+
+    def test_stale_managed_block_is_upgraded(self, tmp_path: Path) -> None:
+        bashrc = tmp_path / ".bashrc"
+        old_block = f'{_MARKER_START}\neval "$(starship init bash)"\n{_MARKER_END}\n'
+        bashrc.write_text(f"export FOO=bar\n\n{old_block}")
+        con, buf = _make_console()
+
+        with (
+            patch("tak.setup.shell.has_command", return_value=True),
+            patch("tak.setup.shell.run_cmd", return_value=_bash5()),
+        ):
+            ok = setup_shell(con, bashrc_path=bashrc)
+
+        assert ok is True
+        assert "Updated tak managed block" in buf.getvalue()
+        content = bashrc.read_text()
+        assert "if [[ $- == *i* ]]" in content
+        assert "export FOO=bar" in content
 
     def test_appends_to_existing_bashrc(self, tmp_path: Path) -> None:
         bashrc = tmp_path / ".bashrc"

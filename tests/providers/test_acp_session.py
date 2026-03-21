@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -13,18 +14,63 @@ from tak.providers.acp_session import (
     ACPSessionState,
     PermissionRequest,
     TakACPClient,
+    _resolve_model_id,
+    _resolve_model_name,
 )
 
 
-def _make_conn_mock() -> AsyncMock:
+def _model(model_id: str, display_name: str) -> SimpleNamespace:
+    return SimpleNamespace(model_id=model_id, name=display_name)
+
+
+def _mode(mode_id: str, display_name: str) -> SimpleNamespace:
+    return SimpleNamespace(id=mode_id, name=display_name)
+
+
+REALISTIC_MODELS = SimpleNamespace(
+    current_model_id="default[]",
+    available_models=[
+        _model("default[]", "Auto"),
+        _model("claude-sonnet-4-6[thinking=true,context=200k,effort=medium]", "Sonnet 4.6"),
+        _model("claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]", "Opus 4.6"),
+        _model("gpt-5.4[reasoning=medium,context=272k,fast=false]", "GPT-5.4"),
+        _model("gemini-3-flash[]", "Gemini 3 Flash"),
+    ],
+)
+
+REALISTIC_MODES = SimpleNamespace(
+    current_mode_id="agent",
+    available_modes=[
+        _mode("agent", "Agent"),
+        _mode("plan", "Plan"),
+        _mode("ask", "Ask"),
+    ],
+)
+
+
+def _make_new_session_response(
+    session_id: str = "sess-abc-123",
+    models: SimpleNamespace | None = REALISTIC_MODELS,
+    modes: SimpleNamespace | None = REALISTIC_MODES,
+) -> SimpleNamespace:
+    """Build a ``NewSessionResponse``-like mock with realistic payloads."""
+    return SimpleNamespace(session_id=session_id, models=models, modes=modes)
+
+
+def _make_conn_mock(
+    new_session_response: MagicMock | None = None,
+) -> AsyncMock:
     """Create a mock ClientSideConnection with standard ACP methods."""
+    if new_session_response is None:
+        new_session_response = _make_new_session_response()
+
     conn = AsyncMock()
     conn.initialize = AsyncMock(return_value=MagicMock(
         protocol_version=1,
         agent_capabilities=MagicMock(load_session=False),
     ))
     conn.authenticate = AsyncMock(return_value=MagicMock())
-    conn.new_session = AsyncMock(return_value=MagicMock(session_id="sess-abc-123"))
+    conn.new_session = AsyncMock(return_value=new_session_response)
     conn.load_session = AsyncMock(return_value=MagicMock(session_id="resumed-sess"))
     conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     conn.cancel = AsyncMock()
@@ -87,6 +133,26 @@ class TestInitializeAuthenticateHandshake:
         assert session.session_id == "sess-abc-123"
         assert session.state == ACPSessionState.SESSION_ACTIVE
 
+    async def test_new_session_resolves_model_name(self) -> None:
+        session, _conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session()
+
+        assert session.current_model_id == "default[]"
+        assert session.current_model_name == "Auto"
+
+    async def test_new_session_with_no_models(self) -> None:
+        resp = _make_new_session_response(models=None)
+        conn = _make_conn_mock(new_session_response=resp)
+        session, _, _ = _make_session(conn=conn)
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session()
+
+        assert session.current_model_id is None
+        assert session.current_model_name is None
+
     async def test_new_session_passes_cwd(self) -> None:
         session, conn, _ = _make_session()
         await session.initialize()
@@ -95,14 +161,57 @@ class TestInitializeAuthenticateHandshake:
 
         conn.new_session.assert_called_once_with(cwd="/tmp/proj", mcp_servers=[])  # noqa: S108
 
-    async def test_new_session_sets_model(self) -> None:
+    async def test_new_session_sets_model_exact_match(self) -> None:
         session, conn, _ = _make_session()
         await session.initialize()
         await session.authenticate()
-        await session.new_session(model="claude-sonnet-4")
+        await session.new_session(
+            model="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+        )
 
         conn.set_session_model.assert_called_once_with(
-            model_id="claude-sonnet-4",
+            model_id="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+            session_id="sess-abc-123",
+        )
+
+    async def test_new_session_resolves_bracketless_model(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(model="gemini-3-flash")
+
+        conn.set_session_model.assert_called_once_with(
+            model_id="gemini-3-flash[]",
+            session_id="sess-abc-123",
+        )
+
+    async def test_new_session_skips_set_when_model_already_active(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(model="default[]")
+
+        conn.set_session_model.assert_not_called()
+        assert session.current_model_id == "default[]"
+        assert session.current_model_name == "Auto"
+
+    async def test_new_session_skips_set_for_display_name_of_current(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(model="Auto")
+
+        conn.set_session_model.assert_not_called()
+        assert session.current_model_id == "default[]"
+
+    async def test_new_session_sets_model_for_different_display_name(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(model="Sonnet 4.6")
+
+        conn.set_session_model.assert_called_once_with(
+            model_id="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
             session_id="sess-abc-123",
         )
 
@@ -305,3 +414,89 @@ class TestCallbackProperties:
         callback = AsyncMock(return_value="option-a")
         session.ask_question_callback = callback
         assert session.ask_question_callback is callback
+
+
+# Model ID → display name resolution based on real Cursor ACP payloads
+# (see docs/research/agents/cursor-acp-behavior/raw_responses.json).
+
+_CURSOR_MODELS: dict[str, str] = {
+    "default[]": "Auto",
+    "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]": "Sonnet 4.6",
+    "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]": "Opus 4.6",
+    "gpt-5.4[reasoning=medium,context=272k,fast=false]": "GPT-5.4",
+    "gemini-3-flash[]": "Gemini 3 Flash",
+    "gpt-5.1[reasoning=medium]": "GPT-5.1",
+}
+
+
+class TestResolveModelName:
+    """Unit tests for _resolve_model_name()."""
+
+    def test_exact_match(self) -> None:
+        assert _resolve_model_name("default[]", _CURSOR_MODELS) == "Auto"
+
+    def test_exact_match_with_params(self) -> None:
+        mid = "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+        assert _resolve_model_name(mid, _CURSOR_MODELS) == "Sonnet 4.6"
+
+    def test_bracket_stripped_fallback(self) -> None:
+        assert _resolve_model_name("default", _CURSOR_MODELS) == "Auto"
+
+    def test_bracket_stripped_complex(self) -> None:
+        assert _resolve_model_name("gpt-5.4", _CURSOR_MODELS) == "GPT-5.4"
+
+    def test_case_insensitive_fallback(self) -> None:
+        assert _resolve_model_name("DEFAULT[]", _CURSOR_MODELS) == "Auto"
+
+    def test_none_input(self) -> None:
+        assert _resolve_model_name(None, _CURSOR_MODELS) is None
+
+    def test_empty_catalog(self) -> None:
+        assert _resolve_model_name("default[]", {}) == "default[]"
+
+    def test_unknown_model_returns_raw_id(self) -> None:
+        assert _resolve_model_name("nonexistent", _CURSOR_MODELS) == "nonexistent"
+
+
+class TestResolveModelId:
+    """Unit tests for _resolve_model_id()."""
+
+    def test_exact_match(self) -> None:
+        assert _resolve_model_id("default[]", _CURSOR_MODELS) == "default[]"
+
+    def test_bracketless_resolves_to_canonical(self) -> None:
+        assert _resolve_model_id("default", _CURSOR_MODELS) == "default[]"
+
+    def test_bracketless_with_params(self) -> None:
+        result = _resolve_model_id("gpt-5.4", _CURSOR_MODELS)
+        assert result == "gpt-5.4[reasoning=medium,context=272k,fast=false]"
+
+    def test_case_insensitive(self) -> None:
+        assert _resolve_model_id("DEFAULT[]", _CURSOR_MODELS) == "default[]"
+
+    def test_unknown_returns_unchanged(self) -> None:
+        assert _resolve_model_id("fake-model", _CURSOR_MODELS) == "fake-model"
+
+    def test_empty_catalog_returns_unchanged(self) -> None:
+        assert _resolve_model_id("gpt-5.4", {}) == "gpt-5.4"
+
+    def test_gemini_bracketless(self) -> None:
+        assert _resolve_model_id("gemini-3-flash", _CURSOR_MODELS) == "gemini-3-flash[]"
+
+    def test_display_name_resolves_to_model_id(self) -> None:
+        assert _resolve_model_id("Auto", _CURSOR_MODELS) == "default[]"
+
+    def test_display_name_case_insensitive(self) -> None:
+        assert _resolve_model_id("auto", _CURSOR_MODELS) == "default[]"
+
+    def test_display_name_with_spaces(self) -> None:
+        assert _resolve_model_id("Gemini 3 Flash", _CURSOR_MODELS) == "gemini-3-flash[]"
+
+    def test_display_name_sonnet(self) -> None:
+        mid = "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+        assert _resolve_model_id("Sonnet 4.6", _CURSOR_MODELS) == mid
+
+    def test_model_id_preferred_over_display_name(self) -> None:
+        """When input matches both a model ID key and a display name, the ID wins."""
+        models = {"auto[]": "Something", "other[]": "auto[]"}
+        assert _resolve_model_id("auto[]", models) == "auto[]"

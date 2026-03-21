@@ -1,0 +1,4703 @@
+{
+  "run_at": "2026-03-17T21:12:07-0400",
+  "phases_requested": [
+    21
+  ],
+  "phases": {
+    "handshake": {
+      "phase": "handshake",
+      "started_wall": "2026-03-17T21:12:07-0400",
+      "entries": [
+        {
+          "call": "initialize",
+          "response": {
+            "_meta": null,
+            "agentCapabilities": {
+              "_meta": null,
+              "loadSession": true,
+              "mcpCapabilities": {
+                "_meta": null,
+                "http": true,
+                "sse": true
+              },
+              "promptCapabilities": {
+                "_meta": null,
+                "audio": false,
+                "embeddedContext": false,
+                "image": true
+              },
+              "sessionCapabilities": {
+                "_meta": null,
+                "fork": null,
+                "list": null,
+                "resume": null
+              }
+            },
+            "agentInfo": null,
+            "authMethods": [
+              {
+                "_meta": null,
+                "description": "Authenticate using existing Cursor login credentials. Run 'cursor agent login' first if not logged in.",
+                "id": "cursor_login",
+                "name": "Cursor Login"
+              }
+            ],
+            "protocolVersion": 1
+          }
+        },
+        {
+          "call": "authenticate",
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "new_session",
+          "response": {
+            "_meta": null,
+            "configOptions": [
+              {
+                "currentValue": "agent",
+                "options": [
+                  {
+                    "_meta": null,
+                    "description": "Full agent capabilities with tool access",
+                    "name": "Agent",
+                    "value": "agent"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "Read-only mode for planning and designing before implementation",
+                    "name": "Plan",
+                    "value": "plan"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "Q&A mode - no edits or command execution",
+                    "name": "Ask",
+                    "value": "ask"
+                  }
+                ],
+                "_meta": null,
+                "category": "mode",
+                "description": "Controls how the agent executes tasks",
+                "id": "mode",
+                "name": "Mode",
+                "type": "select"
+              },
+              {
+                "currentValue": "default[]",
+                "options": [
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Auto",
+                    "value": "default[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Composer 1.5",
+                    "value": "composer-1.5[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Composer 1",
+                    "value": "composer-1[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.3",
+                    "value": "gpt-5.3-codex[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.4",
+                    "value": "gpt-5.4[reasoning=medium,context=272k,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4.6",
+                    "value": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Opus 4.6",
+                    "value": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Opus 4.5",
+                    "value": "claude-opus-4-5[thinking=true]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.2",
+                    "value": "gpt-5.2[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3.1 Pro",
+                    "value": "gemini-3.1-pro[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.4 Mini",
+                    "value": "gpt-5.4-mini[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.4 Nano",
+                    "value": "gpt-5.4-nano[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Haiku 4.5",
+                    "value": "claude-haiku-4-5[thinking=true]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.3 Spark",
+                    "value": "gpt-5.3-codex-spark[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Grok Code",
+                    "value": "grok-code-fast-1[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4.5",
+                    "value": "claude-sonnet-4-5[thinking=true,context=200k]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.2",
+                    "value": "gpt-5.2-codex[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.1 Max",
+                    "value": "gpt-5.1-codex-max[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.1",
+                    "value": "gpt-5.1[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3 Pro",
+                    "value": "gemini-3-pro[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3 Flash",
+                    "value": "gemini-3-flash[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.1 Mini",
+                    "value": "gpt-5.1-codex-mini[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4",
+                    "value": "claude-sonnet-4[thinking=false,context=200k]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5 Mini",
+                    "value": "gpt-5-mini[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 2.5 Flash",
+                    "value": "gemini-2.5-flash[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Kimi K2.5",
+                    "value": "kimi-k2.5[]"
+                  }
+                ],
+                "_meta": null,
+                "category": "model",
+                "description": "Controls which model is used for responses",
+                "id": "model",
+                "name": "Model",
+                "type": "select"
+              }
+            ],
+            "models": {
+              "_meta": null,
+              "availableModels": [
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "default[]",
+                  "name": "Auto"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "composer-1.5[]",
+                  "name": "Composer 1.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "composer-1[]",
+                  "name": "Composer 1"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.3-codex[reasoning=medium,fast=false]",
+                  "name": "Codex 5.3"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+                  "name": "GPT-5.4"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+                  "name": "Sonnet 4.6"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+                  "name": "Opus 4.6"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-opus-4-5[thinking=true]",
+                  "name": "Opus 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.2[reasoning=medium,fast=false]",
+                  "name": "GPT-5.2"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3.1-pro[]",
+                  "name": "Gemini 3.1 Pro"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.4-mini[reasoning=medium]",
+                  "name": "GPT-5.4 Mini"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.4-nano[reasoning=medium]",
+                  "name": "GPT-5.4 Nano"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-haiku-4-5[thinking=true]",
+                  "name": "Haiku 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.3-codex-spark[reasoning=medium]",
+                  "name": "Codex 5.3 Spark"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "grok-code-fast-1[]",
+                  "name": "Grok Code"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4-5[thinking=true,context=200k]",
+                  "name": "Sonnet 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.2-codex[reasoning=medium,fast=false]",
+                  "name": "Codex 5.2"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+                  "name": "Codex 5.1 Max"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1[reasoning=medium]",
+                  "name": "GPT-5.1"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3-pro[]",
+                  "name": "Gemini 3 Pro"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3-flash[]",
+                  "name": "Gemini 3 Flash"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1-codex-mini[reasoning=medium]",
+                  "name": "Codex 5.1 Mini"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4[thinking=false,context=200k]",
+                  "name": "Sonnet 4"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5-mini[]",
+                  "name": "GPT-5 Mini"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-2.5-flash[]",
+                  "name": "Gemini 2.5 Flash"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "kimi-k2.5[]",
+                  "name": "Kimi K2.5"
+                }
+              ],
+              "currentModelId": "default[]"
+            },
+            "modes": {
+              "_meta": null,
+              "availableModes": [
+                {
+                  "_meta": null,
+                  "description": "Full agent capabilities with tool access",
+                  "id": "agent",
+                  "name": "Agent"
+                },
+                {
+                  "_meta": null,
+                  "description": "Read-only mode for planning and designing before implementation",
+                  "id": "plan",
+                  "name": "Plan"
+                },
+                {
+                  "_meta": null,
+                  "description": "Q&A mode - no edits or command execution",
+                  "id": "ask",
+                  "name": "Ask"
+                }
+              ],
+              "currentModeId": "agent"
+            },
+            "sessionId": "3dcdab42-22e4-46c6-bfc9-14b2a4b20a38"
+          }
+        },
+        {
+          "detail": "models",
+          "current_model_id": "default[]",
+          "available_models": [
+            {
+              "model_id": "default[]",
+              "name": "Auto"
+            },
+            {
+              "model_id": "composer-1.5[]",
+              "name": "Composer 1.5"
+            },
+            {
+              "model_id": "composer-1[]",
+              "name": "Composer 1"
+            },
+            {
+              "model_id": "gpt-5.3-codex[reasoning=medium,fast=false]",
+              "name": "Codex 5.3"
+            },
+            {
+              "model_id": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+              "name": "GPT-5.4"
+            },
+            {
+              "model_id": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+              "name": "Sonnet 4.6"
+            },
+            {
+              "model_id": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+              "name": "Opus 4.6"
+            },
+            {
+              "model_id": "claude-opus-4-5[thinking=true]",
+              "name": "Opus 4.5"
+            },
+            {
+              "model_id": "gpt-5.2[reasoning=medium,fast=false]",
+              "name": "GPT-5.2"
+            },
+            {
+              "model_id": "gemini-3.1-pro[]",
+              "name": "Gemini 3.1 Pro"
+            },
+            {
+              "model_id": "gpt-5.4-mini[reasoning=medium]",
+              "name": "GPT-5.4 Mini"
+            },
+            {
+              "model_id": "gpt-5.4-nano[reasoning=medium]",
+              "name": "GPT-5.4 Nano"
+            },
+            {
+              "model_id": "claude-haiku-4-5[thinking=true]",
+              "name": "Haiku 4.5"
+            },
+            {
+              "model_id": "gpt-5.3-codex-spark[reasoning=medium]",
+              "name": "Codex 5.3 Spark"
+            },
+            {
+              "model_id": "grok-code-fast-1[]",
+              "name": "Grok Code"
+            },
+            {
+              "model_id": "claude-sonnet-4-5[thinking=true,context=200k]",
+              "name": "Sonnet 4.5"
+            },
+            {
+              "model_id": "gpt-5.2-codex[reasoning=medium,fast=false]",
+              "name": "Codex 5.2"
+            },
+            {
+              "model_id": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+              "name": "Codex 5.1 Max"
+            },
+            {
+              "model_id": "gpt-5.1[reasoning=medium]",
+              "name": "GPT-5.1"
+            },
+            {
+              "model_id": "gemini-3-pro[]",
+              "name": "Gemini 3 Pro"
+            },
+            {
+              "model_id": "gemini-3-flash[]",
+              "name": "Gemini 3 Flash"
+            },
+            {
+              "model_id": "gpt-5.1-codex-mini[reasoning=medium]",
+              "name": "Codex 5.1 Mini"
+            },
+            {
+              "model_id": "claude-sonnet-4[thinking=false,context=200k]",
+              "name": "Sonnet 4"
+            },
+            {
+              "model_id": "gpt-5-mini[]",
+              "name": "GPT-5 Mini"
+            },
+            {
+              "model_id": "gemini-2.5-flash[]",
+              "name": "Gemini 2.5 Flash"
+            },
+            {
+              "model_id": "kimi-k2.5[]",
+              "name": "Kimi K2.5"
+            }
+          ],
+          "raw": {
+            "_meta": null,
+            "availableModels": [
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "default[]",
+                "name": "Auto"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "composer-1.5[]",
+                "name": "Composer 1.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "composer-1[]",
+                "name": "Composer 1"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.3-codex[reasoning=medium,fast=false]",
+                "name": "Codex 5.3"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+                "name": "GPT-5.4"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+                "name": "Sonnet 4.6"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+                "name": "Opus 4.6"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-opus-4-5[thinking=true]",
+                "name": "Opus 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.2[reasoning=medium,fast=false]",
+                "name": "GPT-5.2"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3.1-pro[]",
+                "name": "Gemini 3.1 Pro"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.4-mini[reasoning=medium]",
+                "name": "GPT-5.4 Mini"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.4-nano[reasoning=medium]",
+                "name": "GPT-5.4 Nano"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-haiku-4-5[thinking=true]",
+                "name": "Haiku 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.3-codex-spark[reasoning=medium]",
+                "name": "Codex 5.3 Spark"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "grok-code-fast-1[]",
+                "name": "Grok Code"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4-5[thinking=true,context=200k]",
+                "name": "Sonnet 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.2-codex[reasoning=medium,fast=false]",
+                "name": "Codex 5.2"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+                "name": "Codex 5.1 Max"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1[reasoning=medium]",
+                "name": "GPT-5.1"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3-pro[]",
+                "name": "Gemini 3 Pro"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3-flash[]",
+                "name": "Gemini 3 Flash"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1-codex-mini[reasoning=medium]",
+                "name": "Codex 5.1 Mini"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4[thinking=false,context=200k]",
+                "name": "Sonnet 4"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5-mini[]",
+                "name": "GPT-5 Mini"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-2.5-flash[]",
+                "name": "Gemini 2.5 Flash"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "kimi-k2.5[]",
+                "name": "Kimi K2.5"
+              }
+            ],
+            "currentModelId": "default[]"
+          }
+        },
+        {
+          "detail": "modes",
+          "current_mode_id": "agent",
+          "available_modes": [
+            {
+              "mode_id": "agent",
+              "name": "Agent"
+            },
+            {
+              "mode_id": "plan",
+              "name": "Plan"
+            },
+            {
+              "mode_id": "ask",
+              "name": "Ask"
+            }
+          ],
+          "raw": {
+            "_meta": null,
+            "availableModes": [
+              {
+                "_meta": null,
+                "description": "Full agent capabilities with tool access",
+                "id": "agent",
+                "name": "Agent"
+              },
+              {
+                "_meta": null,
+                "description": "Read-only mode for planning and designing before implementation",
+                "id": "plan",
+                "name": "Plan"
+              },
+              {
+                "_meta": null,
+                "description": "Q&A mode - no edits or command execution",
+                "id": "ask",
+                "name": "Ask"
+              }
+            ],
+            "currentModeId": "agent"
+          }
+        },
+        {
+          "detail": "config_options",
+          "options": [
+            {
+              "currentValue": "agent",
+              "options": [
+                {
+                  "_meta": null,
+                  "description": "Full agent capabilities with tool access",
+                  "name": "Agent",
+                  "value": "agent"
+                },
+                {
+                  "_meta": null,
+                  "description": "Read-only mode for planning and designing before implementation",
+                  "name": "Plan",
+                  "value": "plan"
+                },
+                {
+                  "_meta": null,
+                  "description": "Q&A mode - no edits or command execution",
+                  "name": "Ask",
+                  "value": "ask"
+                }
+              ],
+              "_meta": null,
+              "category": "mode",
+              "description": "Controls how the agent executes tasks",
+              "id": "mode",
+              "name": "Mode",
+              "type": "select"
+            },
+            {
+              "currentValue": "default[]",
+              "options": [
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Auto",
+                  "value": "default[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Composer 1.5",
+                  "value": "composer-1.5[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Composer 1",
+                  "value": "composer-1[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.3",
+                  "value": "gpt-5.3-codex[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.4",
+                  "value": "gpt-5.4[reasoning=medium,context=272k,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4.6",
+                  "value": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Opus 4.6",
+                  "value": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Opus 4.5",
+                  "value": "claude-opus-4-5[thinking=true]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.2",
+                  "value": "gpt-5.2[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3.1 Pro",
+                  "value": "gemini-3.1-pro[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.4 Mini",
+                  "value": "gpt-5.4-mini[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.4 Nano",
+                  "value": "gpt-5.4-nano[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Haiku 4.5",
+                  "value": "claude-haiku-4-5[thinking=true]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.3 Spark",
+                  "value": "gpt-5.3-codex-spark[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Grok Code",
+                  "value": "grok-code-fast-1[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4.5",
+                  "value": "claude-sonnet-4-5[thinking=true,context=200k]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.2",
+                  "value": "gpt-5.2-codex[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.1 Max",
+                  "value": "gpt-5.1-codex-max[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.1",
+                  "value": "gpt-5.1[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3 Pro",
+                  "value": "gemini-3-pro[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3 Flash",
+                  "value": "gemini-3-flash[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.1 Mini",
+                  "value": "gpt-5.1-codex-mini[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4",
+                  "value": "claude-sonnet-4[thinking=false,context=200k]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5 Mini",
+                  "value": "gpt-5-mini[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 2.5 Flash",
+                  "value": "gemini-2.5-flash[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Kimi K2.5",
+                  "value": "kimi-k2.5[]"
+                }
+              ],
+              "_meta": null,
+              "category": "model",
+              "description": "Controls which model is used for responses",
+              "id": "model",
+              "name": "Model",
+              "type": "select"
+            }
+          ]
+        }
+      ],
+      "error": null
+    },
+    "mcp_config": {
+      "phase": "mcp_config",
+      "started_wall": "2026-03-17T21:12:10-0400",
+      "entries": [
+        {
+          "test": "mcp_approvals_written",
+          "path": "/Users/wadechandler/.cursor/projects/private-var-folders-vj-tkmrz5cj4yz56zrtvb8lvc540000gn-T-tak-inspect-mcp-l0xsh4gq/mcp-approvals.json",
+          "keys": [
+            "tak-test-echo-3b903072f97e3090",
+            "tak-test-echo-http-bc998988be49362a"
+          ],
+          "slug": "private-var-folders-vj-tkmrz5cj4yz56zrtvb8lvc540000gn-T-tak-inspect-mcp-l0xsh4gq"
+        },
+        {
+          "test": "mcp_config_written",
+          "path": "/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-mcp-l0xsh4gq/.cursor/mcp.json",
+          "config": {
+            "mcpServers": {
+              "tak-test-echo": {
+                "type": "stdio",
+                "command": "/Users/wadechandler/.asdf/installs/python/3.13.5/bin/python",
+                "args": [
+                  "/Users/wadechandler/Projects/wadechandler/github/terminal-agent-kit/scripts/agent_inspection/mock_mcp_echo.py"
+                ],
+                "env": {
+                  "MCP_ECHO_LOG_FILE": "/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-mcp-l0xsh4gq/mcp_echo.log"
+                }
+              },
+              "tak-test-echo-http": {
+                "url": "http://127.0.0.1:49382/"
+              }
+            }
+          }
+        },
+        {
+          "test": "initialize",
+          "response": {
+            "_meta": null,
+            "agentCapabilities": {
+              "_meta": null,
+              "loadSession": true,
+              "mcpCapabilities": {
+                "_meta": null,
+                "http": true,
+                "sse": true
+              },
+              "promptCapabilities": {
+                "_meta": null,
+                "audio": false,
+                "embeddedContext": false,
+                "image": true
+              },
+              "sessionCapabilities": {
+                "_meta": null,
+                "fork": null,
+                "list": null,
+                "resume": null
+              }
+            },
+            "agentInfo": null,
+            "authMethods": [
+              {
+                "_meta": null,
+                "description": "Authenticate using existing Cursor login credentials. Run 'cursor agent login' first if not logged in.",
+                "id": "cursor_login",
+                "name": "Cursor Login"
+              }
+            ],
+            "protocolVersion": 1
+          }
+        },
+        {
+          "test": "new_session",
+          "session_id": "f419c9cd-24dc-4b66-a128-2e3a88158dae"
+        },
+        {
+          "test": "list_tools",
+          "prompt_text": "List all tools you have available, including any from MCP servers. Be thorough.",
+          "sent_wall": "2026-03-17T21:12:12-0400",
+          "response_wall": "2026-03-17T21:12:28-0400",
+          "duration_s": 16.19249783293344,
+          "stop_reason": "end_turn",
+          "error": null,
+          "usage": null,
+          "response_raw": {
+            "_meta": null,
+            "stopReason": "end_turn",
+            "usage": null
+          },
+          "update_count": 197,
+          "updates": [
+            {
+              "timestamp": 0.2589929160894826,
+              "wall_clock": "2026-03-17T21:12:12-0400",
+              "type": "available_commands_update",
+              "data": {
+                "_meta": null,
+                "availableCommands": [
+                  {
+                    "_meta": null,
+                    "description": "Copy the last request ID to clipboard",
+                    "input": null,
+                    "name": "copy-request-id"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "Analyze the provided job description and generate a Recruiter Screening Checklist in plain text format that a non-technical recruiter can use to screen candidates before passing them to the hiring manager. (team)",
+                    "input": null,
+                    "name": "jd-to-recruiter-checklist"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "A command to review a candidate for a Lirio technical role (in your Mac explorer click option when right clicking a file and copy as paths to paste any file into a cursor agent chat by its full path) (team)",
+                    "input": null,
+                    "name": "review-tech-candidate"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "create-rule"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "create-skill"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "create-subagent"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "migrate-to-skills"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "shell"
+                  },
+                  {
+                    "_meta": null,
+                    "description": ">- (builtin skill)",
+                    "input": null,
+                    "name": "update-cursor-settings"
+                  }
+                ],
+                "sessionUpdate": "available_commands_update"
+              }
+            },
+            {
+              "timestamp": 4.214764500036836,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.26647158304695,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "user wants me to l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.305876750033349,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ist all tool",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.402953583048657,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s I have availabl",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.45341900002677,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e, including th",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.544300166075118,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ose from MCP s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.544493583030999,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ervers. I sho",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.637271458050236,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "uld be thoro",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.63743670808617,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ugh.\n\nFrom my",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.6846310830442235,
+              "wall_clock": "2026-03-17T21:12:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " system prompt, I ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.731224666000344,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "have the fol",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.826994458097033,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lowing tools li",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.871219624998048,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "sted:\n\n1. **code",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 4.91979437507689,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "base_search** - Se",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.0092572080902755,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "mantic searc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.058365291100927,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "h for code\n2. **r",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.20216954103671,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "un_terminal_cmd",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.244926166022196,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "** - Execute te",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.37953729100991,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rminal comma",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.392263208050281,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "nds\n3. **grep",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.392562624998391,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "** - Ripgrep s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.533027666038834,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "earch\n4. **rea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.575710375094786,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d_file** - Rea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.6199566250434145,
+              "wall_clock": "2026-03-17T21:12:17-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d files\n5. **read_",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.716508291079663,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lints** - Read l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.803371875081211,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "inter errors\n6. **ed",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.849537500063889,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "it_notebook*",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.900060583022423,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "* - Edit Jup",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.943552875076421,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "yter notebooks\n7. **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 5.988087375066243,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "todo_write**",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.091184166027233,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " - Task mana",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.127218000008725,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "gement\n8. **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.1763256250415,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "search_replac",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.2769218750763685,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e** - String rep",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.334596166037954,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lacements in ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.360168500104919,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "files\n9. **w",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.4055265000788495,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rite** - Writ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.4463582910830155,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e files\n10. **d",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.489755665999837,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "elete_file** - ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.583129375008866,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "Delete files\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.633871708065271,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "11. **web_se",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.681501250015572,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "arch** - Web se",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.681666458025575,
+              "wall_clock": "2026-03-17T21:12:18-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "arch\n12. **mcp",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.77100504108239,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "_task** - La",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.772002125042491,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "unch subagent",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.852717541041784,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s\n13. **list",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.897861916106194,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "_mcp_resourc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 6.984193250071257,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "es** - List M",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.034872583113611,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "CP resources\n14",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.0738386660814285,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ". **fetch_mcp_",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.156083333073184,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "resource** -",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.244934000074863,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Fetch MCP res",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.338368625030853,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ource\n15. **m",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.403569875052199,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cp_tak-test-ec",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.418496750062332,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ho-http_echo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.516800166107714,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "** - Echo tool ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.56058416608721,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "from MCP server\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.600164541043341,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "Let me provi",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.68298662500456,
+              "wall_clock": "2026-03-17T21:12:19-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "de a thorough",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 7.730951750068925,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " list to the user. I'll organize them by category and include the MCP tool.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 8.081224583089352,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nHere\u2019s a li",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.132927333004773,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "st of the tool",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.173556499998085,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s I have avai",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.220553458086215,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lable, including",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.300678750034422,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " MCP:\n\n---\n\n##",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.337301916093566,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Core / workspace to",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.337475666077808,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ols\n\n| Tool ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.382236708072014,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "| Purpose |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.46961354103405,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "------|-----",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.512011041049846,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "---|\n| **codeba",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.60970145801548,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "se_search** ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.665349666029215,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "| Semantic se",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.697390916058794,
+              "wall_clock": "2026-03-17T21:12:20-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "arch over the ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.793745583039708,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "codebase (by me",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.793916250113398,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "aning, not just t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.84683912503533,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ext). |\n| **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 8.988640083000064,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "run_terminal_c",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.02744254108984,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "md** | Run sh",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.11495720804669,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ell commands ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.171583583112806,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "(with optiona",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.260091666015796,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "l timeout, backg",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.405132958083414,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "round, cwd).",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.494362166034989,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " |\n| **grep*",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.545683083008043,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "* | Text/regex ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.592081166105345,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "search (ripgre",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.639747166074812,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "p) in files; s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.683524333056994,
+              "wall_clock": "2026-03-17T21:12:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "upports globs, ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.777666583075188,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "-A/-B/-C, mul",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.868276625056751,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tiline. |\n| **read",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 9.915837583015673,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "_file** | Re",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.010536375106312,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ad file content",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.05437350005377,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s (with option",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.107798375072889,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "al offset/li",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.107974166050553,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "mit); can rea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.148959958110936,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d images. |\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.193992750020698,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "| **read_lin",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.242546583060175,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ts** | Read l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.289478083024733,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "inter/editor ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.289685750030912,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "diagnostics for",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.38698487507645,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " files or direc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.440103458007798,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tories. |\n| *",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.53882241609972,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "*edit_notebook** ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.578397958073765,
+              "wall_clock": "2026-03-17T21:12:22-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "| Edit Jupyt",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.716692791087553,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "er notebook c",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.716885375091806,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ells (edit exi",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.726002833107486,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "sting or add ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.772088333033025,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "new). |\n| **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.822624666034244,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "todo_write**",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.867468166048639,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " | Create/upd",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.86810412502382,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ate a todo l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.918180875014514,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ist (pending,",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 10.9641348751029,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " in_progress, com",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.056657708017156,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "pleted, cancelled)",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.158752875053324,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ". |\n| **searc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.199535500025377,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "h_replace** | Ex",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.249941208050586,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "act string re",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.312056041089818,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "place in fil",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.346601958037354,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "es (optional r",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.395583625067957,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "eplace_all). ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.445849291048944,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "|\n| **write**",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.49967616610229,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " | Create or",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.551972625078633,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " overwrite a ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.600563541054726,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "file. |\n| **del",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.645501833059825,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ete_file** |",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.645658625056967,
+              "wall_clock": "2026-03-17T21:12:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Delete a fi",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.744135875022039,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "le. |\n| **we",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.74437004106585,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "b_search** |",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.838766833068803,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Web search for",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.887678541010246,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " up-to-date or e",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 11.936477708048187,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "xternal info",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.03834595810622,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rmation. |\n| *",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.084995791083202,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "*glob_file_s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.176304750028066,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "earch** | Find",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.224598000058904,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " files by glob",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.268686875002459,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " pattern (e.g",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.319603791111149,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ". `*.ts`, `**/te",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.411726040998474,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "st/**`). |\n\n--",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.517321999999695,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "-\n\n## MCP-re",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.558982583112083,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lated tools\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.59918054100126,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n| Tool | Pu",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.600000666105188,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rpose |\n|----",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.691919666016474,
+              "wall_clock": "2026-03-17T21:12:24-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "--|--------|\n| **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.785396708059125,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "mcp_task** |",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.842139500076883,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Start a subag",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 12.927785916021094,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ent (e.g. `generalP",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.021008791052736,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "urpose`) for ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.142489000107162,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "multi-step tas",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.155005791108124,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ks; supports `resum",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.169959791004658,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e`, `readonly",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.21550804108847,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "`, `attachme",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.215726000024006,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "nts`. |\n| **lis",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.263560958090238,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t_mcp_resour",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.310855208081193,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ces** | List",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.362708041095175,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " resources ex",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.454593625036068,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "posed by MCP",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.454745250055566,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " servers (optional",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.549687375081703,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " filter by ser",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.588154875091277,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ver). |\n| **fe",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.690483666025102,
+              "wall_clock": "2026-03-17T21:12:25-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tch_mcp_resour",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.785461291088723,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ce** | Fetch ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.827470625052229,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "a specific r",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 13.869499416090548,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "esource by s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.01194033306092,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "erver and URI; o",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.05701387510635,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ptional downl",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.057221625000238,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "oad path. |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.146798875066452,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " **mcp_tak-te",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.244145875098184,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "st-echo-http",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.299848541035317,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "_echo** | MCP t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.345048916060477,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "est tool: ec",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.382471458055079,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "hoes back th",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.635438916040584,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e provided `t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.639150875038467,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ext` (from serve",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.661878625047393,
+              "wall_clock": "2026-03-17T21:12:26-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r `tak-test-echo-htt",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.767723000026308,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "p`). |\n\n---\n\n##",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.80355262500234,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Summary\n\n- ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.85066945804283,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "**13** core/",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 14.895606708014384,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "workspace to",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.002874041092582,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ols (codebase, ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.09189108305145,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "terminal, sea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.13593779108487,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rch, files, not",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.18329200008884,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ebooks, todos,",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.233307708054781,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " web, glob).\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.27898612502031,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "- **4** MCP-re",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.379774333094247,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lated tools:",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.431773375021294,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " **mcp_task*",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.524078333051875,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "*, **list_mcp_r",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.570255291066132,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "esources**, **f",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.629688000073656,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "etch_mcp_resourc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.671264666016214,
+              "wall_clock": "2026-03-17T21:12:27-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e**, and one ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.72013183310628,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "MCP server to",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.766552708111703,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ol **mcp_tak-tes",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.816817375016399,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t-echo-http_ech",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.863790333038196,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "o**.\n\nSo in t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 15.96377608308103,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "otal there are ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 16.051866791094653,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "**17** distinct t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 16.11283691599965,
+              "wall_clock": "2026-03-17T21:12:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ools available, including the one from the `tak-test-echo-http` MCP server.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "test": "mcp_stdio_echo",
+          "prompt_text": "Use the echo tool from tak-test-echo to echo 'hello from tak'. Show the result.",
+          "sent_wall": "2026-03-17T21:12:28-0400",
+          "response_wall": "2026-03-17T21:12:32-0400",
+          "duration_s": 3.897567999898456,
+          "stop_reason": "end_turn",
+          "error": null,
+          "usage": null,
+          "response_raw": {
+            "_meta": null,
+            "stopReason": "end_turn",
+            "usage": null
+          },
+          "update_count": 22,
+          "updates": [
+            {
+              "timestamp": 1.1170566669898108,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.1172535839723423,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "user wants m",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.2177805000683293,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e to use the M",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.2615283339982852,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "CP echo tool fro",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.3105803340440616,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "m tak-test-ec",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.3594107090029866,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ho to echo th",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.4089801670052111,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e text 'hell",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.4591920420061797,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "o from tak' an",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.5072888340801,
+              "wall_clock": "2026-03-17T21:12:29-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d show them t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.5541722920024768,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "he result. The ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.5995244170771912,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tool is called mcp_tak-test-echo-http_echo and it takes a \"text\" parameter.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.6585632089991122,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 1.8803917090408504,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "other",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "MCP: tool",
+                "toolCallId": "tool_1d7a7326-b223-4c1c-bfed-b96fb6cab1b",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 1.9504061250481755,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_1d7a7326-b223-4c1c-bfed-b96fb6cab1b",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 1.9927515840390697,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "success": true
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_1d7a7326-b223-4c1c-bfed-b96fb6cab1b",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 3.1507731250021607,
+              "wall_clock": "2026-03-17T21:12:31-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe e",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 3.21158208406996,
+              "wall_clock": "2026-03-17T21:12:31-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cho tool wor",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 3.244162334012799,
+              "wall_clock": "2026-03-17T21:12:31-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ked. It returned \"Echo: hello from tak\". I'll show this result to the user.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 3.634539584047161,
+              "wall_clock": "2026-03-17T21:12:32-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n**Result:** `Echo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 3.7262104999972507,
+              "wall_clock": "2026-03-17T21:12:32-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ": hello from ta",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 3.7711264999816194,
+              "wall_clock": "2026-03-17T21:12:32-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "k`\n\nThe `tak-",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 3.8252340420149267,
+              "wall_clock": "2026-03-17T21:12:32-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "test-echo-http` echo tool returned that string when given the input `hello from tak`.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": [
+            {
+              "timestamp": 1.9531490000663325,
+              "wall_clock": "2026-03-17T21:12:30-0400",
+              "tool_name": "tak-test-echo-http-echo: echo",
+              "tool_call": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "content": {
+                      "_meta": null,
+                      "annotations": null,
+                      "text": "```json\n{\n  \"text\": \"hello from tak\"\n}\n```",
+                      "type": "text"
+                    },
+                    "type": "content"
+                  }
+                ],
+                "kind": "other",
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "pending",
+                "title": "tak-test-echo-http-echo: echo",
+                "toolCallId": "tool_1d7a7326-b223-4c1c-bfed-b96fb6cab1b"
+              },
+              "options": [
+                {
+                  "_meta": null,
+                  "kind": "allow_once",
+                  "name": "Allow once",
+                  "optionId": "allow-once"
+                },
+                {
+                  "_meta": null,
+                  "kind": "allow_always",
+                  "name": "Allow always",
+                  "optionId": "allow-always"
+                },
+                {
+                  "_meta": null,
+                  "kind": "reject_once",
+                  "name": "Reject",
+                  "optionId": "reject-once"
+                }
+              ],
+              "decision": "allow-always"
+            }
+          ]
+        },
+        {
+          "test": "mcp_http_echo",
+          "prompt_text": "Use the echo tool from tak-test-echo-http to echo 'hello via HTTP'. Show the result.",
+          "sent_wall": "2026-03-17T21:12:32-0400",
+          "response_wall": "2026-03-17T21:12:34-0400",
+          "duration_s": 2.5617106249555945,
+          "stop_reason": "end_turn",
+          "error": null,
+          "usage": null,
+          "response_raw": {
+            "_meta": null,
+            "stopReason": "end_turn",
+            "usage": null
+          },
+          "update_count": 10,
+          "updates": [
+            {
+              "timestamp": 1.0379916669335216,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe use",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.0864293749909848,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r wants me to u",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.086595166940242,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "se the echo t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.1354464170290157,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ool from tak-test-echo-http to echo 'hello via HTTP' and show the result.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 1.1356145419413224,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 1.3735419169533998,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "other",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "MCP: tool",
+                "toolCallId": "tool_0b428921-510f-4c27-ad76-5c50069941f",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 1.4689645420294255,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_0b428921-510f-4c27-ad76-5c50069941f",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 1.5082672080025077,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "success": true
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_0b428921-510f-4c27-ad76-5c50069941f",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 2.2554109579650685,
+              "wall_clock": "2026-03-17T21:12:34-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe echo tool returned the result. I'll show it to the user.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 2.4909349579829723,
+              "wall_clock": "2026-03-17T21:12:34-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n**Result:** `Echo: hello via HTTP`",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": [
+            {
+              "timestamp": 1.4696966669289395,
+              "wall_clock": "2026-03-17T21:12:33-0400",
+              "tool_name": "tak-test-echo-http-echo: echo",
+              "tool_call": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "content": {
+                      "_meta": null,
+                      "annotations": null,
+                      "text": "```json\n{\n  \"text\": \"hello via HTTP\"\n}\n```",
+                      "type": "text"
+                    },
+                    "type": "content"
+                  }
+                ],
+                "kind": "other",
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "pending",
+                "title": "tak-test-echo-http-echo: echo",
+                "toolCallId": "tool_0b428921-510f-4c27-ad76-5c50069941f"
+              },
+              "options": [
+                {
+                  "_meta": null,
+                  "kind": "allow_once",
+                  "name": "Allow once",
+                  "optionId": "allow-once"
+                },
+                {
+                  "_meta": null,
+                  "kind": "allow_always",
+                  "name": "Allow always",
+                  "optionId": "allow-always"
+                },
+                {
+                  "_meta": null,
+                  "kind": "reject_once",
+                  "name": "Reject",
+                  "optionId": "reject-once"
+                }
+              ],
+              "decision": "allow-always"
+            }
+          ]
+        },
+        {
+          "test": "mcp_echo_server_log",
+          "log": null,
+          "note": "Log file not created -- server may not have been started"
+        }
+      ],
+      "error": null
+    }
+  }
+}

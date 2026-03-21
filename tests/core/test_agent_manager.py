@@ -63,6 +63,30 @@ class TestAgentManagerStop:
             await agent_manager.stop("nonexistent")
 
 
+class TestAgentManagerRemove:
+    async def test_remove_stopped_agent(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("doomed", "mock")
+        await agent_manager.stop("doomed")
+        await agent_manager.remove("doomed")
+        assert agent_manager.get("doomed") is None
+
+    async def test_remove_running_agent_stops_first(
+        self, agent_manager: AgentManager
+    ) -> None:
+        await agent_manager.spawn("live-one", "mock")
+        assert agent_manager.get("live-one") is not None
+        await agent_manager.remove("live-one")
+        assert agent_manager.get("live-one") is None
+
+    async def test_remove_unknown_raises(
+        self, agent_manager: AgentManager
+    ) -> None:
+        with pytest.raises(ValueError, match="No agent named"):
+            await agent_manager.remove("ghost")
+
+
 class TestAgentManagerListing:
     async def test_list_agents_empty(self, agent_manager: AgentManager) -> None:
         assert agent_manager.list_agents() == []
@@ -272,3 +296,90 @@ class TestStateSaveCallbacks:
         loaded = state_mgr.load()
         assert "new-name" in loaded["agents"]
         assert "old-name" not in loaded["agents"]
+
+    async def test_model_id_persisted_in_state(
+        self, agent_manager: AgentManager, tmp_state_dir: Path
+    ) -> None:
+        state_mgr = StateManager(state_dir=tmp_state_dir)
+        registry = SessionRegistry()
+        agent_manager.set_state_manager(state_mgr, registry)
+
+        handle = await agent_manager.spawn("my-agent", "mock")
+        handle.model = "Auto"
+        handle.model_id = "default[]"
+        agent_manager._auto_save()
+
+        loaded = state_mgr.load()
+        agent_data = loaded["agents"]["my-agent"]
+        assert agent_data["model"] == "Auto"
+        assert agent_data["model_id"] == "default[]"
+
+
+class TestRestoreModelId:
+    async def test_restore_prefers_model_id_over_display_name(
+        self, agent_manager: AgentManager, mock_provider: object
+    ) -> None:
+        agents_state = {
+            "test-agent": {
+                "provider": "mock",
+                "project_path": None,
+                "model": "Auto",
+                "model_id": "default[]",
+                "tabs": [],
+                "acp_session_id": None,
+                "permission_policy": "prompt",
+            },
+        }
+        await agent_manager.restore(agents_state)
+
+        from tests.conftest import MockProvider
+
+        provider = mock_provider
+        assert isinstance(provider, MockProvider)
+        assert len(provider.spawn_calls) == 1
+        assert provider.spawn_calls[0]["model"] == "default[]"
+
+    async def test_restore_falls_back_to_display_name_when_no_model_id(
+        self, agent_manager: AgentManager, mock_provider: object
+    ) -> None:
+        agents_state = {
+            "test-agent": {
+                "provider": "mock",
+                "project_path": None,
+                "model": "Sonnet 4.6",
+                "tabs": [],
+                "acp_session_id": None,
+                "permission_policy": "prompt",
+            },
+        }
+        await agent_manager.restore(agents_state)
+
+        from tests.conftest import MockProvider
+
+        provider = mock_provider
+        assert isinstance(provider, MockProvider)
+        assert len(provider.spawn_calls) == 1
+        assert provider.spawn_calls[0]["model"] == "Sonnet 4.6"
+
+    async def test_restore_handles_none_model_id(
+        self, agent_manager: AgentManager, mock_provider: object
+    ) -> None:
+        agents_state = {
+            "test-agent": {
+                "provider": "mock",
+                "project_path": None,
+                "model": None,
+                "model_id": None,
+                "tabs": [],
+                "acp_session_id": None,
+                "permission_policy": "prompt",
+            },
+        }
+        await agent_manager.restore(agents_state)
+
+        from tests.conftest import MockProvider
+
+        provider = mock_provider
+        assert isinstance(provider, MockProvider)
+        assert len(provider.spawn_calls) == 1
+        assert provider.spawn_calls[0]["model"] is None

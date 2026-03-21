@@ -149,6 +149,7 @@ class ACPProvider(BaseProvider):
         model: str | None = None,
         *,
         mode: str = "agent",
+        acp_session_id: str | None = None,
     ) -> asyncio.subprocess.Process:
         """Spawn the ACP subprocess and complete the ACP handshake.
 
@@ -160,6 +161,8 @@ class ACPProvider(BaseProvider):
             project_path: Optional project directory.
             model: Optional model name (e.g. ``claude-sonnet-4``).
             mode: Session mode -- ``ask``, ``plan``, or ``agent``.
+            acp_session_id: Previous session ID to reconnect to via
+                ``load_session``.  Falls back to ``new_session`` on failure.
 
         Returns:
             The subprocess handle.
@@ -180,8 +183,9 @@ class ACPProvider(BaseProvider):
         )
 
         stack = AsyncExitStack()
+        cwd = str(project_path) if project_path else None
         conn, process = await stack.enter_async_context(
-            spawn_agent_process(client, cmd[0], *cmd[1:], env=env)
+            spawn_agent_process(client, cmd[0], *cmd[1:], env=env, cwd=cwd)
         )
         self._exit_stacks[agent_name] = stack
 
@@ -192,11 +196,28 @@ class ACPProvider(BaseProvider):
         if self._auth_method != "none":
             method_id = "cursor_login" if self._auth_method == "login" else self._auth_method
             await session.authenticate(method_id=method_id)
-        await session.new_session(
-            mode=mode,
-            cwd=str(project_path) if project_path else None,
-            model=model,
-        )
+
+        resumed = False
+        if acp_session_id:
+            try:
+                await session.load_session(acp_session_id, cwd=cwd)
+                resumed = True
+                logger.info(
+                    "ACP agent %s reconnected to session %s",
+                    agent_name, acp_session_id,
+                )
+            except Exception:
+                logger.info(
+                    "ACP agent %s: load_session(%s) failed; creating new session",
+                    agent_name, acp_session_id,
+                )
+
+        if not resumed:
+            await session.new_session(
+                mode=mode,
+                cwd=cwd,
+                model=model,
+            )
 
         logger.info(
             "ACP agent %s ready (session %s)", agent_name, session.session_id

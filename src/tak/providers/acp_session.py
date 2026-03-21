@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import re
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -36,6 +37,81 @@ from acp.schema import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+_BRACKET_SUFFIX_RE = re.compile(r"\[.*\]$")
+
+
+def _resolve_model_name(model_id: str | None, models_by_id: dict[str, str]) -> str | None:
+    """Resolve a model ID to its human-readable display name.
+
+    Tries an exact match first, then falls back to bracket-stripped and
+    case-insensitive lookups.
+
+    Args:
+        model_id: The raw model ID (e.g. ``"default[]"``).
+        models_by_id: Mapping of ``model_id`` → ``name`` from the server.
+
+    Returns:
+        The display name, or ``None`` if *model_id* is ``None``.
+    """
+    if model_id is None:
+        return None
+
+    if model_id in models_by_id:
+        return models_by_id[model_id]
+
+    stripped = _BRACKET_SUFFIX_RE.sub("", model_id)
+    for mid, name in models_by_id.items():
+        if _BRACKET_SUFFIX_RE.sub("", mid) == stripped:
+            return name
+
+    lower = model_id.lower()
+    for mid, name in models_by_id.items():
+        if mid.lower() == lower:
+            return name
+
+    return model_id
+
+
+def _resolve_model_id(user_input: str, models_by_id: dict[str, str]) -> str:
+    """Resolve a user-supplied model string to the canonical model ID.
+
+    Handles the common case where a user passes ``"default"`` instead of
+    ``"default[]"``, or ``"claude-sonnet-4"`` without bracket params.
+    Also handles the reverse case where a display name like ``"Auto"`` is
+    passed instead of the raw model ID ``"default[]"``.
+
+    Args:
+        user_input: The model string from the CLI, config, or persisted state.
+        models_by_id: Mapping of ``model_id`` → ``name`` from the server.
+
+    Returns:
+        The best-matching canonical model ID, or *user_input* unchanged if
+        no match is found (the server will reject it with ``-32602``).
+    """
+    if user_input in models_by_id:
+        return user_input
+
+    stripped = _BRACKET_SUFFIX_RE.sub("", user_input)
+    for mid in models_by_id:
+        if _BRACKET_SUFFIX_RE.sub("", mid) == stripped:
+            return mid
+
+    lower = user_input.lower()
+    for mid in models_by_id:
+        if mid.lower() == lower:
+            return mid
+
+    for mid, name in models_by_id.items():
+        if name == user_input:
+            return mid
+
+    for mid, name in models_by_id.items():
+        if name.lower() == lower:
+            return mid
+
+    return user_input
 
 
 class ACPSessionState(Enum):
@@ -142,7 +218,15 @@ class TakACPClient:
             if isinstance(update.content, TextContentBlock):
                 text = update.content.text or ""
         elif isinstance(update, AgentThoughtChunk):
-            pass
+            thought_text = getattr(getattr(update, "content", None), "text", "") or ""
+            logger.debug("Agent thinking: %s", thought_text[:80])
+        elif isinstance(update, ToolCallUpdate):
+            logger.info(
+                "Tool call: %s (id=%s)", update.title, update.tool_call_id,
+            )
+        else:
+            update_type = getattr(update, "session_update", type(update).__name__)
+            logger.debug("Session update: %s", update_type)
 
         if text:
             self._update_chunks.put_nowait(text)
@@ -174,6 +258,7 @@ class TakACPClient:
 
     async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         """Handle extension methods (e.g. cursor/ask_question)."""
+        logger.info("Extension method: %s", method)
         if method == "cursor/ask_question" and self._ask_question_callback is not None:
             question = params.get("question", "")
             choices = params.get("choices", [])
@@ -187,6 +272,7 @@ class TakACPClient:
 
     async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
         """Handle extension notifications."""
+        logger.debug("Extension notification: %s", method)
 
     def on_connect(self, conn: Any) -> None:
         """Called when the connection is established."""
@@ -220,6 +306,7 @@ class ACPSessionManager:
         self._session_id: str | None = None
         self._current_model_id: str | None = None
         self._current_model_name: str | None = None
+        self._models_by_id: dict[str, str] = {}
 
     @property
     def state(self) -> ACPSessionState:
@@ -313,34 +400,54 @@ class ACPSessionManager:
             models_by_id = {
                 m.model_id: m.name for m in result.models.available_models
             }
-            self._current_model_name = models_by_id.get(
-                self._current_model_id, self._current_model_id
+            self._models_by_id = dict(models_by_id)
+            self._current_model_name = _resolve_model_name(
+                self._current_model_id, models_by_id
             )
             logger.info(
-                "Agent %s: model=%s, available=%s",
+                "Agent %s: model=%s (id=%s), available=%s",
                 self._agent_name or "?",
                 self._current_model_name,
+                self._current_model_id,
                 list(models_by_id.values()),
+            )
+        else:
+            logger.debug(
+                "Agent %s: models is None in NewSessionResponse",
+                self._agent_name or "?",
             )
 
         if model and self._session_id:
-            try:
-                await self._conn.set_session_model(
-                    model_id=model,
-                    session_id=self._session_id,
+            resolved_id = _resolve_model_id(model, models_by_id)
+            if resolved_id == self._current_model_id:
+                logger.debug(
+                    "Model %r already active; skipping set_session_model",
+                    resolved_id,
                 )
-                self._current_model_id = model
-                self._current_model_name = models_by_id.get(model, model)
-            except RequestError as exc:
-                if exc.code == -32601:
-                    logger.debug("set_session_model not supported; model param ignored")
-                else:
-                    logger.warning(
-                        "Failed to set model %r: %s (code=%d)",
-                        model, exc, exc.code,
+            else:
+                try:
+                    await self._conn.set_session_model(
+                        model_id=resolved_id,
+                        session_id=self._session_id,
                     )
-            except Exception:
-                logger.debug("set_session_model failed unexpectedly", exc_info=True)
+                    self._current_model_id = resolved_id
+                    self._current_model_name = _resolve_model_name(
+                        resolved_id, models_by_id
+                    )
+                except RequestError as exc:
+                    if exc.code == -32601:
+                        logger.debug(
+                            "set_session_model not supported; model param ignored",
+                        )
+                    else:
+                        logger.warning(
+                            "Failed to set model %r (resolved=%r): %s (code=%d)",
+                            model, resolved_id, exc, exc.code,
+                        )
+                except Exception:
+                    logger.debug(
+                        "set_session_model failed unexpectedly", exc_info=True,
+                    )
 
         if mode != "agent" and self._session_id:
             try:

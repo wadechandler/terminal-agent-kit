@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -25,7 +26,21 @@ def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
         agent_capabilities=MagicMock(load_session=False),
     ))
     mock_conn.authenticate = AsyncMock(return_value=MagicMock())
-    mock_conn.new_session = AsyncMock(return_value=MagicMock(session_id="test-session-id"))
+    mock_conn.new_session = AsyncMock(return_value=SimpleNamespace(
+        session_id="test-session-id",
+        models=SimpleNamespace(
+            current_model_id="default[]",
+            available_models=[
+                SimpleNamespace(model_id="default[]", name="Auto"),
+                SimpleNamespace(model_id="claude-sonnet-4[thinking=false,context=200k]",
+                                name="Sonnet 4"),
+            ],
+        ),
+        modes=SimpleNamespace(
+            current_mode_id="agent",
+            available_modes=[SimpleNamespace(id="agent", name="Agent")],
+        ),
+    ))
     mock_conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     mock_conn.cancel = AsyncMock()
     mock_conn.close = AsyncMock()
@@ -92,7 +107,7 @@ class TestCursorACPProviderSpawn:
             await provider.spawn("my-agent", model="claude-sonnet-4")
 
             mock_conn.set_session_model.assert_called_once_with(
-                model_id="claude-sonnet-4",
+                model_id="claude-sonnet-4[thinking=false,context=200k]",
                 session_id="test-session-id",
             )
 

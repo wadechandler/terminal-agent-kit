@@ -485,3 +485,60 @@ class TestSetupCommands:
         runner = CliRunner()
         result = runner.invoke(cli, ["setup", "fonts"])
         assert result.exit_code != 0
+
+
+class TestRemoveCommand:
+    def test_remove_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["remove", "my-agent"])
+        assert result.exit_code == 0
+        assert "daemon not running" in result.output
+
+    def test_remove_with_daemon_success(self) -> None:
+        resp = MagicMock(success=True, data={"name": "old-agent", "status": "removed"})
+        result = _invoke_with_daemon(["remove", "--force", "old-agent"], ipc_response=resp)
+        assert result.exit_code == 0
+        assert "removed" in result.output
+
+    def test_remove_running_without_force_refuses(self) -> None:
+        status_resp = MagicMock(
+            success=True, data={"name": "live", "status": "running"},
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=status_resp),
+        ):
+            result = CliRunner().invoke(cli, ["remove", "live"])
+        assert result.exit_code != 0
+        assert "still running" in result.output
+
+    def test_remove_error(self) -> None:
+        resp = MagicMock(success=False, error="No agent named 'ghost'")
+        result = _invoke_with_daemon(["remove", "--force", "ghost"], ipc_response=resp)
+        assert result.exit_code != 0
+        assert "ghost" in result.output
+
+
+class TestInfoCommand:
+    def test_info_no_daemon(self) -> None:
+        result = _invoke_no_daemon(["info"])
+        assert result.exit_code == 0
+        assert "not running" in result.output
+        assert "Session ID" in result.output
+
+    def test_info_with_daemon(self) -> None:
+        resp = MagicMock(
+            success=True,
+            data=[
+                {"name": "my-agent", "provider": "cursor-acp", "status": "running",
+                 "model": "Auto", "tabs": ["sess-123"]},
+            ],
+        )
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.cli.main._run_async", return_value=resp),
+            patch("tak.cli.main._detect_session_id", return_value="sess-123"),
+        ):
+            result = CliRunner().invoke(cli, ["info"])
+        assert result.exit_code == 0
+        assert "my-agent" in result.output
+        assert "running" in result.output

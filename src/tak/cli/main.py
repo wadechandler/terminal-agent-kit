@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 
 import click
 from rich.console import Console
+from rich.markup import escape as rich_escape
 from rich.table import Table
 
 console = Console()
@@ -72,7 +74,11 @@ def spawn(
     no_associate: bool,
     permission_policy: str,
 ) -> None:
-    """Spawn a new agent instance."""
+    """Spawn a new agent instance.
+
+    PROVIDER is the agent provider to use (default: cursor-acp).
+    Run 'tak providers' to see available providers.
+    """
     if permission_policy == "yolo":
         click.echo(
             "Warning: yolo mode grants irrevocable per-tool permissions "
@@ -92,8 +98,7 @@ def spawn(
     from tak.ipc.client import send_request
 
     params: dict[str, object] = {"name": name, "provider": provider}
-    if project:
-        params["project_path"] = project
+    params["project_path"] = project or os.getcwd()
     if model:
         params["model"] = model
     params["permission_policy"] = permission_policy
@@ -145,15 +150,58 @@ def status() -> None:
     table.add_column("Tabs")
 
     for agent in agents:
+        model_display = agent.get("model") or "--"
         table.add_row(
-            agent["name"],
-            agent["provider"],
-            agent.get("model") or "--",
+            rich_escape(agent["name"]),
+            rich_escape(agent["provider"]),
+            rich_escape(model_display),
             agent["status"],
             ", ".join(agent.get("tabs", [])) or "--",
         )
 
     console.print(table)
+
+
+@cli.command()
+def providers() -> None:
+    """List available agent providers."""
+    if not _daemon_available():
+        click.echo("Available providers:")
+        click.echo("  [daemon not running -- start iTerm2 with tak daemon]")
+        click.echo()
+        click.echo("Default providers (when daemon is running):")
+        click.echo("  cursor-acp    Cursor (ACP over stdio)")
+        return
+
+    from tak.ipc.client import send_request
+
+    resp = _run_async(send_request("list_providers"))
+    if not resp.success:
+        click.echo(f"Error: {resp.error}", err=True)
+        sys.exit(1)
+
+    items = resp.data or []
+    if not items:
+        click.echo("No providers registered.")
+        return
+
+    table = Table(title="tak providers")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Protocol")
+    table.add_column("Interaction")
+
+    for p in items:
+        table.add_row(
+            rich_escape(p["id"]),
+            rich_escape(p["name"]),
+            p.get("protocol", "--"),
+            p.get("interaction_model", "--"),
+        )
+
+    console.print(table)
+    click.echo()
+    click.echo("Use the ID as the PROVIDER argument to 'tak spawn'.")
 
 
 @cli.command()
@@ -176,23 +224,98 @@ def stop(name: str) -> None:
 
 
 @cli.command()
-@click.argument("query", nargs=-1, required=True)
-@click.option("--agent", "-a", default=None, help="Target a specific agent by name")
-def ask(query: tuple[str, ...], agent: str | None) -> None:
-    """Send a question to an agent.
+@click.argument("name")
+@click.option("--force", "-f", is_flag=True, help="Remove even if running (stops first)")
+def remove(name: str, force: bool) -> None:
+    """Remove an agent from tak entirely.
 
-    Uses the agent associated with the current tab, or ad-hoc if none.
+    Stops the agent if still running (with --force), then deletes it from
+    state. Without --force, refuses to remove a running agent.
     """
+    if not _daemon_available():
+        click.echo(f"Cannot remove '{name}' -- daemon not running.")
+        return
+
+    from tak.ipc.client import send_request
+
+    if not force:
+        resp = _run_async(send_request("status", {"name": name}))
+        if resp.success and resp.data and resp.data.get("status") == "running":
+            click.echo(
+                f"Agent '{name}' is still running. "
+                "Use --force to stop and remove, or 'tak stop' first.",
+                err=True,
+            )
+            sys.exit(1)
+
+    resp = _run_async(send_request("remove", {"name": name}))
+    if resp.success:
+        click.echo(f"Agent '{name}' removed.")
+    else:
+        click.echo(f"Error: {resp.error}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+def info() -> None:
+    """Show terminal environment and session details.
+
+    Displays the current terminal driver, session ID, associated agent,
+    daemon status, and relevant environment variables.
+    """
+    session_id = _detect_session_id()
+
+    table = Table(title="tak info", show_header=False, box=None, padding=(0, 2))
+    table.add_column("Key", style="cyan")
+    table.add_column("Value")
+
+    table.add_row("Terminal", os.environ.get("TERM_PROGRAM", "unknown"))
+    table.add_row("Term version", os.environ.get("TERM_PROGRAM_VERSION", "--"))
+    table.add_row("Shell", os.environ.get("SHELL", "unknown"))
+    table.add_row("TERM", os.environ.get("TERM", "unknown"))
+    table.add_row("Session ID", session_id or "(not detected)")
+    table.add_row("Daemon", "running" if _daemon_available() else "not running")
+
+    agent_name = ""
+    if _daemon_available() and session_id:
+        from tak.ipc.client import send_request
+
+        resp = _run_async(send_request("list_agents"))
+        if resp.success:
+            for ag in resp.data or []:
+                if session_id in ag.get("tabs", []):
+                    agent_name = ag["name"]
+                    break
+
+    table.add_row("Associated agent", agent_name or "(none)")
+
+    if _daemon_available():
+        from tak.ipc.client import send_request
+
+        resp = _run_async(send_request("list_agents"))
+        if resp.success:
+            agents = resp.data or []
+            running = [a for a in agents if a.get("status") == "running"]
+            table.add_row("Running agents", str(len(running)))
+            table.add_row("Total agents", str(len(agents)))
+
+    table.add_row("CWD", os.getcwd())
+
+    console.print(table)
+
+
+def _prompt_impl(query: tuple[str, ...], agent: str | None) -> None:
+    """Send a prompt to an agent (shared by ``prompt`` and ``ask`` commands)."""
     full_query = " ".join(query)
 
     if not _daemon_available():
-        click.echo(f"Asking: {full_query}")
+        click.echo(f"Prompting: {full_query}")
         click.echo("  [daemon not running -- start iTerm2 with tak daemon]")
         return
 
     from tak.ipc.client import send_request
 
-    params: dict[str, object] = {"message": full_query}
+    params: dict[str, object] = {"message": full_query, "cwd": os.getcwd()}
     if agent:
         params["agent"] = agent
     else:
@@ -209,6 +332,34 @@ def ask(query: tuple[str, ...], agent: str | None) -> None:
     else:
         click.echo(f"Error: {resp.error}", err=True)
         sys.exit(1)
+
+
+@cli.command(name="prompt")
+@click.argument("query", nargs=-1, required=True)
+@click.option("--agent", "-a", default=None, help="Target a specific agent by name")
+def prompt_cmd(query: tuple[str, ...], agent: str | None) -> None:
+    """Send a prompt to an agent.
+
+    Uses the agent associated with the current tab, or ad-hoc if none.
+    Shorthand: tak p
+    """
+    _prompt_impl(query, agent)
+
+
+@cli.command(name="p", hidden=True)
+@click.argument("query", nargs=-1, required=True)
+@click.option("--agent", "-a", default=None, help="Target a specific agent by name")
+def prompt_short(query: tuple[str, ...], agent: str | None) -> None:
+    """Shorthand for 'tak prompt'."""
+    _prompt_impl(query, agent)
+
+
+@cli.command(hidden=True)
+@click.argument("query", nargs=-1, required=True)
+@click.option("--agent", "-a", default=None, help="Target a specific agent by name")
+def ask(query: tuple[str, ...], agent: str | None) -> None:
+    """Send a prompt to an agent (alias for 'tak prompt')."""
+    _prompt_impl(query, agent)
 
 
 @cli.command(name="agents")
@@ -250,10 +401,11 @@ def list_agents(provider: str | None, running_only: bool) -> None:
     table.add_column("Tabs")
 
     for ag in agents:
+        model_display = ag.get("model") or "--"
         table.add_row(
-            ag["name"],
-            ag["provider"],
-            ag.get("model") or "--",
+            rich_escape(ag["name"]),
+            rich_escape(ag["provider"]),
+            rich_escape(model_display),
             ag["status"],
             ", ".join(ag.get("tabs", [])) or "--",
         )

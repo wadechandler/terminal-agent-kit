@@ -583,6 +583,152 @@ class TestIPCServerSetPermissions:
             await ipc_server_with_registry.stop()
 
 
+class TestIPCServerSwitch:
+    async def test_switch_activates_tab(
+        self,
+        agent_manager: AgentManager,
+        mock_provider: MockProvider,
+        short_tmp: Path,
+    ) -> None:
+        activated: list[str] = []
+
+        async def fake_activate(session_id: str) -> None:
+            activated.append(session_id)
+
+        server = IPCServer(
+            agent_manager=agent_manager,
+            socket_path=short_tmp / "sw.sock",
+            providers={"mock": mock_provider},
+            activate_tab=fake_activate,
+        )
+        handle = await agent_manager.spawn("sw-agent", "mock")
+        handle.associated_tabs.append("sess-tab-1")
+        await server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "switch",
+                params={"name": "sw-agent"},
+                socket_path=server.socket_path,
+            )
+            assert resp.success
+            assert resp.data["agent"] == "sw-agent"
+            assert resp.data["session_id"] == "sess-tab-1"
+            assert activated == ["sess-tab-1"]
+        finally:
+            await server.stop()
+
+    async def test_switch_uses_most_recent_tab(
+        self,
+        agent_manager: AgentManager,
+        mock_provider: MockProvider,
+        short_tmp: Path,
+    ) -> None:
+        activated: list[str] = []
+
+        async def fake_activate(session_id: str) -> None:
+            activated.append(session_id)
+
+        server = IPCServer(
+            agent_manager=agent_manager,
+            socket_path=short_tmp / "sw2.sock",
+            providers={"mock": mock_provider},
+            activate_tab=fake_activate,
+        )
+        handle = await agent_manager.spawn("multi-tab", "mock")
+        handle.associated_tabs.extend(["sess-old", "sess-new"])
+        await server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "switch",
+                params={"name": "multi-tab"},
+                socket_path=server.socket_path,
+            )
+            assert resp.success
+            assert resp.data["session_id"] == "sess-new"
+            assert activated == ["sess-new"]
+        finally:
+            await server.stop()
+
+    async def test_switch_no_tabs_returns_error(
+        self,
+        agent_manager: AgentManager,
+        mock_provider: MockProvider,
+        short_tmp: Path,
+    ) -> None:
+        async def fake_activate(session_id: str) -> None:
+            pass
+
+        server = IPCServer(
+            agent_manager=agent_manager,
+            socket_path=short_tmp / "sw3.sock",
+            providers={"mock": mock_provider},
+            activate_tab=fake_activate,
+        )
+        await agent_manager.spawn("no-tabs", "mock")
+        await server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "switch",
+                params={"name": "no-tabs"},
+                socket_path=server.socket_path,
+            )
+            assert not resp.success
+            assert "no associated tabs" in (resp.error or "")
+        finally:
+            await server.stop()
+
+    async def test_switch_nonexistent_agent_returns_error(
+        self,
+        ipc_server: IPCServer,
+    ) -> None:
+        await ipc_server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "switch",
+                params={"name": "ghost"},
+                socket_path=ipc_server.socket_path,
+            )
+            assert not resp.success
+            assert "ghost" in (resp.error or "")
+        finally:
+            await ipc_server.stop()
+
+    async def test_switch_without_callback_returns_error(
+        self,
+        agent_manager: AgentManager,
+        mock_provider: MockProvider,
+        short_tmp: Path,
+    ) -> None:
+        server = IPCServer(
+            agent_manager=agent_manager,
+            socket_path=short_tmp / "sw4.sock",
+            providers={"mock": mock_provider},
+        )
+        handle = await agent_manager.spawn("no-driver", "mock")
+        handle.associated_tabs.append("sess-123")
+        await server.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "switch",
+                params={"name": "no-driver"},
+                socket_path=server.socket_path,
+            )
+            assert not resp.success
+            assert "not available" in (resp.error or "")
+        finally:
+            await server.stop()
+
+
 class TestIPCServerSpawnWithAssociation:
     async def test_spawn_with_session_id_auto_associates(
         self,

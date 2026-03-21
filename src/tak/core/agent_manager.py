@@ -82,6 +82,7 @@ class AgentHandle:
     provider_name: str
     project_path: Path | None
     model: str | None = None
+    model_id: str | None = None
     status: AgentStatus = AgentStatus.STOPPED
     process: asyncio.subprocess.Process | None = None
     associated_tabs: list[str] = field(default_factory=list)
@@ -112,6 +113,20 @@ def _extract_model_display(provider: BaseProvider, agent_name: str) -> str | Non
             name = getattr(session, "current_model_name", None)
             if name:
                 return name
+            return getattr(session, "current_model_id", None)
+    return None
+
+
+def _extract_model_id(provider: BaseProvider, agent_name: str) -> str | None:
+    """Extract the raw model ID from the agent's session.
+
+    Returns the canonical ``current_model_id`` (e.g. ``"default[]"``), which
+    is the value accepted by ``set_session_model``.
+    """
+    get_session = getattr(provider, "get_session", None)
+    if get_session is not None:
+        session = get_session(agent_name)
+        if session is not None:
             return getattr(session, "current_model_id", None)
     return None
 
@@ -152,6 +167,34 @@ class AgentManager:
         """Register a named provider for spawning agents."""
         self._providers[name] = provider
 
+    def resolve_provider_name(self, prefix: str) -> str:
+        """Resolve a provider prefix to its full registered name.
+
+        Allows shorthand like ``cursor`` or ``cur`` instead of ``cursor-acp``.
+
+        Args:
+            prefix: Exact name or unambiguous prefix of a registered provider.
+
+        Returns:
+            The full provider name.
+
+        Raises:
+            ValueError: If no match or multiple matches are found.
+        """
+        if prefix in self._providers:
+            return prefix
+        matches = [n for n in self._providers if n.startswith(prefix)]
+        if len(matches) == 1:
+            return matches[0]
+        if not matches:
+            available = ", ".join(sorted(self._providers)) or "(none)"
+            raise ValueError(
+                f"Unknown provider: {prefix!r}. Available: {available}"
+            )
+        raise ValueError(
+            f"Ambiguous provider prefix {prefix!r}: matches {matches}"
+        )
+
     async def spawn(
         self,
         name: str,
@@ -184,9 +227,8 @@ class AgentManager:
             if existing.status not in (AgentStatus.STOPPED, AgentStatus.ERROR):
                 raise ValueError(f"Agent '{name}' already exists")
 
-        provider = self._providers.get(provider_name)
-        if provider is None:
-            raise ValueError(f"Unknown provider: {provider_name}")
+        provider_name = self.resolve_provider_name(provider_name)
+        provider = self._providers[provider_name]
 
         handle = AgentHandle(
             name=name,
@@ -204,6 +246,7 @@ class AgentManager:
             )
             handle.status = AgentStatus.RUNNING
             handle.acp_session_id = _extract_session_id(provider, name)
+            handle.model_id = _extract_model_id(provider, name)
             if not handle.model:
                 handle.model = _extract_model_display(provider, name)
         except Exception:
@@ -231,6 +274,34 @@ class AgentManager:
         await provider.stop(handle)
         handle.status = AgentStatus.STOPPED
         self._auto_save()
+
+    async def remove(self, name: str) -> None:
+        """Remove an agent entirely from state.
+
+        If the agent is still running, it is stopped first. The handle is
+        deleted from the agent registry and associations are cleaned up.
+
+        Args:
+            name: The agent name to remove.
+
+        Raises:
+            ValueError: If no agent exists with the given name.
+        """
+        handle = self._agents.get(name)
+        if handle is None:
+            raise ValueError(f"No agent named '{name}'")
+
+        if handle.status in (AgentStatus.RUNNING, AgentStatus.STARTING):
+            await self.stop(name)
+
+        self._agents.pop(name, None)
+
+        if self._session_registry is not None:
+            for tab in list(handle.associated_tabs):
+                self._session_registry.disassociate(tab)
+
+        self._auto_save()
+        logger.info("Removed agent %s", name)
 
     async def rename(self, old_name: str, new_name: str) -> AgentHandle:
         """Rename an existing agent.
@@ -285,7 +356,9 @@ class AgentManager:
 
             project_path_str = agent_data.get("project_path")
             project_path = _Path(project_path_str) if project_path_str else None
+            model_id: str | None = agent_data.get("model_id")
             model: str | None = agent_data.get("model")
+            spawn_model = model_id or model
             tabs: list[str] = list(agent_data.get("tabs", []))
             acp_session_id: str | None = agent_data.get("acp_session_id")
 
@@ -300,6 +373,7 @@ class AgentManager:
                 provider_name=provider_name,
                 project_path=project_path,
                 model=model,
+                model_id=model_id,
                 status=AgentStatus.STARTING,
                 associated_tabs=tabs,
                 acp_session_id=acp_session_id,
@@ -308,11 +382,18 @@ class AgentManager:
             self._agents[name] = handle
 
             try:
+                spawn_kwargs: dict[str, Any] = {}
+                if acp_session_id:
+                    spawn_kwargs["acp_session_id"] = acp_session_id
                 handle.process = await provider.spawn(
-                    name, project_path=project_path, model=model
+                    name,
+                    project_path=project_path,
+                    model=spawn_model,
+                    **spawn_kwargs,
                 )
                 handle.status = AgentStatus.RUNNING
                 handle.acp_session_id = _extract_session_id(provider, name)
+                handle.model_id = _extract_model_id(provider, name)
                 if not handle.model:
                     handle.model = _extract_model_display(provider, name)
                 logger.info("Restored agent %r (provider=%s)", name, provider_name)
@@ -327,6 +408,18 @@ class AgentManager:
     def get_provider(self, name: str) -> BaseProvider | None:
         """Look up a registered provider by name, or ``None`` if not found."""
         return self._providers.get(name)
+
+    def list_providers(self) -> list[dict[str, str]]:
+        """Return metadata for all registered providers."""
+        return [
+            {
+                "id": pid,
+                "name": p.name,
+                "protocol": p.protocol,
+                "interaction_model": p.interaction_model.value,
+            }
+            for pid, p in self._providers.items()
+        ]
 
     def list_agents(self) -> list[AgentHandle]:
         """Return all agent handles regardless of status."""

@@ -3,7 +3,7 @@
 # Tracks all phases, tasks, and research questions.
 # Status: not_started | in_progress | research | done | blocked | deferred
 #
-# Last updated: 2026-03-16
+# Last updated: 2026-03-21 (model ID, session ID, associate persistence, signal handling, session reconnect)
 
 project:
   name: Terminal Agent Kit
@@ -45,7 +45,7 @@ phases:
         status: done
         notes: >
           Decision: defer @ai interception. Users interact via
-          tak ask (CLI to daemon over IPC). @ai as shell alias is
+          tak prompt (CLI to daemon over IPC). @ai as shell alias is
           interim. KeystrokeFilter for future polish.
         doc: docs/research/architecture-decisions.md
       - id: p0-prior-art
@@ -203,9 +203,9 @@ phases:
         notes: >
           daemon.py _wire_permission_relay + KeystrokeMonitor for y/n/a
       - id: pf-ipc-ask
-        name: IPC extension for tak ask to stream through daemon
+        name: IPC extension for tak prompt to stream through daemon
         status: done
-        notes: IPCServer.ask method in server.py
+        notes: IPCServer.ask method in server.py (to be renamed in ptf-rename-ask-to-prompt)
 
   - id: phase-g
     name: Terminal Environment Setup
@@ -381,7 +381,7 @@ phases:
           request_permission callbacks. spawn_agent_process wires stdio.
           session_id persisted in state.yaml for future session/load support.
       - id: ptf-ask-empty-response
-        name: "tak ask returns empty response (streaming/prompt collection)"
+        name: "tak prompt returns empty response (streaming/prompt collection)"
         status: done
         notes: >
           Fixed by SDK adoption. TakACPClient.session_update() extracts text
@@ -402,10 +402,14 @@ phases:
           Needs updated API call or alternative approach.
       - id: ptf-signal-handling
         name: "Daemon SIGTERM handler for graceful agent shutdown"
-        status: not_started
+        status: done
         notes: >
-          Currently relies on finally block which may not run if killed.
-          Register asyncio signal handler for SIGTERM.
+          Registered SIGTERM/SIGINT handlers via loop.add_signal_handler().
+          Graceful shutdown stops all agents (5s timeout each), closes IPC
+          server, saves final state. Note: iTerm2 console "Terminate" uses
+          SIGKILL (uncatchable), so immediate-save-on-change (_auto_save
+          in _handle_associate) is the primary reliability mechanism.
+          Fixed 2026-03-21.
       - id: ptf-tryout-guide-fixes
         name: "Tryout guide corrections (socket path, cleanup, asdf note)"
         status: done
@@ -418,6 +422,14 @@ phases:
       - id: ptf-troubleshooting-guide
         name: "Add troubleshooting guide (Script Console, common errors)"
         status: not_started
+      - id: ptf-rename-ask-to-prompt
+        name: "Rename 'tak ask' to 'tak prompt' (with 'tak p' shorthand)"
+        status: done
+        priority: medium
+        notes: >
+          CLI command renamed to 'tak prompt' with 'tak p' shorthand. 'tak ask'
+          kept as hidden alias for backward compat. IPC server accepts both
+          'ask' and 'prompt' methods. Fixed 2026-03-18 (ACP analysis breakout).
       - id: ptf-relay-context-object
         name: "Refactor _wire_permission_relay to accept a context dataclass"
         status: not_started
@@ -472,37 +484,24 @@ phases:
           on ACPSessionManager after new_session().
       - id: ptf-prompt-policy-rejects-unexpectedly
         name: "PROMPT policy rejects tool calls when tab lookup fails"
-        status: not_started
+        status: done
         priority: high
         notes: >
-          Observed with a named agent (test-agent) that had a tab association.
-          Under PROMPT policy, handle_permission calls _find_session_for_agent
-          which checks the SessionRegistry. If the registry lookup returns None
-          (e.g. race during restore, stale registry after daemon restart, or
-          iTerm2 session ID changed), the callback rejects even though the
-          agent has a tab in handle.associated_tabs. Two sub-issues:
-          (1) The permission callback only checks SessionRegistry, not
-          handle.associated_tabs as a fallback (unlike _resolve_agent_for_session
-          in server.py which does both). Fix: mirror the fallback logic.
-          (2) The _adhoc agent is spawned with no tab at all -- under PROMPT it
-          will always reject. Fix: ad-hoc should default to AUTO_ALLOW or the
-          ask command should auto-associate the caller's tab.
-          (3) Race during restore: agent process spawns and may request
-          permissions before _restore_full_state finishes re-populating the
-          registry. Fix: restore associations before spawning agent processes,
-          or queue permission requests until restore completes.
+          Sub-issue (1) fixed: handle_permission now falls back to
+          handle.associated_tabs when SessionRegistry lookup returns None,
+          mirroring _resolve_agent_for_session in server.py.
+          Sub-issues (2) ad-hoc AUTO_ALLOW and (3) restore race remain as
+          follow-up items for Phase M (session persistence).
+          Partial fix 2026-03-18 (ACP analysis breakout).
       - id: ptf-spawn-cwd-default
         name: "Default CWD to caller's directory when --project is omitted"
-        status: not_started
+        status: done
         priority: high
         notes: >
-          When tak spawn or tak ask runs without --project, no project_path is
-          sent to the daemon. acp_session.new_session() falls back to cwd="."
-          which resolves to the daemon's CWD (typically / for iTerm2 AutoLaunch).
-          Fix: CLI should send os.getcwd() as project_path when --project is not
-          given. Also applies to the ad-hoc agent flow in tak ask -- the ask
-          command should forward the caller's CWD so the agent operates in the
-          right directory.
+          CLI now sends os.getcwd() as project_path when --project is omitted
+          (spawn and ask commands). spawn_agent_process also receives cwd= so
+          the OS-level subprocess CWD matches the ACP session CWD.
+          Fixed 2026-03-18 (QF-1, QF-2 from ACP analysis breakout).
       - id: ptf-model-display-name
         name: "Show human-readable model name instead of raw model ID"
         status: done
@@ -511,6 +510,73 @@ phases:
           (e.g. "default[]") and name (e.g. "Default"). Updated
           ACPSessionManager to capture current_model_name and agent_manager to
           prefer it for display. tak agents now shows the readable name.
+          Bracket-suffix resolution (_resolve_model_name, _resolve_model_id)
+          and Rich markup escaping added 2026-03-17. 15 new unit tests.
+      - id: ptf-mcp-passthrough
+        name: "Enable MCP servers for ACP agents via --with-mcp flag"
+        status: deferred
+        priority: high
+        notes: >
+          Promoted to standalone phase-mcp-integration (2026-03-18).
+          Scope grew beyond a tryout fix based on ACP behavior research.
+          See phase-mcp-integration and analysis §15.
+      - id: ptf-starship-noninteractive
+        name: "Guard starship init for non-interactive shells"
+        status: done
+        notes: >
+          Starship errors in non-interactive shells (TERM=dumb) when sourcing
+          .bashrc. Fixed by wrapping eval in [[ $- == *i* ]] guard in the
+          managed block. Fixed 2026-03-18 (QF-5 from ACP analysis breakout).
+      - id: ptf-event-logging
+        name: "Log all ACP session update types and extension methods"
+        status: done
+        notes: >
+          session_update now logs AgentThoughtChunk, ToolCallUpdate, and
+          unknown update types. ext_method and ext_notification log the
+          method name. Fixed 2026-03-18 (QF-3, QF-4 from ACP analysis breakout).
+      - id: ptf-prune-stale-tabs
+        name: "Prune stale tab IDs from AgentHandle on daemon restart"
+        status: done
+        notes: >
+          _restore_full_state now filters handle.associated_tabs against
+          available_sessions after restoring associations. Registry was
+          already correct; the display data in AgentHandle was stale.
+          Fixed 2026-03-19.
+      - id: ptf-model-id-resolution
+        name: "Fix model ID resolution: display name sent instead of model ID"
+        status: done
+        priority: high
+        notes: >
+          On restore, handle.model contained display name "Auto" which was
+          sent to set_session_model instead of model ID "default[]".
+          (1) _resolve_model_id now does reverse lookup by display name.
+          (2) Skip set_session_model when resolved ID matches current model.
+          (3) Added model_id field to AgentHandle, persisted in state.yaml,
+          preferred over display name during restore. Fixed 2026-03-21.
+      - id: ptf-session-id-format-mismatch
+        name: "Fix session ID format mismatch between CLI and Python API"
+        status: done
+        priority: high
+        notes: >
+          $ITERM_SESSION_ID uses w0t0p0:UUID format but iTerm2 Python API
+          session.session_id returns bare UUID. Added _strip_session_prefix()
+          normalisation so restore correctly matches sessions. Fixed 2026-03-21.
+      - id: ptf-associate-state-persistence
+        name: "Persist state immediately on tak associate (not just periodic save)"
+        status: done
+        priority: high
+        notes: >
+          _handle_associate in IPC server updated in-memory state but never
+          called _auto_save(). Association was lost if daemon was killed
+          before the 30s periodic save. Added _auto_save() call to match
+          _handle_spawn and _handle_set_permissions. Fixed 2026-03-21.
+      - id: ptf-switch-ipc-handler
+        name: "Implement IPC handler for tak switch command"
+        status: done
+        notes: >
+          Added _handle_switch to IPCServer with activate_tab callback.
+          Daemon passes iTerm2 tab activation closure. Multi-tab: activates
+          most recently associated tab. 5 new tests. Fixed 2026-03-19.
 
   # ------------------------------------------------------------------
   # New phases identified during gap analysis (2026-03-16)
@@ -521,53 +587,87 @@ phases:
     status: not_started
     task_file: docs/tasks/phase-m-conversation.md
     notes: >
-      Session persistence so tak ask is multi-turn, CWD awareness,
-      mode selection (ask/plan/agent), session reset. Level 1 of the
-      graduated conversation design (ADR-016).
+      Session lifecycle management on top of existing persistence: reset,
+      reconnection, mode/model control via set_config_option, configurable
+      CWD injection. Session persistence across tak prompt calls already
+      works. Keeps the 1:1:1 model (one agent = one process = one session);
+      multi-session support deferred until conceptual model is settled.
+      Level 1 of the graduated conversation design (ADR-016).
     tasks:
-      - id: pm-session-persistence
-        name: Daemon keeps ACP sessions alive; tak ask reuses sessions
+      - id: pm-session-lifecycle
+        name: "close_session() drops session; next prompt creates fresh one"
         status: not_started
       - id: pm-cwd-awareness
-        name: "tak ask sends CWD; daemon attaches to bus messages"
+        name: "tak prompt sends user CWD; daemon attaches to bus messages"
         status: not_started
+      - id: pm-cwd-configurable
+        name: "Configurable CWD injection format (xml/bracket/json/none)"
+        status: not_started
+        notes: >
+          User CWD (os.getcwd at prompt time) is distinct from the session
+          CWD (set once at new_session). Format configurable via config.yaml
+          prompt.cwd_context.format. Default xml for cleanest agent behavior.
       - id: pm-mode-selection
-        name: "--mode ask|plan|agent flag on tak ask"
+        name: "--mode ask|plan|agent flag on tak prompt"
         status: not_started
       - id: pm-session-end
         name: "tak session end [agent] command to reset conversation"
         status: not_started
+      - id: pm-session-reconnect
+        name: "Reconnect to existing ACP session on daemon restart via load_session"
+        status: done
+        notes: >
+          ACPProvider.spawn() accepts optional acp_session_id; tries
+          load_session() first, falls back to new_session() on any error.
+          AgentManager.restore() passes saved acp_session_id from state.yaml.
+          Conversation history preserved across daemon restarts when Cursor
+          still holds the session. Fixed 2026-03-21.
+      - id: pm-config-option-mutation
+        name: "Use set_config_option as primary mutation path for mode/model"
+        status: not_started
+        notes: >
+          Analysis §4: set_config_option works for both mode and model changes.
+          Response returns full refreshed configOptions. Mode changes fire
+          CurrentModeUpdate notifications; model changes do not (update from
+          synchronous response). Replaces separate set_session_mode/model calls.
 
   - id: phase-n-streaming
     name: Streaming and IPC Enhancement
     status: not_started
+    task_file: docs/tasks/phase-n-streaming.md
     notes: >
       Level 2 of conversation design (ADR-016). IPC protocol streaming
-      so tak ask prints text as chunks arrive from the agent.
+      so tak prompt prints text as chunks arrive from the agent.
+      Thresholds from ACP analysis §5.
     tasks:
       - id: pn-streaming-ipc
         name: IPC protocol streaming support
         status: not_started
       - id: pn-streaming-cli
-        name: "tak ask prints streaming output as it arrives"
+        name: "tak prompt prints streaming output as it arrives"
+        status: not_started
+      - id: pn-activity-phases
+        name: "Track agent state (idle/thinking/working/responding) from event types"
+        status: not_started
+      - id: pn-inactivity-detection
+        name: "Inactivity-based timeout with configurable thresholds"
+        status: not_started
+        notes: >
+          10-15s warning, 20-30s abnormal, 30s+ stuck. Timer resets on any
+          event. Initial delay before first event (up to 5s) is normal.
+      - id: pn-cancel-cli
+        name: "Ctrl+C during tak prompt sends session_cancel"
+        status: not_started
+      - id: pn-input-preemption
+        name: "New prompt while in-flight cancels current and starts new"
         status: not_started
 
   - id: phase-o-conversation-pane
     name: Conversation Pane (Warp-like)
-    status: not_started
+    status: deferred
     notes: >
-      Level 3 of conversation design (ADR-016). Textual TUI in an
-      iTerm2 split pane as the dedicated conversation surface.
-    tasks:
-      - id: po-conversation-tui
-        name: Textual conversation widget in split pane
-        status: not_started
-      - id: po-free-text-input
-        name: Free-text responses to agent questions
-        status: not_started
-      - id: po-plan-display
-        name: Dedicated plan/todo rendering in conversation pane
-        status: not_started
+      Superseded by phase-q-conversation-tui which combines this scope
+      with Claude Code TUI patterns. Original tasks absorbed into Phase Q.
 
   - id: phase-r-remote
     name: Remote Agents
@@ -613,6 +713,109 @@ phases:
         status: not_started
 
   # ------------------------------------------------------------------
+  # New phases from ACP analysis breakout (2026-03-18)
+  # ------------------------------------------------------------------
+
+  - id: phase-p-event-fidelity
+    name: ACP Event Fidelity
+    status: not_started
+    task_file: docs/tasks/phase-p-event-fidelity.md
+    notes: >
+      Properly capture, route, and expose all ACP event types and Cursor
+      extension methods. Foundational for streaming (Phase N) and TUI
+      (Phase Q). Currently only AgentMessageChunk text is captured.
+    tasks:
+      - id: pp-event-model
+        name: "SessionEvent dataclass hierarchy for all ACP update types"
+        status: not_started
+      - id: pp-event-queue
+        name: "Replace Queue[str] with Queue[SessionEvent] in TakACPClient"
+        status: not_started
+      - id: pp-ext-ask-question
+        name: "Handle cursor/ask_question with user input routing"
+        status: not_started
+      - id: pp-ext-create-plan
+        name: "Handle cursor/create_plan with plan display and approval"
+        status: not_started
+      - id: pp-ext-update-todos
+        name: "Handle cursor/update_todos for task state tracking"
+        status: not_started
+      - id: pp-ext-task
+        name: "Handle cursor/task for subagent completion display"
+        status: not_started
+      - id: pp-ext-generate-image
+        name: "Handle cursor/generate_image (save to file, iTerm2 inline)"
+        status: not_started
+      - id: pp-session-capabilities
+        name: "Parse sessionCapabilities on initialize; guard unsupported methods"
+        status: not_started
+
+  - id: phase-q-conversation-tui
+    name: Conversation TUI
+    status: not_started
+    task_file: docs/tasks/phase-q-conversation-tui.md
+    notes: >
+      Full-screen Textual TUI for interactive agent sessions. Inspired by
+      Claude Code CLI patterns, adapted for tak multi-agent model. Absorbs
+      Phase O scope. Depends on Phase P (event fidelity).
+    tasks:
+      - id: pq-conversation-widget
+        name: "Scrolling message list with Rich markdown rendering"
+        status: not_started
+      - id: pq-tool-call-display
+        name: "Tool calls as collapsible blocks with title and result"
+        status: not_started
+      - id: pq-thinking-indicator
+        name: "Animated thinking label with elapsed time"
+        status: not_started
+      - id: pq-status-bar
+        name: "Mode indicator + activity + model + elapsed time"
+        status: not_started
+      - id: pq-input-box
+        name: "Text input with slash command and @ file completion"
+        status: not_started
+      - id: pq-mode-cycling
+        name: "Shift+Tab to cycle ask/plan/agent via set_config_option"
+        status: not_started
+      - id: pq-plan-approval
+        name: "Structured plan display from AgentPlanUpdate with approve/reject"
+        status: not_started
+      - id: pq-image-support
+        name: "Image paste (Ctrl+V) and iTerm2 inline image display"
+        status: not_started
+      - id: pq-multi-agent-switch
+        name: "Agent picker/switcher within the TUI"
+        status: not_started
+      - id: pq-ask-question-widget
+        name: "Multi-choice question rendering with keyboard navigation"
+        status: not_started
+
+  - id: phase-mcp-integration
+    name: MCP Integration
+    status: not_started
+    task_file: docs/tasks/phase-mcp-integration.md
+    notes: >
+      Enable MCP servers for ACP agents via .cursor/mcp.json and
+      pre-approval workflow. Promoted from ptf-mcp-passthrough based on
+      ACP analysis §15 depth. Cursor-specific approval bug workaround.
+    tasks:
+      - id: pmcp-read-config
+        name: "Read .cursor/mcp.json from project directory, parse server names"
+        status: not_started
+      - id: pmcp-enable-servers
+        name: "Run cursor agent mcp enable <name> before ACP spawn"
+        status: not_started
+      - id: pmcp-with-mcp-flag
+        name: "--with-mcp flag on tak spawn and tak prompt"
+        status: not_started
+      - id: pmcp-list-servers
+        name: "tak mcp list command wrapping cursor agent mcp list"
+        status: not_started
+      - id: pmcp-provider-generic
+        name: "Abstract MCP pre-approval step in provider interface"
+        status: not_started
+
+  # ------------------------------------------------------------------
   # Existing deferred/future phases (unchanged)
   # ------------------------------------------------------------------
 
@@ -622,14 +825,14 @@ phases:
     notes: >
       KeystrokeFilter or shell alias approach. Depends on proven
       daemon + IPC foundation. Shell alias (simple bash function
-      delegating to tak ask) is an interim step -- see phase-m task
+      delegating to tak prompt) is an interim step -- see phase-m task
       or Wave D.
     tasks:
       - id: pinput-keystroke-filter
         name: iTerm2 KeystrokeFilter for @ai prefix interception
         status: deferred
       - id: pinput-shell-alias
-        name: "@ai shell alias/function delegating to tak ask"
+        name: "@ai shell alias/function delegating to tak prompt"
         status: not_started
         notes: >
           Simple bash function; can be implemented independently of
@@ -761,7 +964,7 @@ research_questions:
     status: answered
     priority: high
     answer: >
-      Decision: tak ask (CLI to daemon via IPC). @ai as shell alias
+      Decision: tak prompt (CLI to daemon via IPC). @ai as shell alias
       interim. KeystrokeFilter deferred. See ADR in
       architecture-decisions.md.
     doc: docs/research/architecture-decisions.md
@@ -774,3 +977,20 @@ research_questions:
       Full audit completed March 2026. PyYAML safe with safe_load,
       h11 needs pinning for httpx, iTerm2 app needs >=3.5.11.
     doc: docs/research/dependency-security-audit.md
+
+  - id: rq-conceptual-model
+    question: >
+      What are the right primitives (process, connection, session, prompt,
+      artifact) and how do they relate to tab agents, worker agents,
+      pipelines, and phases? What OSS orchestration frameworks could serve
+      as the pipeline engine?
+    status: open
+    priority: high
+    notes: >
+      Initial conceptual model captured in the workflow architecture doc.
+      Distinguishes tab agents (user-driven, interactive) from worker agents
+      (pipeline-driven, task-scoped). Pipelines reach down to process
+      spawning. Needs further iteration before defining a pipeline
+      orchestration phase. LangGraph, CrewAI, AutoGen, Prefect/Dagster/
+      Temporal evaluated as candidates.
+    doc: docs/research/multi-agent-workflow-architecture.md

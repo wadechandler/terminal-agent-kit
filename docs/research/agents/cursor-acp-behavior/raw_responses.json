@@ -1,0 +1,5566 @@
+{
+  "run_at": "2026-03-17T11:27:35-0400",
+  "phases": {
+    "handshake": {
+      "phase": "handshake",
+      "started_wall": "2026-03-17T11:27:35-0400",
+      "entries": [
+        {
+          "call": "initialize",
+          "response": {
+            "_meta": null,
+            "agentCapabilities": {
+              "_meta": null,
+              "loadSession": true,
+              "mcpCapabilities": {
+                "_meta": null,
+                "http": true,
+                "sse": true
+              },
+              "promptCapabilities": {
+                "_meta": null,
+                "audio": false,
+                "embeddedContext": false,
+                "image": true
+              },
+              "sessionCapabilities": {
+                "_meta": null,
+                "fork": null,
+                "list": null,
+                "resume": null
+              }
+            },
+            "agentInfo": null,
+            "authMethods": [
+              {
+                "_meta": null,
+                "description": "Authenticate using existing Cursor login credentials. Run 'cursor agent login' first if not logged in.",
+                "id": "cursor_login",
+                "name": "Cursor Login"
+              }
+            ],
+            "protocolVersion": 1
+          }
+        },
+        {
+          "call": "authenticate",
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "new_session",
+          "response": {
+            "_meta": null,
+            "configOptions": [
+              {
+                "currentValue": "agent",
+                "options": [
+                  {
+                    "_meta": null,
+                    "description": "Full agent capabilities with tool access",
+                    "name": "Agent",
+                    "value": "agent"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "Read-only mode for planning and designing before implementation",
+                    "name": "Plan",
+                    "value": "plan"
+                  },
+                  {
+                    "_meta": null,
+                    "description": "Q&A mode - no edits or command execution",
+                    "name": "Ask",
+                    "value": "ask"
+                  }
+                ],
+                "_meta": null,
+                "category": "mode",
+                "description": "Controls how the agent executes tasks",
+                "id": "mode",
+                "name": "Mode",
+                "type": "select"
+              },
+              {
+                "currentValue": "default[]",
+                "options": [
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Auto",
+                    "value": "default[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Composer 1.5",
+                    "value": "composer-1.5[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Composer 1",
+                    "value": "composer-1[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.3",
+                    "value": "gpt-5.3-codex[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.4",
+                    "value": "gpt-5.4[reasoning=medium,context=272k,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4.6",
+                    "value": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Opus 4.6",
+                    "value": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Opus 4.5",
+                    "value": "claude-opus-4-5[thinking=true]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.2",
+                    "value": "gpt-5.2[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3.1 Pro",
+                    "value": "gemini-3.1-pro[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Haiku 4.5",
+                    "value": "claude-haiku-4-5[thinking=true]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.3 Spark",
+                    "value": "gpt-5.3-codex-spark[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Grok Code",
+                    "value": "grok-code-fast-1[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4.5",
+                    "value": "claude-sonnet-4-5[thinking=true,context=200k]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.2",
+                    "value": "gpt-5.2-codex[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.1 Max",
+                    "value": "gpt-5.1-codex-max[reasoning=medium,fast=false]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5.1",
+                    "value": "gpt-5.1[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3 Pro",
+                    "value": "gemini-3-pro[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 3 Flash",
+                    "value": "gemini-3-flash[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Codex 5.1 Mini",
+                    "value": "gpt-5.1-codex-mini[reasoning=medium]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Sonnet 4",
+                    "value": "claude-sonnet-4[thinking=false,context=200k]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "GPT-5 Mini",
+                    "value": "gpt-5-mini[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Gemini 2.5 Flash",
+                    "value": "gemini-2.5-flash[]"
+                  },
+                  {
+                    "_meta": null,
+                    "description": null,
+                    "name": "Kimi K2.5",
+                    "value": "kimi-k2.5[]"
+                  }
+                ],
+                "_meta": null,
+                "category": "model",
+                "description": "Controls which model is used for responses",
+                "id": "model",
+                "name": "Model",
+                "type": "select"
+              }
+            ],
+            "models": {
+              "_meta": null,
+              "availableModels": [
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "default[]",
+                  "name": "Auto"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "composer-1.5[]",
+                  "name": "Composer 1.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "composer-1[]",
+                  "name": "Composer 1"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.3-codex[reasoning=medium,fast=false]",
+                  "name": "Codex 5.3"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+                  "name": "GPT-5.4"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+                  "name": "Sonnet 4.6"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+                  "name": "Opus 4.6"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-opus-4-5[thinking=true]",
+                  "name": "Opus 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.2[reasoning=medium,fast=false]",
+                  "name": "GPT-5.2"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3.1-pro[]",
+                  "name": "Gemini 3.1 Pro"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-haiku-4-5[thinking=true]",
+                  "name": "Haiku 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.3-codex-spark[reasoning=medium]",
+                  "name": "Codex 5.3 Spark"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "grok-code-fast-1[]",
+                  "name": "Grok Code"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4-5[thinking=true,context=200k]",
+                  "name": "Sonnet 4.5"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.2-codex[reasoning=medium,fast=false]",
+                  "name": "Codex 5.2"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+                  "name": "Codex 5.1 Max"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1[reasoning=medium]",
+                  "name": "GPT-5.1"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3-pro[]",
+                  "name": "Gemini 3 Pro"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-3-flash[]",
+                  "name": "Gemini 3 Flash"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5.1-codex-mini[reasoning=medium]",
+                  "name": "Codex 5.1 Mini"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "claude-sonnet-4[thinking=false,context=200k]",
+                  "name": "Sonnet 4"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gpt-5-mini[]",
+                  "name": "GPT-5 Mini"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "gemini-2.5-flash[]",
+                  "name": "Gemini 2.5 Flash"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "modelId": "kimi-k2.5[]",
+                  "name": "Kimi K2.5"
+                }
+              ],
+              "currentModelId": "default[]"
+            },
+            "modes": {
+              "_meta": null,
+              "availableModes": [
+                {
+                  "_meta": null,
+                  "description": "Full agent capabilities with tool access",
+                  "id": "agent",
+                  "name": "Agent"
+                },
+                {
+                  "_meta": null,
+                  "description": "Read-only mode for planning and designing before implementation",
+                  "id": "plan",
+                  "name": "Plan"
+                },
+                {
+                  "_meta": null,
+                  "description": "Q&A mode - no edits or command execution",
+                  "id": "ask",
+                  "name": "Ask"
+                }
+              ],
+              "currentModeId": "agent"
+            },
+            "sessionId": "7c0a0245-9a1f-4d75-be3f-576a4de1aa04"
+          }
+        },
+        {
+          "detail": "models",
+          "current_model_id": "default[]",
+          "available_models": [
+            {
+              "model_id": "default[]",
+              "name": "Auto"
+            },
+            {
+              "model_id": "composer-1.5[]",
+              "name": "Composer 1.5"
+            },
+            {
+              "model_id": "composer-1[]",
+              "name": "Composer 1"
+            },
+            {
+              "model_id": "gpt-5.3-codex[reasoning=medium,fast=false]",
+              "name": "Codex 5.3"
+            },
+            {
+              "model_id": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+              "name": "GPT-5.4"
+            },
+            {
+              "model_id": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+              "name": "Sonnet 4.6"
+            },
+            {
+              "model_id": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+              "name": "Opus 4.6"
+            },
+            {
+              "model_id": "claude-opus-4-5[thinking=true]",
+              "name": "Opus 4.5"
+            },
+            {
+              "model_id": "gpt-5.2[reasoning=medium,fast=false]",
+              "name": "GPT-5.2"
+            },
+            {
+              "model_id": "gemini-3.1-pro[]",
+              "name": "Gemini 3.1 Pro"
+            },
+            {
+              "model_id": "claude-haiku-4-5[thinking=true]",
+              "name": "Haiku 4.5"
+            },
+            {
+              "model_id": "gpt-5.3-codex-spark[reasoning=medium]",
+              "name": "Codex 5.3 Spark"
+            },
+            {
+              "model_id": "grok-code-fast-1[]",
+              "name": "Grok Code"
+            },
+            {
+              "model_id": "claude-sonnet-4-5[thinking=true,context=200k]",
+              "name": "Sonnet 4.5"
+            },
+            {
+              "model_id": "gpt-5.2-codex[reasoning=medium,fast=false]",
+              "name": "Codex 5.2"
+            },
+            {
+              "model_id": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+              "name": "Codex 5.1 Max"
+            },
+            {
+              "model_id": "gpt-5.1[reasoning=medium]",
+              "name": "GPT-5.1"
+            },
+            {
+              "model_id": "gemini-3-pro[]",
+              "name": "Gemini 3 Pro"
+            },
+            {
+              "model_id": "gemini-3-flash[]",
+              "name": "Gemini 3 Flash"
+            },
+            {
+              "model_id": "gpt-5.1-codex-mini[reasoning=medium]",
+              "name": "Codex 5.1 Mini"
+            },
+            {
+              "model_id": "claude-sonnet-4[thinking=false,context=200k]",
+              "name": "Sonnet 4"
+            },
+            {
+              "model_id": "gpt-5-mini[]",
+              "name": "GPT-5 Mini"
+            },
+            {
+              "model_id": "gemini-2.5-flash[]",
+              "name": "Gemini 2.5 Flash"
+            },
+            {
+              "model_id": "kimi-k2.5[]",
+              "name": "Kimi K2.5"
+            }
+          ],
+          "raw": {
+            "_meta": null,
+            "availableModels": [
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "default[]",
+                "name": "Auto"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "composer-1.5[]",
+                "name": "Composer 1.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "composer-1[]",
+                "name": "Composer 1"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.3-codex[reasoning=medium,fast=false]",
+                "name": "Codex 5.3"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+                "name": "GPT-5.4"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+                "name": "Sonnet 4.6"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+                "name": "Opus 4.6"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-opus-4-5[thinking=true]",
+                "name": "Opus 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.2[reasoning=medium,fast=false]",
+                "name": "GPT-5.2"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3.1-pro[]",
+                "name": "Gemini 3.1 Pro"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-haiku-4-5[thinking=true]",
+                "name": "Haiku 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.3-codex-spark[reasoning=medium]",
+                "name": "Codex 5.3 Spark"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "grok-code-fast-1[]",
+                "name": "Grok Code"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4-5[thinking=true,context=200k]",
+                "name": "Sonnet 4.5"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.2-codex[reasoning=medium,fast=false]",
+                "name": "Codex 5.2"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+                "name": "Codex 5.1 Max"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1[reasoning=medium]",
+                "name": "GPT-5.1"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3-pro[]",
+                "name": "Gemini 3 Pro"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-3-flash[]",
+                "name": "Gemini 3 Flash"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5.1-codex-mini[reasoning=medium]",
+                "name": "Codex 5.1 Mini"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "claude-sonnet-4[thinking=false,context=200k]",
+                "name": "Sonnet 4"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gpt-5-mini[]",
+                "name": "GPT-5 Mini"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "gemini-2.5-flash[]",
+                "name": "Gemini 2.5 Flash"
+              },
+              {
+                "_meta": null,
+                "description": null,
+                "modelId": "kimi-k2.5[]",
+                "name": "Kimi K2.5"
+              }
+            ],
+            "currentModelId": "default[]"
+          }
+        },
+        {
+          "detail": "modes",
+          "current_mode_id": "agent",
+          "available_modes": [
+            {
+              "mode_id": "agent",
+              "name": "Agent"
+            },
+            {
+              "mode_id": "plan",
+              "name": "Plan"
+            },
+            {
+              "mode_id": "ask",
+              "name": "Ask"
+            }
+          ],
+          "raw": {
+            "_meta": null,
+            "availableModes": [
+              {
+                "_meta": null,
+                "description": "Full agent capabilities with tool access",
+                "id": "agent",
+                "name": "Agent"
+              },
+              {
+                "_meta": null,
+                "description": "Read-only mode for planning and designing before implementation",
+                "id": "plan",
+                "name": "Plan"
+              },
+              {
+                "_meta": null,
+                "description": "Q&A mode - no edits or command execution",
+                "id": "ask",
+                "name": "Ask"
+              }
+            ],
+            "currentModeId": "agent"
+          }
+        },
+        {
+          "detail": "config_options",
+          "options": [
+            {
+              "currentValue": "agent",
+              "options": [
+                {
+                  "_meta": null,
+                  "description": "Full agent capabilities with tool access",
+                  "name": "Agent",
+                  "value": "agent"
+                },
+                {
+                  "_meta": null,
+                  "description": "Read-only mode for planning and designing before implementation",
+                  "name": "Plan",
+                  "value": "plan"
+                },
+                {
+                  "_meta": null,
+                  "description": "Q&A mode - no edits or command execution",
+                  "name": "Ask",
+                  "value": "ask"
+                }
+              ],
+              "_meta": null,
+              "category": "mode",
+              "description": "Controls how the agent executes tasks",
+              "id": "mode",
+              "name": "Mode",
+              "type": "select"
+            },
+            {
+              "currentValue": "default[]",
+              "options": [
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Auto",
+                  "value": "default[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Composer 1.5",
+                  "value": "composer-1.5[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Composer 1",
+                  "value": "composer-1[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.3",
+                  "value": "gpt-5.3-codex[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.4",
+                  "value": "gpt-5.4[reasoning=medium,context=272k,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4.6",
+                  "value": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Opus 4.6",
+                  "value": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Opus 4.5",
+                  "value": "claude-opus-4-5[thinking=true]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.2",
+                  "value": "gpt-5.2[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3.1 Pro",
+                  "value": "gemini-3.1-pro[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Haiku 4.5",
+                  "value": "claude-haiku-4-5[thinking=true]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.3 Spark",
+                  "value": "gpt-5.3-codex-spark[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Grok Code",
+                  "value": "grok-code-fast-1[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4.5",
+                  "value": "claude-sonnet-4-5[thinking=true,context=200k]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.2",
+                  "value": "gpt-5.2-codex[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.1 Max",
+                  "value": "gpt-5.1-codex-max[reasoning=medium,fast=false]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5.1",
+                  "value": "gpt-5.1[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3 Pro",
+                  "value": "gemini-3-pro[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 3 Flash",
+                  "value": "gemini-3-flash[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Codex 5.1 Mini",
+                  "value": "gpt-5.1-codex-mini[reasoning=medium]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Sonnet 4",
+                  "value": "claude-sonnet-4[thinking=false,context=200k]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "GPT-5 Mini",
+                  "value": "gpt-5-mini[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Gemini 2.5 Flash",
+                  "value": "gemini-2.5-flash[]"
+                },
+                {
+                  "_meta": null,
+                  "description": null,
+                  "name": "Kimi K2.5",
+                  "value": "kimi-k2.5[]"
+                }
+              ],
+              "_meta": null,
+              "category": "model",
+              "description": "Controls which model is used for responses",
+              "id": "model",
+              "name": "Model",
+              "type": "select"
+            }
+          ]
+        },
+        {
+          "call": "list_sessions",
+          "error": "RequestError code=-32601: \"Method not found\": session/list"
+        }
+      ],
+      "error": null
+    },
+    "model_mode": {
+      "phase": "model_mode",
+      "started_wall": "2026-03-17T11:27:37-0400",
+      "entries": [
+        {
+          "call": "set_session_model",
+          "model_id": "default[]",
+          "model_name": "Auto",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "composer-1.5[]",
+          "model_name": "Composer 1.5",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "composer-1[]",
+          "model_name": "Composer 1",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.3-codex[reasoning=medium,fast=false]",
+          "model_name": "Codex 5.3",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.4[reasoning=medium,context=272k,fast=false]",
+          "model_name": "GPT-5.4",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+          "model_name": "Sonnet 4.6",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-opus-4-6[thinking=true,context=200k,effort=high,fast=false]",
+          "model_name": "Opus 4.6",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-opus-4-5[thinking=true]",
+          "model_name": "Opus 4.5",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.2[reasoning=medium,fast=false]",
+          "model_name": "GPT-5.2",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gemini-3.1-pro[]",
+          "model_name": "Gemini 3.1 Pro",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-haiku-4-5[thinking=true]",
+          "model_name": "Haiku 4.5",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.3-codex-spark[reasoning=medium]",
+          "model_name": "Codex 5.3 Spark",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "grok-code-fast-1[]",
+          "model_name": "Grok Code",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-sonnet-4-5[thinking=true,context=200k]",
+          "model_name": "Sonnet 4.5",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.2-codex[reasoning=medium,fast=false]",
+          "model_name": "Codex 5.2",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.1-codex-max[reasoning=medium,fast=false]",
+          "model_name": "Codex 5.1 Max",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.1[reasoning=medium]",
+          "model_name": "GPT-5.1",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gemini-3-pro[]",
+          "model_name": "Gemini 3 Pro",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gemini-3-flash[]",
+          "model_name": "Gemini 3 Flash",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5.1-codex-mini[reasoning=medium]",
+          "model_name": "Codex 5.1 Mini",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "claude-sonnet-4[thinking=false,context=200k]",
+          "model_name": "Sonnet 4",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gpt-5-mini[]",
+          "model_name": "GPT-5 Mini",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "gemini-2.5-flash[]",
+          "model_name": "Gemini 2.5 Flash",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "kimi-k2.5[]",
+          "model_name": "Kimi K2.5",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "nonexistent-model",
+          "label": "invalid_model_test",
+          "success": false,
+          "error_code": -32602,
+          "error_message": "Invalid params"
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "",
+          "label": "invalid_model_test",
+          "success": false,
+          "error_code": -32602,
+          "error_message": "Invalid params"
+        },
+        {
+          "call": "set_session_model",
+          "model_id": "default",
+          "label": "invalid_model_test",
+          "success": false,
+          "error_code": -32602,
+          "error_message": "Invalid params"
+        },
+        {
+          "call": "set_session_mode",
+          "mode_id": "agent",
+          "mode_name": "Agent",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_mode",
+          "mode_id": "plan",
+          "mode_name": "Plan",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        },
+        {
+          "call": "set_session_mode",
+          "mode_id": "ask",
+          "mode_name": "Ask",
+          "success": true,
+          "response": {
+            "_meta": null
+          }
+        }
+      ],
+      "error": null
+    },
+    "prompts": {
+      "phase": "prompts",
+      "started_wall": "2026-03-17T11:27:43-0400",
+      "entries": [
+        {
+          "prompt_text": "What files are in the current directory? List them.",
+          "sent_wall": "2026-03-17T11:27:43-0400",
+          "response_wall": "2026-03-17T11:28:05-0400",
+          "duration_s": 22.054131165961735,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 34,
+          "updates": [
+            {
+              "timestamp": 22.37490708299447,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe use",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.375295166973956,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r wants to kn",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.375516000087373,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ow what files are in",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.375571083044633,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " the current di",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.375602292013355,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rectory. I sho",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.421706375083886,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "uld list the files",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.47267725004349,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " in the works",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.606111750006676,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "pace director",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.653770125005394,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "y. I can use ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.711949667078443,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "the list_dir tool or",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.712100833072327,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " run a terminal c",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.740988000063226,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ommand like `ls`. Let me use list_dir to get the contents of the workspace.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 22.79136962501798,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 22.889460833044723,
+              "wall_clock": "2026-03-17T11:27:58-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "search",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Find",
+                "toolCallId": "tool_f198ae6f-da69-4424-8473-96b8a862fa8",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 23.390423999982886,
+              "wall_clock": "2026-03-17T11:27:59-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_f198ae6f-da69-4424-8473-96b8a862fa8",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 23.505498917074874,
+              "wall_clock": "2026-03-17T11:27:59-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "totalFiles": 6,
+                  "truncated": false
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_f198ae6f-da69-4424-8473-96b8a862fa8",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 28.928169333026744,
+              "wall_clock": "2026-03-17T11:28:04-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nI fo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 28.928610707982443,
+              "wall_clock": "2026-03-17T11:28:04-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "und the files",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 28.980772332986817,
+              "wall_clock": "2026-03-17T11:28:04-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " in the current directory. Let me present them to the user in a clear list format.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 29.382019917014986,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nFiles in the cu",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.414382999995723,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rrent direct",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.47091429203283,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ory:\n\n| File   ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.542425292078406,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "    |\n|--------",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.588236708077602,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "---|\n| `note",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.6282276250422,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s.md` |\n| `da",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.667627250077203,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ta.json` |\n| `hel",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.753476042067632,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lo.ts` |\n| `he",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.794854875071906,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "llo.js` |\n| `He",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.847651042044163,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "llo.java` |\n| `",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.938656583079137,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "hello.py` |\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.981701917015016,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "There are 6 ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 29.982474875054322,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "items: one m",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 30.072545957984403,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "arkdown file, ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 30.122785291983746,
+              "wall_clock": "2026-03-17T11:28:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "one JSON file, and four source files (TypeScript, JavaScript, Java, Python).",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "prompt_text": "Read hello.py and tell me what it does in one sentence.",
+          "sent_wall": "2026-03-17T11:28:05-0400",
+          "response_wall": "2026-03-17T11:28:14-0400",
+          "duration_s": 8.908342833048664,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 11,
+          "updates": [
+            {
+              "timestamp": 36.13936575001571,
+              "wall_clock": "2026-03-17T11:28:11-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe user wan",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 36.13951424998231,
+              "wall_clock": "2026-03-17T11:28:11-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ts me to read the hello.py file and summarize what it does in one sentence.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 36.17727795802057,
+              "wall_clock": "2026-03-17T11:28:11-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 36.271644000080414,
+              "wall_clock": "2026-03-17T11:28:12-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "read",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Read File",
+                "toolCallId": "tool_948f33a3-5f0e-4faf-86ea-9e8fb2cf007",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 36.850356000009924,
+              "wall_clock": "2026-03-17T11:28:12-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_948f33a3-5f0e-4faf-86ea-9e8fb2cf007",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 36.894080292084254,
+              "wall_clock": "2026-03-17T11:28:12-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "content": "print(\"Hello from Python!\")\n"
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_948f33a3-5f0e-4faf-86ea-9e8fb2cf007",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 38.665174000081606,
+              "wall_clock": "2026-03-17T11:28:14-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe f",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 38.71351295802742,
+              "wall_clock": "2026-03-17T11:28:14-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ile is very si",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 38.75521854206454,
+              "wall_clock": "2026-03-17T11:28:14-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "mple - it ju",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 38.81623570807278,
+              "wall_clock": "2026-03-17T11:28:14-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "st prints \"Hello from Python!\" to the console. I can summarize this in one sentence.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 39.036608958034776,
+              "wall_clock": "2026-03-17T11:28:14-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nIt prints the message `\"Hello from Python!\"` to the console.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "prompt_text": "Create a file called greeting.py that prints 'Hello from Cursor'",
+          "sent_wall": "2026-03-17T11:28:14-0400",
+          "response_wall": "2026-03-17T11:28:23-0400",
+          "duration_s": 8.699020582949743,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 12,
+          "updates": [
+            {
+              "timestamp": 45.131025750073604,
+              "wall_clock": "2026-03-17T11:28:20-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe use",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.14432591700461,
+              "wall_clock": "2026-03-17T11:28:20-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r wants me to ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.19152304204181,
+              "wall_clock": "2026-03-17T11:28:20-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "create a new f",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.2246925419895,
+              "wall_clock": "2026-03-17T11:28:20-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ile called gree",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.274061125004664,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ting.py that",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.2742413750384,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " prints 'Hello from Cursor'. I'll use the write tool to create this file.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 45.33529112499673,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 45.51639220805373,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "edit",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Edit File",
+                "toolCallId": "tool_ad9b5474-f2c1-433d-9921-81f6364e838",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 46.0904459169833,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_ad9b5474-f2c1-433d-9921-81f6364e838",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 46.192415875033475,
+              "wall_clock": "2026-03-17T11:28:21-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "newText": "print('Hello from Cursor')\n",
+                    "oldText": null,
+                    "path": "/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/greeting.py",
+                    "type": "diff"
+                  }
+                ],
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_ad9b5474-f2c1-433d-9921-81f6364e838",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 47.37764775007963,
+              "wall_clock": "2026-03-17T11:28:23-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe file was created successfully. I'll let the user know it's done.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 47.73288416699506,
+              "wall_clock": "2026-03-17T11:28:23-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nCreated `greeting.py` so it prints `Hello from Cursor` when you run it.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "prompt_text": "Run hello.py and show me the output.",
+          "sent_wall": "2026-03-17T11:28:23-0400",
+          "response_wall": "2026-03-17T11:28:31-0400",
+          "duration_s": 7.902749250060879,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 13,
+          "updates": [
+            {
+              "timestamp": 52.85877024999354,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe use",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 52.89317654201295,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r wants me to run h",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 52.938273624982685,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ello.py and show t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 52.9384340000106,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "hem the output. I'll use the run_terminal_cmd to execute the Python script.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 52.976407875074074,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 53.02718850004021,
+              "wall_clock": "2026-03-17T11:28:28-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "execute",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Terminal",
+                "toolCallId": "tool_b56bc2cb-6b8d-4ac0-90f4-a54297edb56",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 53.90045779198408,
+              "wall_clock": "2026-03-17T11:28:29-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_b56bc2cb-6b8d-4ac0-90f4-a54297edb56",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 54.13259975006804,
+              "wall_clock": "2026-03-17T11:28:29-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "exitCode": 0,
+                  "stdout": "Hello from Python!\n",
+                  "stderr": ""
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_b56bc2cb-6b8d-4ac0-90f4-a54297edb56",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 55.187387875048444,
+              "wall_clock": "2026-03-17T11:28:30-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 55.22608383302577,
+              "wall_clock": "2026-03-17T11:28:30-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "script ran suc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 55.2263644579798,
+              "wall_clock": "2026-03-17T11:28:30-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cessfully. The",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 55.273172833025455,
+              "wall_clock": "2026-03-17T11:28:31-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " output is \"Hello from Python!\" as expected. I'll share this with the user.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 55.62204179202672,
+              "wall_clock": "2026-03-17T11:28:31-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nOutput from running `hello.py`:\n\n```\nHello from Python!\n```",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": [
+            {
+              "timestamp": 53.90225241705775,
+              "wall_clock": "2026-03-17T11:28:29-0400",
+              "tool_name": "`python3 /var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/hello.py`",
+              "tool_call": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "content": {
+                      "_meta": null,
+                      "annotations": null,
+                      "text": "Not in allowlist: python3 /var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/hello.py",
+                      "type": "text"
+                    },
+                    "type": "content"
+                  }
+                ],
+                "kind": "execute",
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "pending",
+                "title": "`python3 /var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/hello.py`",
+                "toolCallId": "tool_b56bc2cb-6b8d-4ac0-90f4-a54297edb56"
+              },
+              "options": [
+                {
+                  "_meta": null,
+                  "kind": "allow_once",
+                  "name": "Allow once",
+                  "optionId": "allow-once"
+                },
+                {
+                  "_meta": null,
+                  "kind": "allow_always",
+                  "name": "Allow always",
+                  "optionId": "allow-always"
+                },
+                {
+                  "_meta": null,
+                  "kind": "reject_once",
+                  "name": "Reject",
+                  "optionId": "reject-once"
+                }
+              ],
+              "decision": "allow-always"
+            }
+          ]
+        }
+      ],
+      "error": null
+    },
+    "permissions": {
+      "phase": "permissions",
+      "started_wall": "2026-03-17T11:28:31-0400",
+      "entries": [
+        {
+          "mode": "reject-once",
+          "prompt_text": "Create a file called should_not_exist.txt with the text 'test'",
+          "sent_wall": "2026-03-17T11:28:31-0400",
+          "response_wall": "2026-03-17T11:28:40-0400",
+          "duration_s": 8.781810124986805,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 11,
+          "updates": [
+            {
+              "timestamp": 61.74905529199168,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 61.79069966706447,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "user wants me t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 61.84682724997401,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "o create a file",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 61.88716729206499,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " called should_",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 61.887318333028816,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "not_exist.txt with the text 'test'. I'll use the write tool to create this file.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 61.936369292088784,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 62.039580999989994,
+              "wall_clock": "2026-03-17T11:28:37-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "edit",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Edit File",
+                "toolCallId": "tool_dbfc7dc7-1990-4205-a0b8-0e789c28b0e",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 62.74175745807588,
+              "wall_clock": "2026-03-17T11:28:38-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_dbfc7dc7-1990-4205-a0b8-0e789c28b0e",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 62.84440658299718,
+              "wall_clock": "2026-03-17T11:28:38-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "newText": "test\n",
+                    "oldText": null,
+                    "path": "/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/should_not_exist.txt",
+                    "type": "diff"
+                  }
+                ],
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_dbfc7dc7-1990-4205-a0b8-0e789c28b0e",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 64.41409237508196,
+              "wall_clock": "2026-03-17T11:28:40-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nDone. I created the file should_not_exist.txt with the text 'test'.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 64.41579554206692,
+              "wall_clock": "2026-03-17T11:28:40-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nCreated `should_not_exist.txt` with the text `test`.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        }
+      ],
+      "error": null
+    },
+    "cwd_behavior": {
+      "phase": "cwd_behavior",
+      "started_wall": "2026-03-17T11:28:40-0400",
+      "entries": [
+        {
+          "test": "cwd_query",
+          "prompt_text": "What is your current working directory? Print the absolute path and list what files you see.",
+          "sent_wall": "2026-03-17T11:28:40-0400",
+          "response_wall": "2026-03-17T11:28:52-0400",
+          "duration_s": 12.516705832909793,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 90,
+          "updates": [
+            {
+              "timestamp": 69.62337908300105,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe use",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.66736383305397,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "r is asking ab",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.7128316250164,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "out the current",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.71342291706242,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " working directory",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.801394833019,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ". They want t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.84583012503572,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "o know:\n1. The",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.84596666705329,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " absolute pa",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.89803758298513,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "th of the cur",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 69.99132050003391,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rent working directo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.04571591701824,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ry\n2. A list o",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.16242266702466,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "f files in th",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.17825654207263,
+              "wall_clock": "2026-03-17T11:28:45-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "at directory",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.2731223750161,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\nFrom the u",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.40789895807393,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ser_info, the ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.42597316706087,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "workspace pa",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.52217795804609,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "th is: /var/fo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.55417233298067,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lders/vj/tkmrz5c",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.59437095804606,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "j4yz56zrtvb8lv",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.64159720798489,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "c540000gn/T/",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.68435550003778,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tak-inspect-lsdfuw4",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.73276720801368,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "w\n\nI can lis",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.76690637506545,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t the files u",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.8084544170415,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "sing the glob",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.89195416704752,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "_file_search too",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.94085937505588,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "l to get the cur",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 70.9881218749797,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rent content",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.02468608308118,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s. I already ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.12131837499328,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "know from ea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.15354125003796,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rlier that ther",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.23764312500134,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e were: notes.m",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.23780362505931,
+              "wall_clock": "2026-03-17T11:28:46-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d, data.json",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.27951200003736,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ", hello.ts, hel",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.36511441704351,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lo.js, Hello.j",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.36533487506676,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ava, hello.py. B",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.4485821670387,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ut I also crea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.4936155420728,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ted greeting.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.53730133303907,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "py and should_",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.58101545798127,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "not_exist.txt, so t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.58119091705885,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "he list should inc",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.66048104199581,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lude those now.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.71308820799459,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\nLet me run ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.75142854207661,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "a command to ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.75157833308913,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "get the curren",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.83864787500352,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t working directory a",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.880023292033,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "nd list files -",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.92719979200047,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " that way I'm ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.92788654204924,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "giving the user accurate, current information from the shell's perspective.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 71.96556008304469,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 72.01085420802701,
+              "wall_clock": "2026-03-17T11:28:47-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "execute",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Terminal",
+                "toolCallId": "tool_6be3a4ac-f326-48ea-afdf-d3a79f214c6",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 72.8195212080609,
+              "wall_clock": "2026-03-17T11:28:48-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_6be3a4ac-f326-48ea-afdf-d3a79f214c6",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 73.17718966701068,
+              "wall_clock": "2026-03-17T11:28:48-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "exitCode": 0,
+                  "stdout": "/private/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w\ntotal 64\ndrwx------@  10 wadechandler  staff    320 Mar 17 11:28 .\ndrwx------@ 498 wadechandler  staff  15936 Mar 17 11:28 ..\n-rw-r--r--@   1 wadechandler  staff    122 Mar 17 11:27 Hello.java\n-rw-r--r--@   1 wadechandler  staff     62 Mar 17 11:27 data.json\n-rw-r--r--@   1 wadechandler  staff     27 Mar 17 11:28 greeting.py\n-rw-r--r--@   1 wadechandler  staff     39 Mar 17 11:27 hello.js\n-rw-r--r--@   1 wadechandler  staff     28 Mar 17 11:27 hello.py\n-rw-r--r--@   1 wadechandler  staff     64 Mar 17 11:27 hello.ts\n-rw-r--r--@   1 wadechandler  staff     53 Mar 17 11:27 notes.md\n-rw-r--r--@   1 wadechandler  staff      5 Mar 17 11:28 should_not_exist.txt\n",
+                  "stderr": ""
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_6be3a4ac-f326-48ea-afdf-d3a79f214c6",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 74.8921309170546,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nI hav",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.89237666700501,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e the inform",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.892508167075,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ation. On ma",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.89581116707996,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cOS, the pat",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.89603516703937,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "h shows as /",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.89651833300013,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "private/var/.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.96637833304703,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ".. when you ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 74.98350895801559,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "pwd from tha",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 75.07565108302515,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t directory -",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 75.07588516699616,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " the /var is t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 75.1118384579895,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ypically a s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 75.15152083302382,
+              "wall_clock": "2026-03-17T11:28:50-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ymlink to /private/var. I'll report the absolute path and list the files.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 75.46950920799281,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n**Current w",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.54221341700759,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "orking directo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.61766358301975,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ry (absolute p",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.66769387503155,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ath):**  \n`/",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.75082525005564,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "private/var/",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.79707579198293,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "folders/vj/tkmrz5c",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.83556258305907,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "j4yz56zrtvb8lvc540000gn/T/t",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 75.91934862500057,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ak-inspect-lsdfuw4w`",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.01287416706327,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n**Files in tha",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.01414529199246,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t directory:**",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.09127741702832,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n| File       ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.13009212503675,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "          |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.17770408303477,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "--------------",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.2467732920777,
+              "wall_clock": "2026-03-17T11:28:51-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "--------|\n| ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.25420125003438,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "`Hello.java`         ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.34435412508901,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "|\n| `data.json",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.34595354204066,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "`          |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.42798566701822,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " `greeting.p",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.43070949998219,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "y`        |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.51234854198992,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " `hello.js` ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.51280133298133,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "          |\n|",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.56055241706781,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " `hello.py`  ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.65253362501971,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "         |\n| `h",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.69968370802235,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ello.ts`         ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.79191583301872,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "  |\n| `notes",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.83484233298805,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ".md`        ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 76.93446712498553,
+              "wall_clock": "2026-03-17T11:28:52-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "   |\n| `should_not_exist.txt` |\n\nThere are 8 files total (plus `.` and `..`).",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": [
+            {
+              "timestamp": 72.8203397920588,
+              "wall_clock": "2026-03-17T11:28:48-0400",
+              "tool_name": "`pwd && ls -la`",
+              "tool_call": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "content": {
+                      "_meta": null,
+                      "annotations": null,
+                      "text": "Not in allowlist: pwd",
+                      "type": "text"
+                    },
+                    "type": "content"
+                  }
+                ],
+                "kind": "execute",
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "pending",
+                "title": "`pwd && ls -la`",
+                "toolCallId": "tool_6be3a4ac-f326-48ea-afdf-d3a79f214c6"
+              },
+              "options": [
+                {
+                  "_meta": null,
+                  "kind": "allow_once",
+                  "name": "Allow once",
+                  "optionId": "allow-once"
+                },
+                {
+                  "_meta": null,
+                  "kind": "allow_always",
+                  "name": "Allow always",
+                  "optionId": "allow-always"
+                },
+                {
+                  "_meta": null,
+                  "kind": "reject_once",
+                  "name": "Reject",
+                  "optionId": "reject-once"
+                }
+              ],
+              "decision": "allow-always"
+            }
+          ]
+        }
+      ],
+      "error": null
+    },
+    "streaming": {
+      "phase": "streaming",
+      "started_wall": "2026-03-17T11:28:52-0400",
+      "entries": [
+        {
+          "test": "long_running_prompt",
+          "prompt_text": "Create a Python script called fib.py that generates the first 100 Fibonacci numbers, writes them to fib.json as a JSON array, then reads the file back and prints how many numbers are in it.",
+          "sent_wall": "2026-03-17T11:28:52-0400",
+          "response_wall": "2026-03-17T11:29:06-0400",
+          "duration_s": 14.081575916032307,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 81,
+          "updates": [
+            {
+              "timestamp": 81.95298745797481,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe user wan",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 81.9991641669767,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ts me to crea",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.04596125008538,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "te a Python s",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.09098658303265,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cript that:\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.09178054204676,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "1. Generates ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.1922785830684,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "the first 100",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.22559212497436,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Fibonacci n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.231448458042,
+              "wall_clock": "2026-03-17T11:28:57-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "umbers\n2. Wr",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.30341983307153,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ites them to ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.31489999999758,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "fib.json as ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.41060683305841,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "a JSON array\n3.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.41112137504388,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Reads the fil",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.50002333300654,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "e back\n4. Prints",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.62568945798557,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " how many numb",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.6649585000705,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ers are in it",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.66677995806094,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\nI'll create the f",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.70782887504902,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ib.py script ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.74325120798312,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "with this logic. I'll need to use the json module for reading/writing JSON.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 82.80697200004943,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 82.83682741702069,
+              "wall_clock": "2026-03-17T11:28:58-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "edit",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Edit File",
+                "toolCallId": "tool_6716cc37-c65f-4821-b718-f32c319f805",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 84.55346683308017,
+              "wall_clock": "2026-03-17T11:29:00-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_6716cc37-c65f-4821-b718-f32c319f805",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 84.65803858300205,
+              "wall_clock": "2026-03-17T11:29:00-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": [
+                  {
+                    "_meta": null,
+                    "newText": "import json\n\n# Generate first 100 Fibonacci numbers\nfib = [0, 1]\nfor _ in range(98):\n    fib.append(fib[-1] + fib[-2])\n\n# Write to fib.json\nwith open(\"fib.json\", \"w\") as f:\n    json.dump(fib, f)\n\n# Read back and print count\nwith open(\"fib.json\", \"r\") as f:\n    numbers = json.load(f)\n\nprint(f\"There are {len(numbers)} numbers in fib.json\")\n",
+                    "oldText": null,
+                    "path": "/var/folders/vj/tkmrz5cj4yz56zrtvb8lvc540000gn/T/tak-inspect-lsdfuw4w/fib.py",
+                    "type": "diff"
+                  }
+                ],
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_6716cc37-c65f-4821-b718-f32c319f805",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 85.900984124979,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe scr",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 85.90112562500872,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ipt is created.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 85.93959570804145,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " Let me verify",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 85.98642850003671,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " there are no l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.0836559580639,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "inter errors",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.12128616706468,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ", then I cou",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.2111177080078,
+              "wall_clock": "2026-03-17T11:29:01-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ld run it to",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.32645495806355,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " show the user it wo",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.32662191707641,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rks. The user ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.40199766703881,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "didn't ask me ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.44582483300474,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "to run it, but i",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.58386424998753,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t would be a",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.63817641697824,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " nice verifica",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.63832229201216,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tion. I'll men",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.67888883303385,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "tion the scr",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.74656037497334,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ipt is ready an",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.77281550003681,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d offer or jus",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.8186130829854,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "t run it to co",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.86635925003793,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "nfirm.\n\nActua",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 86.9081051669782,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "lly re-readin",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 87.00315045798197,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "g the request -",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 87.04584316699766,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " they just asked me",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 87.09047370799817,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " to create the ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 87.13888774998486,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "script. I've done that. I'll check lints and then summarize what I created.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 87.18704458302818,
+              "wall_clock": "2026-03-17T11:29:02-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\n\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 87.28781137499027,
+              "wall_clock": "2026-03-17T11:29:03-0400",
+              "type": "tool_call",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": "read",
+                "locations": null,
+                "rawInput": {},
+                "rawOutput": null,
+                "status": "pending",
+                "title": "Read Lints",
+                "toolCallId": "tool_d38401bd-557b-4437-b3ac-41f60161d02",
+                "sessionUpdate": "tool_call"
+              }
+            },
+            {
+              "timestamp": 87.91398299997672,
+              "wall_clock": "2026-03-17T11:29:03-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": null,
+                "status": "in_progress",
+                "title": null,
+                "toolCallId": "tool_d38401bd-557b-4437-b3ac-41f60161d02",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 87.9142538330052,
+              "wall_clock": "2026-03-17T11:29:03-0400",
+              "type": "tool_call_update",
+              "data": {
+                "_meta": null,
+                "content": null,
+                "kind": null,
+                "locations": null,
+                "rawInput": null,
+                "rawOutput": {
+                  "totalDiagnostics": 0,
+                  "totalFiles": 0
+                },
+                "status": "completed",
+                "title": null,
+                "toolCallId": "tool_d38401bd-557b-4437-b3ac-41f60161d02",
+                "sessionUpdate": "tool_call_update"
+              }
+            },
+            {
+              "timestamp": 89.0807388330577,
+              "wall_clock": "2026-03-17T11:29:04-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nNo l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 89.12708529201336,
+              "wall_clock": "2026-03-17T11:29:04-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "inter errors. The script is complete. I'll give the user a brief summary.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 89.45139745797496,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nSummary of w",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.54743358306587,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "hat `fib.py`",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.63978850003332,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " does:\n\n1. **B",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.68361050006934,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "uilds the fi",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.72343745804392,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rst 100 Fibona",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.81818587507587,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "cci numbers** ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.86543141701259,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\u2014 starts with",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 89.95483375003096,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " `[0, 1]` an",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.0029197500553,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "d appends the n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.05216304201167,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ext 98 values",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.09394541708753,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": ".\n2. **Write",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.1897996669868,
+              "wall_clock": "2026-03-17T11:29:05-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s them to `f",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.2471707080258,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ib.json`** \u2014 sav",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.31859841698315,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "es the list as",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.44411641708575,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " a JSON array",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.46728045807686,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " with `json.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.48284695798066,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "dump()`.\n3. *",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.50290704204235,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "*Reads `fib.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.55883912497666,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "json` back** ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.58530183299445,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\u2014 loads the a",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.62925420806278,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "rray with `json.l",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.71136833308265,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "oad()`.\n4. **",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.75198475003708,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "Prints the count",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.79994558298495,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "** \u2014 prints ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.8428392080823,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "how many numbers",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.88935045804828,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " are in the ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.89009816700127,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "array (e.g. `Th",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 90.97239883302245,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "ere are 100 nu",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            },
+            {
+              "timestamp": 91.01841891708318,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "mbers in fib.json`).\n\nRun it from the project directory with: `python3 fib.py`.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "test": "timeline_analysis",
+          "analysis": {
+            "total_updates": 81,
+            "update_types": {
+              "agent_message_chunk": {
+                "count": 31,
+                "first_at": 82.80697200004943,
+                "last_at": 91.01841891708318,
+                "duration_s": 8.211446917033754
+              },
+              "agent_thought_chunk": {
+                "count": 44,
+                "first_at": 81.95298745797481,
+                "last_at": 89.12708529201336,
+                "duration_s": 7.174097834038548
+              },
+              "tool_call": {
+                "count": 2,
+                "first_at": 82.83682741702069,
+                "last_at": 87.28781137499027,
+                "duration_s": 4.450983957969584
+              },
+              "tool_call_update": {
+                "count": 4,
+                "first_at": 84.55346683308017,
+                "last_at": 87.9142538330052,
+                "duration_s": 3.3607869999250397
+              }
+            },
+            "phases": [
+              {
+                "phase": "thinking",
+                "start": 81.95298745797481,
+                "end": 82.80697200004943,
+                "duration_s": 0.8539845420746133
+              },
+              {
+                "phase": "responding",
+                "start": 82.80697200004943,
+                "end": 82.83682741702069,
+                "duration_s": 0.02985541697125882
+              },
+              {
+                "phase": "working",
+                "start": 82.83682741702069,
+                "end": 85.900984124979,
+                "duration_s": 3.0641567079583183
+              },
+              {
+                "phase": "thinking",
+                "start": 85.900984124979,
+                "end": 87.18704458302818,
+                "duration_s": 1.2860604580491781
+              },
+              {
+                "phase": "responding",
+                "start": 87.18704458302818,
+                "end": 87.28781137499027,
+                "duration_s": 0.10076679196208715
+              },
+              {
+                "phase": "working",
+                "start": 87.28781137499027,
+                "end": 89.0807388330577,
+                "duration_s": 1.7929274580674246
+              },
+              {
+                "phase": "thinking",
+                "start": 89.0807388330577,
+                "end": 89.45139745797496,
+                "duration_s": 0.37065862491726875
+              },
+              {
+                "phase": "responding",
+                "start": 89.45139745797496,
+                "end": 91.01841891708318,
+                "duration_s": 1.5670214591082186
+              }
+            ]
+          }
+        }
+      ],
+      "error": null
+    },
+    "edge_cases": {
+      "phase": "edge_cases",
+      "started_wall": "2026-03-17T11:29:06-0400",
+      "entries": [
+        {
+          "test": "empty_prompt",
+          "prompt_text": "",
+          "sent_wall": "2026-03-17T11:29:06-0400",
+          "response_wall": "2026-03-17T11:29:06-0400",
+          "duration_s": 0.0005238329758867621,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 1,
+          "updates": [
+            {
+              "timestamp": 91.0925281670643,
+              "wall_clock": "2026-03-17T11:29:06-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "No prompt content provided.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "test": "short_timeout_2s",
+          "prompt_text": "Write a haiku about programming.",
+          "sent_wall": "2026-03-17T11:29:06-0400",
+          "response_wall": null,
+          "duration_s": 2.001069916994311,
+          "stop_reason": null,
+          "error": "Timeout after 2.0s",
+          "update_count": 0,
+          "updates": [],
+          "permissions": []
+        },
+        {
+          "test": "cancel_after_timeout",
+          "success": true
+        },
+        {
+          "test": "recovery_after_timeout",
+          "prompt_text": "Say 'recovered' if you can hear me.",
+          "sent_wall": "2026-03-17T11:29:10-0400",
+          "response_wall": "2026-03-17T11:29:16-0400",
+          "duration_s": 5.534635916934349,
+          "stop_reason": "end_turn",
+          "error": null,
+          "update_count": 10,
+          "updates": [
+            {
+              "timestamp": 99.94212104205508,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nThe user i",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.04094195808284,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s asking me to",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.04284404206555,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": " say \"recovered\" - they'",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.13351637497544,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "re checking i",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.17964191699866,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "f I can hear/u",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.22129879205022,
+              "wall_clock": "2026-03-17T11:29:15-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "nderstand them. Thi",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.3509653750807,
+              "wall_clock": "2026-03-17T11:29:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "s is a simple ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.41701933299191,
+              "wall_clock": "2026-03-17T11:29:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "conversational ",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.45554574998096,
+              "wall_clock": "2026-03-17T11:29:16-0400",
+              "type": "agent_thought_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "request, not a coding task. I'll just respond with the word they asked for.\n",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_thought_chunk"
+              }
+            },
+            {
+              "timestamp": 100.55359287501778,
+              "wall_clock": "2026-03-17T11:29:16-0400",
+              "type": "agent_message_chunk",
+              "data": {
+                "_meta": null,
+                "content": {
+                  "_meta": null,
+                  "annotations": null,
+                  "text": "\nRecovered.",
+                  "type": "text"
+                },
+                "sessionUpdate": "agent_message_chunk"
+              }
+            }
+          ],
+          "permissions": []
+        },
+        {
+          "test": "cancel_mid_flight",
+          "stop_reason": "cancelled",
+          "updates_during": [],
+          "success": true
+        }
+      ],
+      "error": null
+    }
+  }
+}
