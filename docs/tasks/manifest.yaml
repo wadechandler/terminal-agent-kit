@@ -1,14 +1,14 @@
-# yaml-language-server: $schema=
+# yaml-language-server: $schema=../../config/tak-task-manifest.schema.json
 # Terminal Agent Kit (tak) -- Task Manifest
 # Tracks all phases, tasks, and research questions.
 # Status: not_started | in_progress | research | done | blocked | deferred
 #
-# Last updated: 2026-03-21 (model ID, session ID, associate persistence, signal handling, session reconnect)
+# Last updated: 2026-03-23 (README/docs refresh, documentation-maintenance rule, docs-site phase)
 
 project:
   name: Terminal Agent Kit
   command: tak
-  tagline: "Forging your terminal into an agentic environment"
+  tagline: "Transform your terminal into an agentic workspace"
   repo: terminal-agent-kit
   started: 2026-03-14
 
@@ -584,7 +584,7 @@ phases:
 
   - id: phase-m-conversation
     name: Conversation and Context
-    status: not_started
+    status: done
     task_file: docs/tasks/phase-m-conversation.md
     notes: >
       Session lifecycle management on top of existing persistence: reset,
@@ -593,26 +593,27 @@ phases:
       works. Keeps the 1:1:1 model (one agent = one process = one session);
       multi-session support deferred until conceptual model is settled.
       Level 1 of the graduated conversation design (ADR-016).
+      Completed 2026-03-21.
     tasks:
       - id: pm-session-lifecycle
         name: "close_session() drops session; next prompt creates fresh one"
-        status: not_started
+        status: done
       - id: pm-cwd-awareness
         name: "tak prompt sends user CWD; daemon attaches to bus messages"
-        status: not_started
+        status: done
       - id: pm-cwd-configurable
         name: "Configurable CWD injection format (xml/bracket/json/none)"
-        status: not_started
+        status: done
         notes: >
           User CWD (os.getcwd at prompt time) is distinct from the session
           CWD (set once at new_session). Format configurable via config.yaml
           prompt.cwd_context.format. Default xml for cleanest agent behavior.
       - id: pm-mode-selection
         name: "--mode ask|plan|agent flag on tak prompt"
-        status: not_started
+        status: done
       - id: pm-session-end
         name: "tak session end [agent] command to reset conversation"
-        status: not_started
+        status: done
       - id: pm-session-reconnect
         name: "Reconnect to existing ACP session on daemon restart via load_session"
         status: done
@@ -624,12 +625,13 @@ phases:
           still holds the session. Fixed 2026-03-21.
       - id: pm-config-option-mutation
         name: "Use set_config_option as primary mutation path for mode/model"
-        status: not_started
+        status: done
         notes: >
           Analysis §4: set_config_option works for both mode and model changes.
           Response returns full refreshed configOptions. Mode changes fire
           CurrentModeUpdate notifications; model changes do not (update from
           synchronous response). Replaces separate set_session_mode/model calls.
+          Implemented 2026-03-21 in ACPSessionManager.new_session + set_config_option().
 
   - id: phase-n-streaming
     name: Streaming and IPC Enhancement
@@ -813,6 +815,37 @@ phases:
         status: not_started
       - id: pmcp-provider-generic
         name: "Abstract MCP pre-approval step in provider interface"
+        status: not_started
+
+  - id: phase-docs-site
+    name: Documentation Site
+    status: not_started
+    notes: >
+      MkDocs Material static site hosted on GitHub Pages for free.
+      Auto-deploys via GitHub Actions on push to main. Existing docs/
+      markdown (research, ADRs, guides) included automatically. CLI
+      reference auto-generated from Click decorators via mkdocs-click.
+    tasks:
+      - id: pd-mkdocs-setup
+        name: "Add mkdocs-material to dev deps, create mkdocs.yml and docs/ index"
+        status: not_started
+        notes: >
+          MkDocs reads existing markdown from docs/ so research docs,
+          ADRs, and guides are included with minimal config.
+      - id: pd-cli-reference-gen
+        name: "Auto-generate CLI reference from Click introspection (mkdocs-click)"
+        status: not_started
+        notes: >
+          mkdocs-click plugin or a small script to keep CLI docs in
+          sync with code. Eliminates manual CLI doc updates for the site.
+      - id: pd-github-pages-deploy
+        name: "GitHub Actions workflow for mkdocs gh-deploy to gh-pages branch"
+        status: not_started
+        notes: >
+          .github/workflows/docs.yml builds and pushes on every merge
+          to main. Free hosting at wadechandler.github.io/terminal-agent-kit/.
+      - id: pd-nav-structure
+        name: "Organize site nav: Getting Started, CLI Reference, Architecture, ADRs, Research"
         status: not_started
 
   # ------------------------------------------------------------------

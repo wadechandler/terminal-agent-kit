@@ -2,9 +2,10 @@
 
 ## Project Overview
 
-Terminal Agent Kit (tak) is a Python framework for embedding and managing AI coding
-agents within terminal environments. It provides a core agent management layer with
-terminal-specific drivers, starting with iTerm2 on macOS.
+Terminal Agent Kit (tak) is a Python framework for embedding, managing, and
+orchestrating AI agents within terminal environments -- for coding, system
+management, workflows, and more. It provides a core agent management layer with
+terminal-specific drivers, starting with Cursor (via ACP) on iTerm2 for macOS.
 
 ## Tech Stack
 
@@ -16,7 +17,8 @@ terminal-specific drivers, starting with iTerm2 on macOS.
 - **Configuration**: YAML (PyYAML)
 - **iTerm2 Integration**: iterm2 Python package (websocket-based API)
 - **Agent Communication**: JSON-RPC 2.0 over stdio (Cursor ACP), generic stdio
-- **Build System**: Hatch/Hatchling
+- **Build System**: Hatchling (PEP 517 build backend only; the full Hatch CLI is
+  not used). Build with `python -m build` or `pip install -e .`.
 - **Linting**: Ruff
 - **Type Checking**: mypy (strict mode)
 - **Testing**: pytest + pytest-asyncio
@@ -61,6 +63,11 @@ clarifications below.
 - No wildcard imports. Explicit is better than implicit.
 - Prefer composition over inheritance for providers and drivers.
 - Configuration is always loaded from YAML files, never hardcoded.
+- **Documentation maintenance**: When adding, removing, or modifying CLI commands,
+  subcommands, options, or parameters, update the corresponding documentation in the
+  same change set. This includes: README.md (CLI Reference section), Click help strings
+  in `src/tak/cli/main.py`, and any affected `docs/` files. A change that alters the
+  user-facing CLI surface without updating documentation is incomplete.
 
 ## Dependencies
 

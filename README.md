@@ -1,21 +1,25 @@
 # Terminal Agent Kit (tak)
 
-> Forging your terminal into an agentic environment
+> Transform your terminal into an agentic workspace
 
-Terminal Agent Kit is an open-source framework for embedding, managing, and interacting
-with AI coding agents directly within your terminal. Starting with iTerm2 on macOS, it
-provides a terminal-native agentic workspace where you can spawn agents, route questions
-from any tab, manage multiple agent instances, and scaffold projects -- without leaving
-your command line.
+Terminal Agent Kit is an open-source framework for embedding, managing, and
+orchestrating AI agents directly within your terminal -- for coding, system
+management, workflows, and more. Starting with Cursor (via ACP) on iTerm2 for
+macOS, it provides a terminal-native workspace where you can spawn agents, route
+prompts from any tab, manage multiple agent instances, and scaffold projects --
+without leaving your command line.
 
 ## Status
 
-**Alpha.** Core agent management, ACP session lifecycle, CLI, IPC, TUI dashboard,
-scaffold generators, and setup commands are implemented and tested (357 unit tests,
-zero lint errors). End-to-end integration with a real iTerm2 daemon and Cursor CLI
-has not yet been validated. See [docs/tasks/manifest.yaml](docs/tasks/manifest.yaml)
-for detailed phase status and [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) for
-a quick orientation.
+**Alpha.** Core agent management, full ACP session lifecycle (via the official
+agent-client-protocol SDK), CLI (17 commands), IPC, TUI dashboard, scaffold
+generators, and setup commands are implemented and tested (477 unit tests, zero
+lint errors). Initial end-to-end integration with the iTerm2 daemon and Cursor CLI
+has been validated, with numerous protocol-level fixes applied (ACP SDK adoption,
+subprocess PATH resolution, session reconnection, permission relay, signal handling).
+Streaming output and the conversation TUI are next. See
+[docs/tasks/manifest.yaml](docs/tasks/manifest.yaml) for detailed phase status and
+[docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) for a quick orientation.
 
 ## Vision
 
@@ -82,9 +86,48 @@ tak menu                          # Launch the agent management TUI
 tak setup tak                     # All-in-one opinionated setup
 ```
 
-For daemon-dependent commands (`tak spawn`, `tak ask`, `tak agents`, `tak stop`,
-`tak switch`), the iTerm2 daemon must be running. See
-[docs/tryout-guide.md](docs/tryout-guide.md) for the full walkthrough.
+For daemon-dependent commands (agent lifecycle, interaction, and routing), the
+iTerm2 daemon must be running. See [docs/tryout-guide.md](docs/tryout-guide.md)
+for the full walkthrough.
+
+## CLI Reference
+
+**Agent lifecycle:**
+
+| Command | Description |
+|---------|-------------|
+| `tak spawn [PROVIDER]` | Spawn a new agent (`-n NAME`, `-p PROJECT`, `-m MODEL`, `--permissions`, `--no-associate`) |
+| `tak stop NAME` | Stop a running agent |
+| `tak remove NAME` | Remove an agent from state entirely (`-f/--force`) |
+| `tak rename OLD NEW` | Rename an agent |
+
+**Interaction:**
+
+| Command | Description |
+|---------|-------------|
+| `tak prompt QUERY...` | Send a prompt to an agent (`-a AGENT`, `-M MODE`). Shorthand: `tak p` |
+| `tak session end [AGENT]` | End conversation session (fresh on next prompt) |
+
+**Discovery and routing:**
+
+| Command | Description |
+|---------|-------------|
+| `tak agents` | List all managed agents (`-p PROVIDER`, `--running`) |
+| `tak status` | Show status of all running agents |
+| `tak associate AGENT` | Associate current terminal tab with an agent (`-s SESSION_ID`) |
+| `tak switch NAME` | Switch to the terminal tab of a named agent |
+| `tak providers` | List available agent providers |
+| `tak info` | Show terminal environment and session details |
+| `tak permissions AGENT POLICY` | Set permission policy (`prompt`, `reject`, `auto-allow`, `yolo`) |
+
+**Standalone (no daemon needed):**
+
+| Command | Description |
+|---------|-------------|
+| `tak menu` | Open the agent management TUI |
+| `tak scaffold agents\|rules\|skills` | Generate standards files for a project |
+| `tak new project NAME` | Create a new project skeleton (`--quick`) |
+| `tak setup tak\|iterm2\|fonts\|starship\|shell\|profiles\|iterm2-pip` | Set up environment components |
 
 ## Project Structure
 

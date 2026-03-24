@@ -1,0 +1,29 @@
+# Documentation Maintenance for CLI Changes
+
+This rule ensures that user-facing documentation stays in sync with the code.
+
+## When Modifying CLI Commands
+
+When adding, removing, or changing Click commands, subcommands, options, or
+arguments in `src/tak/cli/main.py`, you **must** also update:
+
+1. **README.md** -- the CLI Reference tables (grouped by Agent lifecycle,
+   Interaction, Discovery and routing, Standalone).
+2. **Click help strings** -- the `help=` parameter on each `@click.command()`,
+   `@click.option()`, and `@click.argument()` decorator.
+3. **Any docs/ files** that reference the changed command (e.g.
+   `docs/tryout-guide.md`, `docs/PROJECT-STATUS.md`).
+
+A change that alters the user-facing CLI surface without updating documentation
+is incomplete.
+
+## When Adding IPC Handlers
+
+When adding a new handler in `src/tak/ipc/server.py` that exposes new
+CLI-accessible functionality, update the README CLI Reference and any relevant
+docs/ files.
+
+## When Changing Configuration
+
+When adding or modifying keys in `config/default.yaml` or `config/agents.yaml`,
+update `AGENTS.md` and any docs/ files that describe configuration options.

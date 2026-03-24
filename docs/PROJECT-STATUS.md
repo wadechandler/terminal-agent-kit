@@ -6,11 +6,12 @@ this file alone -- always check the manifest.
 
 ## Quick Summary
 
-tak is a Python framework for embedding and managing AI coding agents within
-terminal environments. It provides a core agent management layer with
-terminal-specific drivers, starting with iTerm2 on macOS. The CLI command is
-`tak`. The vision is a "poor man's Warp" -- conversational terminal AI using
-iTerm2, Cursor CLI, and eventually other agents and terminals.
+tak is a Python framework for embedding, managing, and orchestrating AI agents
+within terminal environments -- for coding, system management, workflows, and
+more. It provides a core agent management layer with terminal-specific drivers,
+starting with Cursor (via ACP) on iTerm2 for macOS. The CLI command is `tak`.
+The vision is conversational terminal AI using iTerm2, Cursor CLI, and
+eventually other agents and terminals.
 
 ## Authoritative Status
 
@@ -19,8 +20,11 @@ in progress, not started, or deferred. Always read it. Always update it after
 completing work. See `.cursor/rules/manifest-maintenance.mdc` for the full
 maintenance protocol.
 
-As of 2026-03-16: Phases 0, 1, F, G, H, I, J, and K are done (357 tests, 0 ruff
-errors). Phases M through CI are not started. See the manifest for details.
+As of 2026-03-23: Phases 0, 1, F, G, H, I, J, K, and M are done (477 tests,
+0 ruff errors). The Tryout Fixes phase is mostly complete (ACP SDK adoption,
+subprocess PATH, session reconnection, permission relay, signal handling, and
+many more). Streaming (Phase N), Event Fidelity (Phase P), and the Conversation
+TUI (Phase Q) are next. See the manifest for details.
 
 ## Key Documents
 
@@ -43,7 +47,7 @@ src/tak/
   providers/   Agent protocols: ACP (generic + Cursor), terminal session, base
   drivers/     Terminal integrations: iTerm2 (daemon, driver, RPC, status bar)
   ipc/         Daemon-CLI communication: Unix socket, length-prefixed JSON protocol
-  cli/         Click-based CLI: spawn, stop, ask, agents, switch, menu, scaffold, setup
+  cli/         Click-based CLI: spawn, stop, prompt, agents, switch, menu, scaffold, setup
   tui/         Textual TUI: agent dashboard (tak menu)
   scaffold/    Generators: AGENTS.md, .cursor/rules, SKILL.md, new project
   setup/       Environment bootstrap: iTerm2, fonts, starship, shell, profiles
@@ -66,7 +70,7 @@ else is terminal-agnostic. See ADR-003 for the core/driver split rationale.
 | 008 | Configurable prefixes (`@ai`, `@tak`, `??`) |
 | 009 | Dependency security: CVE checks, bus factor > 1, pip-audit |
 | 010 | Variable namespace: `user.tak_*` |
-| 011 | Deferred @ai interception -- use `tak ask` first |
+| 011 | Deferred @ai interception -- use `tak prompt` first |
 | 012 | Headless vs terminal agent models |
 | 013 | Bash-first shell target |
 | 014 | Idempotent setup commands |
@@ -76,10 +80,11 @@ else is terminal-agnostic. See ADR-003 for the core/driver split rationale.
 
 ## Current Priorities
 
-1. **Documentation catch-up** (Wave A) -- README, AGENTS.md accuracy
-2. **Tryout preparation** (Wave B) -- guide, `--dry-run` for setup, Phase M implementation
-3. **Security and CI** (Wave C) -- SECURITY.md, GitHub Actions, pip-audit
-4. **Polish** (Wave D) -- TUI review, @ai alias, real integration testing
+1. **Streaming and IPC** (Phase N) -- IPC streaming so `tak prompt` prints text as chunks arrive
+2. **Event fidelity** (Phase P) -- capture all ACP event types for rich TUI display
+3. **Conversation TUI** (Phase Q) -- full-screen Textual TUI for interactive agent sessions
+4. **Security and CI** (Phases S, CI) -- SECURITY.md, GitHub Actions, pip-audit
+5. **Documentation site** (Phase docs-site) -- MkDocs Material on GitHub Pages
 
 ## Deferred Items
 
