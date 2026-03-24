@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, cast
 
 
 @dataclass
@@ -77,7 +77,7 @@ async def read_message(reader: Any) -> bytes:
     """
     header = await reader.readexactly(4)
     length = int.from_bytes(header, byteorder="big")
-    return await reader.readexactly(length)
+    return cast("bytes", await reader.readexactly(length))
 
 
 async def write_message(writer: Any, data: bytes) -> None:

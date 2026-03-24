@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tak.core.config import _deep_merge
+from tak.core.config import _deep_merge, prompt_cwd_context_settings
 
 
 class TestDeepMerge:
@@ -34,3 +34,22 @@ class TestDeepMerge:
         override = {"a": {"nested": True}}
         result = _deep_merge(base, override)
         assert result["a"] == {"nested": True}
+
+
+class TestPromptCwdContextSettings:
+    def test_defaults(self) -> None:
+        enabled, fmt = prompt_cwd_context_settings({})
+        assert enabled is True
+        assert fmt == "xml"
+
+    def test_user_overlay(self) -> None:
+        cfg = {"prompt": {"cwd_context": {"enabled": False, "format": "json"}}}
+        enabled, fmt = prompt_cwd_context_settings(cfg)
+        assert enabled is False
+        assert fmt == "json"
+
+    def test_unknown_format_falls_back_to_xml(self) -> None:
+        cfg = {"prompt": {"cwd_context": {"format": "typo"}}}
+        enabled, fmt = prompt_cwd_context_settings(cfg)
+        assert enabled is True
+        assert fmt == "xml"

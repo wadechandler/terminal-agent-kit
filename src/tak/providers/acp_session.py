@@ -15,7 +15,7 @@ import re
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from acp import (
     PROTOCOL_VERSION,
@@ -147,6 +147,11 @@ class TakACPClient:
 
     Receives ``session/update`` notifications and ``request_permission``
     calls from the agent, routing them to tak's callback system.
+
+    Several methods are ``async def`` without ``await`` because the
+    ``acp.Client`` protocol requires async signatures for all callbacks.
+    No-op implementations must remain async to satisfy structural typing
+    (PEP 544).
     """
 
     def __init__(
@@ -178,6 +183,11 @@ class TakACPClient:
         """Handle permission requests from the agent."""
         tool_name = tool_call.title or "unknown"
         description = tool_call.title or ""
+        logger.debug(
+            "ACP request_permission session_id=%s tool=%s",
+            session_id,
+            tool_name,
+        )
 
         req = PermissionRequest(
             tool_name=tool_name,
@@ -213,6 +223,7 @@ class TakACPClient:
         **kwargs: Any,
     ) -> None:
         """Receive streamed session updates from the agent."""
+        logger.debug("ACP session_update session_id=%s", session_id)
         text = ""
         if isinstance(update, AgentMessageChunk):
             if isinstance(update.content, TextContentBlock):
@@ -229,32 +240,68 @@ class TakACPClient:
             logger.debug("Session update: %s", update_type)
 
         if text:
-            self._update_chunks.put_nowait(text)
+            await self._update_chunks.put(text)
 
-    async def write_text_file(self, **kwargs: Any) -> None:
+    async def write_text_file(  # NOSONAR(S7503) -- protocol requires async
+        self, content: str, path: str, session_id: str, **kwargs: Any,
+    ) -> None:
         """No-op: tak does not handle file writes from agents."""
+        logger.debug(
+            "write_text_file ignored: path=%s session=%s (%d bytes)",
+            path, session_id, len(content),
+        )
 
-    async def read_text_file(self, **kwargs: Any) -> Any:
+    async def read_text_file(  # NOSONAR(S7503) -- protocol requires async
+        self, path: str, session_id: str,
+        limit: int | None = None, line: int | None = None, **kwargs: Any,
+    ) -> Any:
         """No-op: tak does not handle file reads from agents."""
+        logger.debug(
+            "read_text_file ignored: path=%s session=%s limit=%s line=%s",
+            path, session_id, limit, line,
+        )
         return {"content": ""}
 
-    async def create_terminal(self, **kwargs: Any) -> Any:
+    async def create_terminal(  # NOSONAR(S7503) -- protocol requires async
+        self, command: str, session_id: str,
+        args: list[str] | None = None, cwd: str | None = None,
+        env: list[Any] | None = None, output_byte_limit: int | None = None,
+        **kwargs: Any,
+    ) -> Any:
         """No-op: tak does not handle terminal creation from agents."""
+        logger.debug(
+            "create_terminal ignored: cmd=%s args=%s cwd=%s session=%s env=%s limit=%s",
+            command, args, cwd, session_id, env, output_byte_limit,
+        )
         return {"terminalId": ""}
 
-    async def terminal_output(self, **kwargs: Any) -> Any:
+    async def terminal_output(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> Any:
         """No-op."""
+        logger.debug("terminal_output ignored: session=%s terminal=%s", session_id, terminal_id)
         return {"output": ""}
 
-    async def release_terminal(self, **kwargs: Any) -> None:
+    async def release_terminal(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> None:
         """No-op."""
+        logger.debug("release_terminal ignored: session=%s terminal=%s", session_id, terminal_id)
 
-    async def wait_for_terminal_exit(self, **kwargs: Any) -> Any:
+    async def wait_for_terminal_exit(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> Any:
         """No-op."""
+        logger.debug(
+            "wait_for_terminal_exit ignored: session=%s terminal=%s", session_id, terminal_id,
+        )
         return {"exitCode": 0}
 
-    async def kill_terminal(self, **kwargs: Any) -> None:
+    async def kill_terminal(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> None:
         """No-op."""
+        logger.debug("kill_terminal ignored: session=%s terminal=%s", session_id, terminal_id)
 
     async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         """Handle extension methods (e.g. cursor/ask_question)."""
@@ -270,9 +317,11 @@ class TakACPClient:
             return {"answer": answer}
         return {}
 
-    async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
+    async def ext_notification(  # NOSONAR(S7503) -- protocol requires async
+        self, method: str, params: dict[str, Any],
+    ) -> None:
         """Handle extension notifications."""
-        logger.debug("Extension notification: %s", method)
+        logger.debug("Extension notification: %s params=%r", method, params)
 
     def on_connect(self, conn: Any) -> None:
         """Called when the connection is established."""
@@ -355,7 +404,10 @@ class ACPSessionManager:
             Server capabilities from the response.
         """
         self._state = ACPSessionState.INITIALIZING
-        return await self._conn.initialize(protocol_version=PROTOCOL_VERSION)
+        return cast(
+            "InitializeResponse",
+            await self._conn.initialize(protocol_version=PROTOCOL_VERSION),
+        )
 
     async def authenticate(self, method_id: str = "cursor_login") -> AuthenticateResponse:
         """Send the ``authenticate`` request.
@@ -368,7 +420,89 @@ class ACPSessionManager:
         """
         result = await self._conn.authenticate(method_id=method_id)
         self._state = ACPSessionState.AUTHENTICATED
-        return result
+        return cast("AuthenticateResponse", result)
+
+    def _ingest_models_from_new_session(
+        self,
+        result: NewSessionResponse,
+    ) -> dict[str, str]:
+        """Populate model fields from ``new_session`` response; return id→name map."""
+        models_by_id: dict[str, str] = {}
+        if result.models is None:
+            logger.debug(
+                "Agent %s: models is None in NewSessionResponse",
+                self._agent_name or "?",
+            )
+            return models_by_id
+
+        self._current_model_id = result.models.current_model_id
+        models_by_id = {
+            m.model_id: m.name for m in result.models.available_models
+        }
+        self._models_by_id = dict(models_by_id)
+        self._current_model_name = _resolve_model_name(
+            self._current_model_id, models_by_id,
+        )
+        logger.info(
+            "Agent %s: model=%s (id=%s), available=%s",
+            self._agent_name or "?",
+            self._current_model_name,
+            self._current_model_id,
+            list(models_by_id.values()),
+        )
+        return models_by_id
+
+    async def _apply_initial_model(
+        self,
+        model: str | None,
+        models_by_id: dict[str, str],
+    ) -> None:
+        """Apply CLI ``model`` override after ``new_session`` when supported."""
+        if not model or not self._session_id:
+            return
+        resolved_id = _resolve_model_id(model, models_by_id)
+        if resolved_id == self._current_model_id:
+            logger.debug(
+                "Model %r already active; skipping set_config_option",
+                resolved_id,
+            )
+            return
+        try:
+            resp = await self._conn.set_config_option(
+                "model", self._session_id, resolved_id,
+            )
+            self._ingest_config_options(resp.config_options)
+            if self._current_model_id != resolved_id:
+                self._current_model_id = resolved_id
+                self._current_model_name = _resolve_model_name(
+                    resolved_id, self._models_by_id or models_by_id,
+                )
+        except RequestError as exc:
+            if exc.code == -32601:
+                logger.debug(
+                    "set_config_option(model) not supported; model param ignored",
+                )
+            else:
+                logger.warning(
+                    "Failed to set model %r (resolved=%r): %s (code=%d)",
+                    model, resolved_id, exc, exc.code,
+                )
+        except Exception:
+            logger.debug(
+                "set_config_option(model) failed unexpectedly", exc_info=True,
+            )
+
+    async def _apply_initial_mode(self, mode: str) -> None:
+        """Set non-default session mode when the agent supports ``set_config_option``."""
+        if mode == "agent" or not self._session_id:
+            return
+        try:
+            resp = await self._conn.set_config_option(
+                "mode", self._session_id, mode,
+            )
+            self._ingest_config_options(resp.config_options)
+        except Exception:
+            logger.debug("set_config_option(mode) not supported; mode param ignored")
 
     async def new_session(
         self,
@@ -393,72 +527,57 @@ class ACPSessionManager:
         )
         self._session_id = result.session_id or ""
         self._state = ACPSessionState.SESSION_ACTIVE
-
-        models_by_id: dict[str, str] = {}
-        if result.models is not None:
-            self._current_model_id = result.models.current_model_id
-            models_by_id = {
-                m.model_id: m.name for m in result.models.available_models
-            }
-            self._models_by_id = dict(models_by_id)
-            self._current_model_name = _resolve_model_name(
-                self._current_model_id, models_by_id
-            )
-            logger.info(
-                "Agent %s: model=%s (id=%s), available=%s",
-                self._agent_name or "?",
-                self._current_model_name,
-                self._current_model_id,
-                list(models_by_id.values()),
-            )
-        else:
-            logger.debug(
-                "Agent %s: models is None in NewSessionResponse",
-                self._agent_name or "?",
-            )
-
-        if model and self._session_id:
-            resolved_id = _resolve_model_id(model, models_by_id)
-            if resolved_id == self._current_model_id:
-                logger.debug(
-                    "Model %r already active; skipping set_session_model",
-                    resolved_id,
-                )
-            else:
-                try:
-                    await self._conn.set_session_model(
-                        model_id=resolved_id,
-                        session_id=self._session_id,
-                    )
-                    self._current_model_id = resolved_id
-                    self._current_model_name = _resolve_model_name(
-                        resolved_id, models_by_id
-                    )
-                except RequestError as exc:
-                    if exc.code == -32601:
-                        logger.debug(
-                            "set_session_model not supported; model param ignored",
-                        )
-                    else:
-                        logger.warning(
-                            "Failed to set model %r (resolved=%r): %s (code=%d)",
-                            model, resolved_id, exc, exc.code,
-                        )
-                except Exception:
-                    logger.debug(
-                        "set_session_model failed unexpectedly", exc_info=True,
-                    )
-
-        if mode != "agent" and self._session_id:
-            try:
-                await self._conn.set_session_mode(
-                    mode_id=mode,
-                    session_id=self._session_id,
-                )
-            except (RequestError, Exception):
-                logger.debug("set_session_mode not supported; mode param ignored")
-
+        models_by_id = self._ingest_models_from_new_session(result)
+        await self._apply_initial_model(model, models_by_id)
+        await self._apply_initial_mode(mode)
         return self._session_id
+
+    def _ingest_config_options(self, config_options: list[Any]) -> None:
+        """Update model display state from a ``set_config_option`` response."""
+        for wrapped in config_options:
+            opt = wrapped.root
+            if opt.id != "model":
+                continue
+            self._current_model_id = opt.current_value
+            raw_opts = opt.options
+            if isinstance(raw_opts, list) and raw_opts:
+                first = raw_opts[0]
+                if hasattr(first, "value") and hasattr(first, "name"):
+                    self._models_by_id = {
+                        str(o.value): str(o.name) for o in raw_opts
+                    }
+            self._current_model_name = _resolve_model_name(
+                self._current_model_id, self._models_by_id,
+            )
+            break
+
+    async def set_config_option(self, option_id: str, value: str) -> None:
+        """Set a session config option via ``session/set_config_option``.
+
+        Args:
+            option_id: Config option id (e.g. ``mode``, ``model``).
+            value: New value for the option.
+
+        Raises:
+            RuntimeError: If there is no active session.
+        """
+        if not self._session_id:
+            raise RuntimeError("No active session; call new_session() first")
+        resp = await self._conn.set_config_option(
+            option_id, self._session_id, value,
+        )
+        self._ingest_config_options(resp.config_options)
+
+    async def close_session(self) -> None:  # NOSONAR(S7503) -- lifecycle symmetry
+        """Clear the active session id; keep the JSON-RPC connection alive.
+
+        The ACP SDK does not expose a dedicated session teardown RPC for
+        Cursor; dropping the local session id allows :meth:`new_session` to
+        start a fresh conversation on the same subprocess connection.
+        """
+        self._session_id = None
+        if self._state not in (ACPSessionState.CLOSED, ACPSessionState.DISCONNECTED):
+            self._state = ACPSessionState.AUTHENTICATED
 
     async def load_session(self, session_id: str, cwd: str | None = None) -> str:
         """Resume a previous ACP session.

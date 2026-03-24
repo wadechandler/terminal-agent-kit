@@ -54,3 +54,25 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
         else:
             result[key] = value
     return result
+
+
+def prompt_cwd_context_settings(config: dict[str, Any]) -> tuple[bool, str]:
+    """Return whether user CWD is injected into prompts and which format to use.
+
+    Reads ``prompt.cwd_context`` from the merged config dict (see
+    ``load_config()``). Unknown ``format`` values fall back to ``xml``.
+
+    Args:
+        config: Full tak configuration dict.
+
+    Returns:
+        A tuple ``(enabled, format)`` where *format* is one of
+        ``xml``, ``bracket``, ``json``, or ``none``.
+    """
+    prompt_cfg = config.get("prompt") or {}
+    ctx = prompt_cfg.get("cwd_context") or {}
+    enabled = bool(ctx.get("enabled", True))
+    fmt = str(ctx.get("format", "xml")).lower()
+    if fmt not in ("xml", "bracket", "json", "none"):
+        fmt = "xml"
+    return enabled, fmt

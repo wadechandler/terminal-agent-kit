@@ -44,8 +44,9 @@ def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
     mock_conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     mock_conn.cancel = AsyncMock()
     mock_conn.close = AsyncMock()
-    mock_conn.set_session_model = AsyncMock()
-    mock_conn.set_session_mode = AsyncMock()
+    mock_conn.set_config_option = AsyncMock(
+        return_value=SimpleNamespace(config_options=[])
+    )
 
     mock_process = MagicMock()
     mock_process.returncode = None
@@ -106,9 +107,10 @@ class TestCursorACPProviderSpawn:
             provider = CursorACPProvider(command="cursor")
             await provider.spawn("my-agent", model="claude-sonnet-4")
 
-            mock_conn.set_session_model.assert_called_once_with(
-                model_id="claude-sonnet-4[thinking=false,context=200k]",
-                session_id="test-session-id",
+            mock_conn.set_config_option.assert_called_once_with(
+                "model",
+                "test-session-id",
+                "claude-sonnet-4[thinking=false,context=200k]",
             )
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -68,7 +69,7 @@ class TestWriteGitignore:
 
 class TestCreateProject:
     @pytest.fixture
-    def no_git(self) -> object:
+    def no_git(self) -> Generator[None, None, None]:
         with patch("tak.scaffold.new_project._git_init", return_value=False):
             yield
 

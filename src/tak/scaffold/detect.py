@@ -28,6 +28,21 @@ class TechStack:
     extra_languages: list[str] = field(default_factory=list)
 
 
+def _infer_python_build_system(pyproject_text: str) -> str | None:
+    """Return a build backend name from *pyproject_text*, or None."""
+    if not pyproject_text:
+        return None
+    if "hatchling" in pyproject_text:
+        return "hatchling"
+    if "poetry" in pyproject_text:
+        return "poetry"
+    if "setuptools" in pyproject_text:
+        return "setuptools"
+    if "flit" in pyproject_text:
+        return "flit"
+    return None
+
+
 def _file_contains(path: Path, text: str) -> bool:
     """Return True if *path* exists and its text content contains *text*.
 
@@ -53,19 +68,9 @@ def _detect_python(path: Path) -> TechStack:
     Returns:
         A TechStack populated with Python-specific metadata.
     """
-    build: str | None = None
     pyproject = path / "pyproject.toml"
     pyproject_text = pyproject.read_text(encoding="utf-8") if pyproject.exists() else ""
-
-    if pyproject_text:
-        if "hatchling" in pyproject_text:
-            build = "hatchling"
-        elif "poetry" in pyproject_text:
-            build = "poetry"
-        elif "setuptools" in pyproject_text:
-            build = "setuptools"
-        elif "flit" in pyproject_text:
-            build = "flit"
+    build = _infer_python_build_system(pyproject_text)
 
     test: str | None = None
     if "pytest" in pyproject_text or (path / "pytest.ini").exists():

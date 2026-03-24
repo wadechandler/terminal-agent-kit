@@ -28,7 +28,7 @@ def _git_init(project_dir: Path) -> bool:
     try:
         result = run_cmd("git", "init", str(project_dir))
         return result.returncode == 0
-    except (FileNotFoundError, OSError):
+    except OSError:
         return False
 
 

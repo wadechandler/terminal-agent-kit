@@ -47,7 +47,7 @@ def setup_profiles(console: Console, *, dry_run: bool = False) -> bool:
 
     try:
         return asyncio.run(_create_profile_async(console))
-    except (ConnectionRefusedError, OSError) as exc:
+    except OSError as exc:
         console.print(f"[yellow]⚠[/yellow] Cannot connect to iTerm2: {exc}")
         console.print("  Ensure iTerm2 is running with Python API enabled")
         return False
@@ -77,23 +77,28 @@ async def _create_profile_async(console: Console) -> bool:
             console.print(
                 f"[green]✓[/green] Profile '{PROFILE_NAME}' already exists"
             )
-            return True
+            break
+    else:
+        font = _FONT if _font_installed() else _FALLBACK_FONT
 
-    font = _FONT if _font_installed() else _FALLBACK_FONT
+        new_profile = iterm2.LocalWriteOnlyProfile()
+        new_profile.set_name(PROFILE_NAME)
+        new_profile.set_normal_font(font)
+        new_profile.set_foreground_color(iterm2.Color(212, 212, 212))
+        new_profile.set_background_color(iterm2.Color(30, 33, 39))
+        new_profile.set_cursor_color(iterm2.Color(97, 175, 239))
+        await iterm2.Profile.async_create(connection, new_profile)  # type: ignore[attr-defined]
 
-    new_profile = iterm2.LocalWriteOnlyProfile()
-    new_profile.set_name(PROFILE_NAME)
-    new_profile.set_normal_font(font)
-    new_profile.set_foreground_color(iterm2.Color(212, 212, 212))
-    new_profile.set_background_color(iterm2.Color(30, 33, 39))
-    new_profile.set_cursor_color(iterm2.Color(97, 175, 239))
-    await iterm2.Profile.async_create(connection, new_profile)
+        console.print(
+            f"[green]✓[/green] Created profile '{PROFILE_NAME}' (font: {font})"
+        )
+        console.print()
+        console.print("[bold]Manual steps:[/bold]")
+        console.print("  • Open iTerm2 → Profiles → select 'tak-default'")
+        console.print(
+            "  • Optionally add a status bar component via Session → Configure Status Bar"
+        )
 
-    console.print(f"[green]✓[/green] Created profile '{PROFILE_NAME}' (font: {font})")
-    console.print()
-    console.print("[bold]Manual steps:[/bold]")
-    console.print("  • Open iTerm2 → Profiles → select 'tak-default'")
-    console.print("  • Optionally add a status bar component via Session → Configure Status Bar")
     return True
 
 

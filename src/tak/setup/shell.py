@@ -27,6 +27,49 @@ fi
 """
 
 
+def _configure_managed_bashrc(
+    console: Console,
+    bashrc_path: Path,
+    *,
+    dry_run: bool,
+) -> None:
+    """Create or update ``bashrc_path`` with the tak-managed Starship block."""
+    if bashrc_path.exists():
+        content = bashrc_path.read_text()
+        if _MARKER_START in content:
+            existing_block = _extract_managed_block(content)
+            expected_block = _MANAGED_BLOCK.strip()
+            if existing_block == expected_block:
+                console.print(
+                    "[green]✓[/green] .bashrc already configured (tak marker found)"
+                )
+                return
+            if dry_run:
+                console.print("[dim]would update:[/dim] tak managed block in .bashrc")
+            else:
+                updated = _replace_managed_block(content, _MANAGED_BLOCK.strip())
+                bashrc_path.write_text(updated)
+                console.print("[green]✓[/green] Updated tak managed block in .bashrc")
+            return
+        if dry_run:
+            console.print(
+                f"[dim]would append:[/dim] tak managed block to {bashrc_path}"
+            )
+        else:
+            bashrc_path.write_text(content.rstrip() + "\n\n" + _MANAGED_BLOCK)
+            console.print("[green]✓[/green] Added tak managed block to .bashrc")
+        return
+
+    if dry_run:
+        console.print(
+            f"[dim]would create:[/dim] {bashrc_path} with tak managed block"
+        )
+    else:
+        bashrc_path.parent.mkdir(parents=True, exist_ok=True)
+        bashrc_path.write_text(_MANAGED_BLOCK)
+        console.print("[green]✓[/green] Created .bashrc with tak managed block")
+
+
 def setup_shell(
     console: Console,
     bashrc_path: Path | None = None,
@@ -45,39 +88,9 @@ def setup_shell(
     Returns:
         True if shell configuration is in place.
     """
-    bashrc_path = bashrc_path or Path.home() / ".bashrc"
-
+    resolved = bashrc_path or Path.home() / ".bashrc"
     _check_bash_version(console)
-
-    if bashrc_path.exists():
-        content = bashrc_path.read_text()
-        if _MARKER_START in content:
-            existing_block = _extract_managed_block(content)
-            expected_block = _MANAGED_BLOCK.strip()
-            if existing_block == expected_block:
-                console.print(
-                    "[green]✓[/green] .bashrc already configured (tak marker found)"
-                )
-                return True
-            if dry_run:
-                console.print("[dim]would update:[/dim] tak managed block in .bashrc")
-            else:
-                updated = _replace_managed_block(content, _MANAGED_BLOCK.strip())
-                bashrc_path.write_text(updated)
-                console.print("[green]✓[/green] Updated tak managed block in .bashrc")
-            return True
-        if dry_run:
-            console.print(f"[dim]would append:[/dim] tak managed block to {bashrc_path}")
-        else:
-            bashrc_path.write_text(content.rstrip() + "\n\n" + _MANAGED_BLOCK)
-            console.print("[green]✓[/green] Added tak managed block to .bashrc")
-    elif dry_run:
-        console.print(f"[dim]would create:[/dim] {bashrc_path} with tak managed block")
-    else:
-        bashrc_path.parent.mkdir(parents=True, exist_ok=True)
-        bashrc_path.write_text(_MANAGED_BLOCK)
-        console.print("[green]✓[/green] Created .bashrc with tak managed block")
-
+    _configure_managed_bashrc(console, resolved, dry_run=dry_run)
     return True
 
 

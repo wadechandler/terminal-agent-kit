@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import asyncio
@@ -112,8 +112,8 @@ def _extract_model_display(provider: BaseProvider, agent_name: str) -> str | Non
         if session is not None:
             name = getattr(session, "current_model_name", None)
             if name:
-                return name
-            return getattr(session, "current_model_id", None)
+                return cast("str", name)
+            return cast("str | None", getattr(session, "current_model_id", None))
     return None
 
 
@@ -127,7 +127,7 @@ def _extract_model_id(provider: BaseProvider, agent_name: str) -> str | None:
     if get_session is not None:
         session = get_session(agent_name)
         if session is not None:
-            return getattr(session, "current_model_id", None)
+            return cast("str | None", getattr(session, "current_model_id", None))
     return None
 
 
@@ -297,14 +297,23 @@ class AgentManager:
         self._agents.pop(name, None)
 
         if self._session_registry is not None:
-            for tab in list(handle.associated_tabs):
+            for tab in handle.associated_tabs:
                 self._session_registry.disassociate(tab)
 
         self._auto_save()
         logger.info("Removed agent %s", name)
 
-    async def rename(self, old_name: str, new_name: str) -> AgentHandle:
+    async def rename(  # NOSONAR(S7503) -- lifecycle interface uniformity
+        self,
+        old_name: str,
+        new_name: str,
+    ) -> AgentHandle:
         """Rename an existing agent.
+
+        This method is ``async`` despite containing no ``await`` today.
+        All ``AgentManager`` lifecycle methods share an async signature so
+        callers (IPC handlers, CLI commands) can treat them uniformly.
+        Rename may also need provider notification in the future.
 
         Args:
             old_name: Current agent name.

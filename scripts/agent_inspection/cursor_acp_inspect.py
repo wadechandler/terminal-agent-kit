@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# NOSONAR(S3776) -- This script was written as a quick-and-dirty exploration of
+# the Cursor CLI ACP protocol.  The high cognitive complexity in run_inspection()
+# and the report helpers is acknowledged; refactoring into per-phase functions is
+# a future cleanup task, not a priority while the script serves its research purpose.
 """Cursor ACP Inspection Harness.
 
 Spawns a real Cursor agent via the ACP SDK, exercises the full lifecycle,
@@ -53,6 +57,7 @@ from acp.schema import (
     RequestPermissionResponse,
     ResourceContentBlock,
     SessionInfoUpdate,
+    SseMcpServer,
     TextContentBlock,
     TextResourceContents,
     ToolCallProgress,
@@ -90,6 +95,10 @@ ORIGINAL_PHASES = {1, 2, 3, 4, 5, 6, 7}
 GAP_PHASES = {8, 9, 10, 11, 12, 13, 14}
 V3_PHASES = {15, 16, 17, 18, 19, 20, 21}
 ALL_PHASES = ORIGINAL_PHASES | GAP_PHASES | V3_PHASES
+
+_SEED_FILE_HELLO = "hello.py"
+_LOG_WROTE = "Wrote %s"
+_LOG_CLEANUP_FAILED = "Failed to clean up %s"
 
 
 def _sanitize(obj: Any) -> Any:
@@ -258,7 +267,7 @@ class RecordingClient:
             data=_model_dump(update),
         ))
 
-    async def request_permission(
+    async def request_permission(  # NOSONAR(S7503) -- protocol requires async
         self,
         options: list[PermissionOption],
         session_id: str,
@@ -271,6 +280,7 @@ class RecordingClient:
         self._permissions.append({
             "timestamp": _ts() - base,
             "wall_clock": _wall(),
+            "session_id": session_id,
             "tool_name": tool_name,
             "tool_call": _model_dump(tool_call),
             "options": [_model_dump(o) for o in options],
@@ -287,13 +297,14 @@ class RecordingClient:
             outcome=DeniedOutcome(outcome="cancelled")
         )
 
-    async def session_update(
+    async def session_update(  # NOSONAR -- protocol requires async; complexity from exploration script
         self,
         session_id: str,
         update: Any,
         **kwargs: Any,
     ) -> None:
         """Record and log each session update notification."""
+        logger.debug("session_update session=%s", session_id)
         self._record_update(update)
         if isinstance(update, AgentMessageChunk):
             if isinstance(update.content, TextContentBlock):
@@ -326,20 +337,24 @@ class RecordingClient:
         self, content: str, path: str, session_id: str, **kwargs: Any
     ) -> None:
         """Write a file inside the temp workspace."""
+        logger.debug("write_text_file session=%s path=%s", session_id, path)
         full = os.path.join(self._tmpdir, path.lstrip("/"))
         os.makedirs(os.path.dirname(full), exist_ok=True)
-        with open(full, "w") as f:
-            f.write(content)
+        await asyncio.to_thread(Path(full).write_text, content)
         logger.info("write_text_file: %s (%d bytes)", path, len(content))
 
     async def read_text_file(
-        self, path: str, session_id: str, **kwargs: Any
+        self, path: str, session_id: str,
+        limit: int | None = None, line: int | None = None, **kwargs: Any,
     ) -> Any:
         """Read a file from the temp workspace."""
+        logger.debug(
+            "read_text_file session=%s path=%s limit=%s line=%s",
+            session_id, path, limit, line,
+        )
         full = os.path.join(self._tmpdir, path.lstrip("/"))
         try:
-            with open(full) as f:
-                content = f.read()
+            content = await asyncio.to_thread(Path(full).read_text)
             logger.info("read_text_file: %s (%d bytes)", path, len(content))
             return {"content": content}
         except FileNotFoundError:
@@ -352,27 +367,34 @@ class RecordingClient:
         session_id: str,
         args: list[str] | None = None,
         cwd: str | None = None,
+        env: list[Any] | None = None,
+        output_byte_limit: int | None = None,
         **kwargs: Any,
     ) -> Any:
         """Run a command in a subprocess and record the output."""
         tid = f"term-{len(self._terminals)}"
         effective_cwd = cwd or self._tmpdir
         cmd_parts = [command] + (args or [])
-        logger.info("create_terminal: %s (cwd=%s)", " ".join(cmd_parts), effective_cwd)
+        logger.info(
+            "create_terminal: %s (cwd=%s, session=%s, env=%s, limit=%s)",
+            " ".join(cmd_parts), effective_cwd, session_id, env, output_byte_limit,
+        )
         try:
-            proc = subprocess.run(  # noqa: S603
-                cmd_parts,
-                capture_output=True,
-                text=True,
-                timeout=30,
+            proc = await asyncio.create_subprocess_exec(
+                *cmd_parts,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
                 cwd=effective_cwd,
+            )
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(
+                proc.communicate(), timeout=30,
             )
             self._terminals[tid] = {
                 "command": command,
                 "args": args,
-                "stdout": proc.stdout[:4096],
-                "stderr": proc.stderr[:2048],
-                "exit_code": proc.returncode,
+                "stdout": (stdout_bytes or b"").decode(errors="replace")[:4096],
+                "stderr": (stderr_bytes or b"").decode(errors="replace")[:2048],
+                "exit_code": proc.returncode or 0,
             }
         except Exception as exc:
             self._terminals[tid] = {
@@ -383,34 +405,42 @@ class RecordingClient:
             }
         return {"terminalId": tid}
 
-    async def terminal_output(
+    async def terminal_output(  # NOSONAR(S7503) -- protocol requires async
         self, session_id: str, terminal_id: str, **kwargs: Any
     ) -> Any:
         """Return captured stdout for a terminal."""
+        logger.debug("terminal_output session=%s terminal=%s", session_id, terminal_id)
         info = self._terminals.get(terminal_id, {})
         return {"output": info.get("stdout", "")}
 
-    async def release_terminal(self, **kwargs: Any) -> None:
+    async def release_terminal(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> None:
         """No-op release."""
+        logger.debug("release_terminal session=%s terminal=%s", session_id, terminal_id)
 
-    async def wait_for_terminal_exit(
+    async def wait_for_terminal_exit(  # NOSONAR(S7503) -- protocol requires async
         self, session_id: str, terminal_id: str, **kwargs: Any
     ) -> Any:
         """Return the exit code for a completed terminal."""
+        logger.debug("wait_for_terminal_exit session=%s terminal=%s", session_id, terminal_id)
         info = self._terminals.get(terminal_id, {})
         return {"exitCode": info.get("exit_code", 0)}
 
-    async def kill_terminal(self, **kwargs: Any) -> None:
+    async def kill_terminal(  # NOSONAR(S7503) -- protocol requires async
+        self, session_id: str, terminal_id: str, **kwargs: Any,
+    ) -> None:
         """No-op kill."""
+        logger.debug("kill_terminal session=%s terminal=%s", session_id, terminal_id)
 
-    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def ext_method(self, method: str, params: dict[str, Any]) -> dict[str, Any]:  # NOSONAR(S7503)
         """Log and return empty for extension methods."""
-        logger.info("ext_method: %s", method)
+        logger.info("ext_method: %s params=%s", method, list(params))
         return {}
 
-    async def ext_notification(self, method: str, params: dict[str, Any]) -> None:
+    async def ext_notification(self, method: str, params: dict[str, Any]) -> None:  # NOSONAR(S7503)
         """Log extension notifications."""
-        logger.info("ext_notification: %s", method)
+        logger.info("ext_notification: %s params=%s", method, list(params))
 
     def on_connect(self, conn: Any) -> None:
         """No-op connection callback."""
@@ -421,7 +451,7 @@ class RecordingClient:
 # ---------------------------------------------------------------------------
 
 SEED_FILES = {
-    "hello.py": 'print("Hello from Python!")\n',
+    _SEED_FILE_HELLO: 'print("Hello from Python!")\n',
     "Hello.java": (
         'public class Hello {\n'
         '    public static void main(String[] args) {\n'
@@ -454,7 +484,7 @@ async def _send_prompt(
     text: str,
     client: RecordingClient,
     *,
-    timeout: float = 120.0,
+    timeout: float = 120.0,  # NOSONAR(S7483) -- timeout used with asyncio.wait_for
     content_blocks: list[Any] | None = None,
 ) -> PromptRecord:
     """Send a prompt and record the full response cycle.
@@ -565,7 +595,7 @@ def _subprocess_env() -> dict[str, str]:
 # Main inspection
 # ---------------------------------------------------------------------------
 
-async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, Any]:
+async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, Any]:  # NOSONAR
     """Run the inspection and return the captured data.
 
     Args:
@@ -924,10 +954,8 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                     await conn.cancel(session_id=session_id)
                     try:
                         resp = await asyncio.wait_for(prompt_task, timeout=10.0)
-                        cancel_record["stop_reason"] = (
-                            resp.stop_reason.value
-                            if hasattr(resp.stop_reason, "value")
-                            else str(resp.stop_reason)
+                        cancel_record["stop_reason"] = getattr(
+                            resp.stop_reason, "value", str(resp.stop_reason)
                         )
                     except TimeoutError:
                         cancel_record["prompt_timed_out_after_cancel"] = True
@@ -1341,7 +1369,7 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                         "error": f"mock_mcp_echo.py not found at {mock_mcp_path}",
                     })
                 else:
-                    mcp_servers = [
+                    mcp_servers: list[HttpMcpServer | SseMcpServer | McpServerStdio] = [
                         McpServerStdio(
                             command=sys.executable,
                             args=[mock_mcp_path],
@@ -1576,13 +1604,13 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                 logger.info("=== Phase 18: ResourceContentBlock (URI) ===")
 
                 # Test A: file:// URI
-                file_uri = f"file://{tmpdir}/hello.py"
+                file_uri = f"file://{tmpdir}/{_SEED_FILE_HELLO}"
                 resource_file = ResourceContentBlock(
                     type="resource_link",
-                    name="hello.py",
+                    name=_SEED_FILE_HELLO,
                     uri=file_uri,
                     mime_type="text/x-python",
-                    size=len(SEED_FILES["hello.py"]),
+                    size=len(SEED_FILES[_SEED_FILE_HELLO]),
                     description="A Python hello world script",
                 )
                 try:
@@ -1808,6 +1836,8 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
 
             http_srv = None
             http_port = 0
+            mcp_echo_log = ""
+            approval_dir = ""
             tmpdir2 = tempfile.mkdtemp(prefix="tak-inspect-mcp-")
             try:
                 from mock_mcp_http import start_server as _start_http_21
@@ -1854,8 +1884,9 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                 )
                 os.makedirs(approval_dir, exist_ok=True)
                 approval_path = os.path.join(approval_dir, "mcp-approvals.json")
-                with open(approval_path, "w") as f:
-                    json.dump(approvals, f)
+                await asyncio.to_thread(
+                    Path(approval_path).write_text, json.dumps(approvals),
+                )
                 logger.info("Wrote MCP approvals: %s", approval_path)
 
                 phase21.entries.append({
@@ -1868,9 +1899,10 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                 mcp_dir = os.path.join(tmpdir2, ".cursor")
                 os.makedirs(mcp_dir, exist_ok=True)
                 mcp_json_path = os.path.join(mcp_dir, "mcp.json")
-                with open(mcp_json_path, "w") as f:
-                    json.dump(mcp_config, f, indent=2)
-                logger.info("Wrote %s", mcp_json_path)
+                await asyncio.to_thread(
+                    Path(mcp_json_path).write_text, json.dumps(mcp_config, indent=2),
+                )
+                logger.info(_LOG_WROTE, mcp_json_path)
 
                 phase21.entries.append({
                     "test": "mcp_config_written",
@@ -1956,9 +1988,10 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                     http_srv.shutdown()
                     logger.info("Phase 21 HTTP mock shut down")
                 try:
-                    if os.path.exists(mcp_echo_log):
-                        with open(mcp_echo_log) as lf:
-                            log_contents = lf.read()
+                    if mcp_echo_log and os.path.exists(mcp_echo_log):
+                        log_contents = await asyncio.to_thread(
+                            Path(mcp_echo_log).read_text,
+                        )
                         logger.info(
                             "MCP echo log (%d bytes):\n%s",
                             len(log_contents), log_contents,
@@ -1980,13 +2013,13 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
                     shutil.rmtree(tmpdir2)
                     logger.info("Cleaned up %s", tmpdir2)
                 except Exception:
-                    logger.warning("Failed to clean up %s", tmpdir2)
+                    logger.warning(_LOG_CLEANUP_FAILED, tmpdir2)
                 try:
                     if os.path.isdir(approval_dir):
                         shutil.rmtree(approval_dir)
                         logger.info("Cleaned up approval dir %s", approval_dir)
                 except Exception:
-                    logger.warning("Failed to clean up %s", approval_dir)
+                    logger.warning(_LOG_CLEANUP_FAILED, approval_dir)
 
             results["phases"]["mcp_config"] = _phase_to_dict(phase21)
 
@@ -1999,7 +2032,7 @@ async def run_inspection(*, phases_to_run: set[int] | None = None) -> dict[str, 
             shutil.rmtree(tmpdir)
             logger.info("Cleaned up %s", tmpdir)
         except Exception:
-            logger.warning("Failed to clean up %s", tmpdir)
+            logger.warning(_LOG_CLEANUP_FAILED, tmpdir)
 
     return results
 
@@ -2165,7 +2198,7 @@ def _generate_report(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _report_handshake(phases: dict, lines: list[str]) -> None:
+def _report_handshake(phases: dict, lines: list[str]) -> None:  # NOSONAR
     hs = phases.get("handshake", {})
     if not hs:
         return
@@ -2230,7 +2263,7 @@ def _report_handshake(phases: dict, lines: list[str]) -> None:
                 lines.append(f"```json\n{json.dumps(entry.get('response'), indent=2)}\n```\n")
 
 
-def _report_model_mode(phases: dict, lines: list[str]) -> None:
+def _report_model_mode(phases: dict, lines: list[str]) -> None:  # NOSONAR
     mm = phases.get("model_mode", {})
     if not mm:
         return
@@ -2356,7 +2389,7 @@ def _report_usage(phases: dict, lines: list[str]) -> None:
             _report_prompt_summary(entry, lines)
 
 
-def _report_config_option(phases: dict, lines: list[str]) -> None:
+def _report_config_option(phases: dict, lines: list[str]) -> None:  # NOSONAR
     co = phases.get("config_option", {})
     if not co:
         return
@@ -2700,15 +2733,14 @@ async def main() -> None:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     json_path = REPORT_DIR / f"raw_responses{suffix}.json"
-    with open(json_path, "w") as f:
-        json.dump(sanitized, f, indent=2, default=str)
-    logger.info("Wrote %s", json_path)
+    json_text = json.dumps(sanitized, indent=2, default=str)
+    await asyncio.to_thread(json_path.write_text, json_text)
+    logger.info(_LOG_WROTE, json_path)
 
     report_path = REPORT_DIR / f"report{suffix}.md"
     report_text = _generate_report(sanitized)
-    with open(report_path, "w") as f:
-        f.write(report_text)
-    logger.info("Wrote %s", report_path)
+    await asyncio.to_thread(report_path.write_text, report_text)
+    logger.info(_LOG_WROTE, report_path)
 
     logger.info("Inspection complete.")
 

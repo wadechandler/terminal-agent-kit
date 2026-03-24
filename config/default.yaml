@@ -42,6 +42,12 @@ adhoc:
   model: null             # uses provider default
   auto_stop_after: 300    # seconds of inactivity before auto-stopping
 
+# Per-prompt context for `tak prompt` (user shell CWD at prompt time)
+prompt:
+  cwd_context:
+    enabled: true
+    format: xml   # xml | bracket | json | none
+
 # Security
 security:
   audit_dependencies: true

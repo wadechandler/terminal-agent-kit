@@ -19,27 +19,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-async def register_rpcs(
+async def _register_tak_list_agents(
     connection: Any,
-    agent_manager: AgentManager,
-    session_registry: SessionRegistry,
     app_getter: Any,
+    agent_manager: AgentManager,
 ) -> None:
-    """Register all tak RPC functions with iTerm2.
-
-    Users bind these to keybindings in Preferences > Keys.
-
-    Args:
-        connection: An ``iterm2.Connection`` instance.
-        agent_manager: The daemon's agent manager.
-        session_registry: The daemon's session registry.
-        app_getter: Callable that returns the ``iterm2.App`` instance.
-    """
     import iterm2
 
     @iterm2.RPC
     async def tak_list_agents(
-        session_id: str = iterm2.Reference("id"),
+        session_id: str = iterm2.Reference("id"),  # type: ignore[arg-type]
     ) -> None:
         """List all managed agents. Injects output into the calling session."""
         app = await app_getter()
@@ -62,13 +51,21 @@ async def register_rpcs(
             )
         await session.async_inject("".join(lines).encode())
 
-    await tak_list_agents.async_register(connection)
+    await tak_list_agents.async_register(connection)  # type: ignore[attr-defined]
     logger.info("Registered RPC: tak_list_agents")
+
+
+async def _register_tak_switch_to_agent(
+    connection: Any,
+    app_getter: Any,
+    session_registry: SessionRegistry,
+) -> None:
+    import iterm2
 
     @iterm2.RPC
     async def tak_switch_to_agent(
         agent_name: str,
-        session_id: str = iterm2.Reference("id"),
+        session_id: str = iterm2.Reference("id"),  # type: ignore[arg-type]
     ) -> None:
         """Activate the tab associated with the named agent."""
         sessions = session_registry.get_sessions(agent_name)
@@ -86,13 +83,21 @@ async def register_rpcs(
         if target is not None:
             await target.async_activate(select_tab=True, order_window_front=True)
 
-    await tak_switch_to_agent.async_register(connection)
+    await tak_switch_to_agent.async_register(connection)  # type: ignore[attr-defined]
     logger.info("Registered RPC: tak_switch_to_agent")
+
+
+async def _register_tak_stop_agent(
+    connection: Any,
+    app_getter: Any,
+    agent_manager: AgentManager,
+) -> None:
+    import iterm2
 
     @iterm2.RPC
     async def tak_stop_agent(
         agent_name: str,
-        session_id: str = iterm2.Reference("id"),
+        session_id: str = iterm2.Reference("id"),  # type: ignore[arg-type]
     ) -> None:
         """Stop the named agent."""
         app = await app_getter()
@@ -110,12 +115,19 @@ async def register_rpcs(
                     f"\r\n[tak] Error: {exc}\r\n".encode()
                 )
 
-    await tak_stop_agent.async_register(connection)
+    await tak_stop_agent.async_register(connection)  # type: ignore[attr-defined]
     logger.info("Registered RPC: tak_stop_agent")
+
+
+async def _register_tak_agent_menu(
+    connection: Any,
+    app_getter: Any,
+) -> None:
+    import iterm2
 
     @iterm2.RPC
     async def tak_agent_menu(
-        session_id: str = iterm2.Reference("id"),
+        session_id: str = iterm2.Reference("id"),  # type: ignore[arg-type]
     ) -> None:
         """Open the tak TUI dashboard in a horizontal split pane."""
         app = await app_getter()
@@ -132,5 +144,27 @@ async def register_rpcs(
                 b"\r\n[tak] Could not open TUI pane -- run `tak menu` manually.\r\n"
             )
 
-    await tak_agent_menu.async_register(connection)
+    await tak_agent_menu.async_register(connection)  # type: ignore[attr-defined]
     logger.info("Registered RPC: tak_agent_menu")
+
+
+async def register_rpcs(
+    connection: Any,
+    agent_manager: AgentManager,
+    session_registry: SessionRegistry,
+    app_getter: Any,
+) -> None:
+    """Register all tak RPC functions with iTerm2.
+
+    Users bind these to keybindings in Preferences > Keys.
+
+    Args:
+        connection: An ``iterm2.Connection`` instance.
+        agent_manager: The daemon's agent manager.
+        session_registry: The daemon's session registry.
+        app_getter: Callable that returns the ``iterm2.App`` instance.
+    """
+    await _register_tak_list_agents(connection, app_getter, agent_manager)
+    await _register_tak_switch_to_agent(connection, app_getter, session_registry)
+    await _register_tak_stop_agent(connection, app_getter, agent_manager)
+    await _register_tak_agent_menu(connection, app_getter)

@@ -85,3 +85,19 @@ class TestAgentBusRouting:
         assert len(mock_provider.send_calls) == 1
         assert mock_provider.send_calls[0]["message"] == "what is this?"
         assert mock_provider.send_calls[0]["agent"] == "cursor-myapp"
+
+    async def test_route_passes_cwd_to_provider(
+        self,
+        agent_manager: AgentManager,
+        session_registry: SessionRegistry,
+        mock_provider: MockProvider,
+    ) -> None:
+        await agent_manager.spawn("cursor-myapp", "mock")
+        session_registry.associate("sess-1", "cursor-myapp")
+        bus = AgentBus(agent_manager, session_registry, {"mock": mock_provider})
+
+        await bus.route(
+            BusMessage(session_id="sess-1", text="hi", cwd="/tmp/sub"),  # noqa: S108
+        )
+
+        assert mock_provider.send_calls[0]["cwd"] == "/tmp/sub"  # noqa: S108

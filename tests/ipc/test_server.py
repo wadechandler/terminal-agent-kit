@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def short_tmp(tmp_path: Path) -> Path:
+def short_tmp() -> Iterator[Path]:
     # Unix domain sockets have a 104-byte path limit on macOS.
     # pytest's tmp_path can exceed this, so use /tmp directly.
     d = Path(tempfile.mkdtemp(prefix="tak_", dir="/tmp"))
@@ -389,6 +391,58 @@ class TestIPCServerAsk:
         finally:
             await ipc_server_with_registry.stop()
 
+    async def test_prompt_passes_cwd_and_mode_to_provider(
+        self,
+        ipc_server_with_provider: IPCServer,
+        agent_manager: AgentManager,
+        mock_provider: MockProvider,
+    ) -> None:
+        await agent_manager.spawn("ipc-test-agent", "mock")
+        await ipc_server_with_provider.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "prompt",
+                params={
+                    "agent": "ipc-test-agent",
+                    "message": "hi",
+                    "cwd": "/workspace",
+                    "mode": "plan",
+                },
+                socket_path=ipc_server_with_provider.socket_path,
+            )
+            assert resp.success
+            assert mock_provider.send_calls[-1]["cwd"] == "/workspace"
+            assert mock_provider.send_calls[-1]["mode"] == "plan"
+        finally:
+            await ipc_server_with_provider.stop()
+
+
+class TestIPCServerSessionEnd:
+    async def test_session_end_clears_acp_session_id(
+        self,
+        ipc_server_with_provider: IPCServer,
+        agent_manager: AgentManager,
+    ) -> None:
+        handle = await agent_manager.spawn("ipc-test-agent", "mock")
+        handle.acp_session_id = "persisted-sess"
+        await ipc_server_with_provider.start()
+        try:
+            from tak.ipc.client import send_request
+
+            resp = await send_request(
+                "session_end",
+                params={"agent": "ipc-test-agent"},
+                socket_path=ipc_server_with_provider.socket_path,
+            )
+            assert resp.success
+            renewed = agent_manager.get("ipc-test-agent")
+            assert renewed is not None
+            assert renewed.acp_session_id is None
+        finally:
+            await ipc_server_with_provider.stop()
+
 
 class TestIPCServerAdHocAsk:
     async def test_ask_adhoc_spawns_and_responds(
@@ -593,6 +647,7 @@ class TestIPCServerSwitch:
         activated: list[str] = []
 
         async def fake_activate(session_id: str) -> None:
+            await asyncio.sleep(0)
             activated.append(session_id)
 
         server = IPCServer(
@@ -628,6 +683,7 @@ class TestIPCServerSwitch:
         activated: list[str] = []
 
         async def fake_activate(session_id: str) -> None:
+            await asyncio.sleep(0)
             activated.append(session_id)
 
         server = IPCServer(
@@ -659,8 +715,9 @@ class TestIPCServerSwitch:
         mock_provider: MockProvider,
         short_tmp: Path,
     ) -> None:
-        async def fake_activate(session_id: str) -> None:
-            pass
+        async def fake_activate(_session_id: str) -> None:
+            """Unused when the agent has no associated tabs."""
+            await asyncio.sleep(0)
 
         server = IPCServer(
             agent_manager=agent_manager,

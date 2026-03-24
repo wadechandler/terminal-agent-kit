@@ -7,6 +7,7 @@ by dispatching them to the ``AgentManager`` and provider sessions.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from collections.abc import Callable, Coroutine
 from pathlib import Path
@@ -26,6 +27,8 @@ ActivateTabCallback = Callable[[str], Coroutine[Any, Any, None]]
 logger = logging.getLogger(__name__)
 
 DEFAULT_SOCKET_PATH = Path.home() / ".tak" / "daemon.sock"
+
+_ERR_AGENT_NAME_REQUIRED = "agent name is required"
 
 
 class IPCServer:
@@ -129,6 +132,7 @@ class IPCServer:
             "associate": self._handle_associate,
             "set_permissions": self._handle_set_permissions,
             "switch": self._handle_switch,
+            "session_end": self._handle_session_end,
         }
 
         handler = handlers.get(request.method)
@@ -140,7 +144,8 @@ class IPCServer:
             )
 
         try:
-            data = await handler(request.params)
+            result = handler(request.params)
+            data = await result if inspect.isawaitable(result) else result
             return IPCResponse(
                 success=True, data=data, request_id=request.request_id
             )
@@ -151,7 +156,7 @@ class IPCServer:
                 request_id=request.request_id,
             )
 
-    async def _handle_list_agents(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def _handle_list_agents(self, params: dict[str, Any]) -> list[dict[str, Any]]:
         """Return a filtered list of managed agents.
 
         Params:
@@ -180,7 +185,7 @@ class IPCServer:
             for h in agents
         ]
 
-    async def _handle_list_providers(
+    def _handle_list_providers(
         self, params: dict[str, Any]
     ) -> list[dict[str, str]]:
         """Return metadata for all registered providers."""
@@ -239,7 +244,7 @@ class IPCServer:
         await self._manager.remove(name)
         return {"name": name, "status": "removed"}
 
-    async def _handle_status(self, params: dict[str, Any]) -> dict[str, Any] | None:
+    def _handle_status(self, params: dict[str, Any]) -> dict[str, Any] | None:
         """Get status of a specific agent."""
         name = params.get("name", "")
         handle = self._manager.get(name)
@@ -275,11 +280,16 @@ class IPCServer:
                 associated agent when *agent* is not specified.
             use_adhoc: If truthy and no agent can be resolved, use the
                 ad-hoc agent (spawning it if needed).
+            cwd: Caller's working directory for per-prompt user CWD context.
+            mode: Optional session mode (``ask``, ``plan``, ``agent``) when a
+                new ACP session is created on this prompt.
         """
         agent_name = params.get("agent", "")
         message = params.get("message", "")
         session_id: str | None = params.get("session_id")
         use_adhoc = bool(params.get("use_adhoc", False))
+        cwd: str | None = params.get("cwd")
+        mode: str | None = params.get("mode")
 
         if not agent_name and session_id:
             agent_name = self._resolve_agent_for_session(session_id)
@@ -287,12 +297,16 @@ class IPCServer:
         if not agent_name and use_adhoc:
             if self._adhoc_manager is None:
                 raise ValueError("Ad-hoc mode not configured on this server")
-            response_text = await self._adhoc_manager.ask(message)
+            response_text = await self._adhoc_manager.ask(
+                message, cwd=cwd, mode=mode,
+            )
             return {"agent": "_adhoc", "response": response_text}
 
         if not agent_name:
             if self._adhoc_manager is not None:
-                response_text = await self._adhoc_manager.ask(message)
+                response_text = await self._adhoc_manager.ask(
+                    message, cwd=cwd, mode=mode,
+                )
                 return {"agent": "_adhoc", "response": response_text}
             running = self._manager.running_agents()
             if not running:
@@ -307,8 +321,48 @@ class IPCServer:
         if provider is None:
             raise ValueError(f"No provider '{handle.provider_name}' registered with IPC server")
 
-        response_text = await provider.send(handle, message)
+        response_text = await provider.send(handle, message, cwd=cwd, mode=mode)
         return {"agent": agent_name, "response": response_text}
+
+    async def _handle_session_end(self, params: dict[str, Any]) -> dict[str, str]:
+        """Close the ACP session for an agent; next prompt starts fresh.
+
+        Params:
+            agent: Optional agent name.
+            session_id: Used to resolve the agent when *agent* is omitted.
+            use_adhoc: When no agent resolved, target the ad-hoc agent.
+        """
+        agent_name = params.get("agent", "")
+        session_id: str | None = params.get("session_id")
+        use_adhoc = bool(params.get("use_adhoc", False))
+
+        if not agent_name and session_id:
+            agent_name = self._resolve_agent_for_session(session_id)
+
+        if not agent_name and use_adhoc:
+            agent_name = "_adhoc"
+
+        if not agent_name:
+            running = self._manager.running_agents()
+            if not running:
+                raise ValueError("No running agents")
+            agent_name = running[0].name
+
+        handle = self._manager.get(agent_name)
+        if handle is None:
+            raise ValueError(f"No agent named '{agent_name}'")
+
+        provider = self._providers.get(handle.provider_name)
+        if provider is None:
+            raise ValueError(f"No provider '{handle.provider_name}' registered with IPC server")
+
+        closer = getattr(provider, "close_session", None)
+        if closer is not None:
+            await closer(agent_name)
+
+        handle.acp_session_id = None
+        self._manager._auto_save()
+        return {"agent": agent_name, "status": "session_ended"}
 
     def _resolve_agent_for_session(self, session_id: str) -> str:
         """Find the agent associated with a terminal session.
@@ -336,7 +390,7 @@ class IPCServer:
 
         return ""
 
-    async def _handle_associate(self, params: dict[str, Any]) -> dict[str, str]:
+    def _handle_associate(self, params: dict[str, Any]) -> dict[str, str]:
         """Associate a terminal session (tab) with an agent.
 
         Params:
@@ -347,7 +401,7 @@ class IPCServer:
         session_id = params.get("session_id", "")
 
         if not agent_name:
-            raise ValueError("agent name is required")
+            raise ValueError(_ERR_AGENT_NAME_REQUIRED)
         if not session_id:
             raise ValueError("session_id is required (set $ITERM_SESSION_ID)")
 
@@ -365,7 +419,7 @@ class IPCServer:
         logger.info("Associated session %s with agent %s", session_id, agent_name)
         return {"agent": agent_name, "session_id": session_id}
 
-    async def _handle_set_permissions(self, params: dict[str, Any]) -> dict[str, str]:
+    def _handle_set_permissions(self, params: dict[str, Any]) -> dict[str, str]:
         """Update the permission policy for a running agent.
 
         Params:
@@ -376,7 +430,7 @@ class IPCServer:
         policy_str = params.get("policy", "")
 
         if not agent_name:
-            raise ValueError("agent name is required")
+            raise ValueError(_ERR_AGENT_NAME_REQUIRED)
 
         handle = self._manager.get(agent_name)
         if handle is None:
@@ -406,7 +460,7 @@ class IPCServer:
         """
         agent_name = params.get("name", "")
         if not agent_name:
-            raise ValueError("agent name is required")
+            raise ValueError(_ERR_AGENT_NAME_REQUIRED)
 
         handle = self._manager.get(agent_name)
         if handle is None:

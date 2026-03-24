@@ -84,14 +84,13 @@ def _test_connection(console: Console) -> None:
         return
 
     async def _connect() -> None:
-        await asyncio.wait_for(
-            iterm2.Connection.async_create(), timeout=_CONNECTION_TIMEOUT,
-        )
+        async with asyncio.timeout(_CONNECTION_TIMEOUT):
+            await iterm2.Connection.async_create()
 
     try:
         asyncio.run(_connect())
         console.print("[green]✓[/green] iTerm2 API connection verified")
-    except (TimeoutError, ConnectionRefusedError, OSError):
+    except OSError:
         console.print(
             "[yellow]⚠[/yellow] Could not connect to iTerm2 — restart may be needed"
         )

@@ -83,16 +83,26 @@ class TerminalSessionProvider(BaseProvider):
             cwd=str(project_path) if project_path else None,
         )
 
-    async def send(self, handle: AgentHandle, message: str) -> str:
+    async def send(
+        self,
+        handle: AgentHandle,
+        message: str,
+        *,
+        cwd: str | None = None,
+        mode: str | None = None,
+    ) -> str:
         """Not supported for terminal agents.
 
         Args:
             handle: The agent handle (unused).
             message: The message (unused).
+            cwd: Unused (ACP-only).
+            mode: Unused (ACP-only).
 
         Raises:
             NotImplementedError: Always -- the user interacts directly via the TUI.
         """
+        del cwd, mode
         raise NotImplementedError(
             f"TerminalSessionProvider '{self._name}' does not support send(); "
             "interact with the agent directly in its terminal tab."

@@ -58,7 +58,7 @@ def _make_new_session_response(
 
 
 def _make_conn_mock(
-    new_session_response: MagicMock | None = None,
+    new_session_response: Any = None,
 ) -> AsyncMock:
     """Create a mock ClientSideConnection with standard ACP methods."""
     if new_session_response is None:
@@ -75,8 +75,9 @@ def _make_conn_mock(
     conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     conn.cancel = AsyncMock()
     conn.close = AsyncMock()
-    conn.set_session_model = AsyncMock()
-    conn.set_session_mode = AsyncMock()
+    conn.set_config_option = AsyncMock(
+        return_value=SimpleNamespace(config_options=[])
+    )
     return conn
 
 
@@ -169,9 +170,10 @@ class TestInitializeAuthenticateHandshake:
             model="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]"
         )
 
-        conn.set_session_model.assert_called_once_with(
-            model_id="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
-            session_id="sess-abc-123",
+        conn.set_config_option.assert_called_once_with(
+            "model",
+            "sess-abc-123",
+            "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
         )
 
     async def test_new_session_resolves_bracketless_model(self) -> None:
@@ -180,9 +182,10 @@ class TestInitializeAuthenticateHandshake:
         await session.authenticate()
         await session.new_session(model="gemini-3-flash")
 
-        conn.set_session_model.assert_called_once_with(
-            model_id="gemini-3-flash[]",
-            session_id="sess-abc-123",
+        conn.set_config_option.assert_called_once_with(
+            "model",
+            "sess-abc-123",
+            "gemini-3-flash[]",
         )
 
     async def test_new_session_skips_set_when_model_already_active(self) -> None:
@@ -191,7 +194,7 @@ class TestInitializeAuthenticateHandshake:
         await session.authenticate()
         await session.new_session(model="default[]")
 
-        conn.set_session_model.assert_not_called()
+        conn.set_config_option.assert_not_called()
         assert session.current_model_id == "default[]"
         assert session.current_model_name == "Auto"
 
@@ -201,7 +204,7 @@ class TestInitializeAuthenticateHandshake:
         await session.authenticate()
         await session.new_session(model="Auto")
 
-        conn.set_session_model.assert_not_called()
+        conn.set_config_option.assert_not_called()
         assert session.current_model_id == "default[]"
 
     async def test_new_session_sets_model_for_different_display_name(self) -> None:
@@ -210,9 +213,20 @@ class TestInitializeAuthenticateHandshake:
         await session.authenticate()
         await session.new_session(model="Sonnet 4.6")
 
-        conn.set_session_model.assert_called_once_with(
-            model_id="claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
-            session_id="sess-abc-123",
+        conn.set_config_option.assert_called_once_with(
+            "model",
+            "sess-abc-123",
+            "claude-sonnet-4-6[thinking=true,context=200k,effort=medium]",
+        )
+
+    async def test_new_session_plan_mode_calls_set_config_option(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session(mode="plan")
+
+        conn.set_config_option.assert_called_once_with(
+            "mode", "sess-abc-123", "plan",
         )
 
 
@@ -297,7 +311,6 @@ class TestPermissionCallback:
         _, _, client = _make_session(permission_callback=callback)
 
         tool_call = ToolCallUpdate(
-            session_update="tool_call_update",
             tool_call_id="tc-1",
             title="edit_file",
         )
@@ -324,7 +337,6 @@ class TestPermissionCallback:
         _, _, client = _make_session()
 
         tool_call = ToolCallUpdate(
-            session_update="tool_call_update",
             tool_call_id="tc-1",
             title="run_cmd",
         )
@@ -347,7 +359,6 @@ class TestPermissionCallback:
         )
 
         tool_call = ToolCallUpdate(
-            session_update="tool_call_update",
             tool_call_id="tc-1",
             title="run_cmd",
         )
@@ -400,6 +411,37 @@ class TestClose:
 
         assert session.state == ACPSessionState.CLOSED
         conn.close.assert_called_once()
+
+
+class TestCloseSession:
+    async def test_close_session_clears_id_without_closing_conn(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session()
+        await session.close_session()
+
+        assert session.session_id is None
+        assert session.state == ACPSessionState.AUTHENTICATED
+        conn.close.assert_not_called()
+
+
+class TestSetConfigOptionMethod:
+    async def test_set_config_option_requires_active_session(self) -> None:
+        session, _, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        with pytest.raises(RuntimeError, match="No active session"):
+            await session.set_config_option("mode", "plan")
+
+    async def test_set_config_option_forwards_to_conn(self) -> None:
+        session, conn, _ = _make_session()
+        await session.initialize()
+        await session.authenticate()
+        await session.new_session()
+        conn.set_config_option.reset_mock()
+        await session.set_config_option("mode", "ask")
+        conn.set_config_option.assert_called_once_with("mode", "sess-abc-123", "ask")
 
 
 class TestCallbackProperties:

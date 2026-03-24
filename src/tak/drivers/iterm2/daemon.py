@@ -32,8 +32,9 @@ def _ensure_tak_importable() -> None:
     back to the project tree, we resolve the symlink and derive the ``src/``
     directory to make all ``tak.*`` imports work.
     """
+    # If tak is already on sys.path (dev installs), nothing to do.
     try:
-        import tak  # noqa: F401 — already importable, nothing to do
+        import tak  # noqa: F401
         return
     except ImportError:
         pass
@@ -131,7 +132,7 @@ async def main(connection: Any) -> None:
 
         fallback = CursorACPProvider()
         manager.register_provider("cursor-acp", fallback)
-        providers = {"cursor-acp": fallback}
+        providers: dict[str, BaseProvider] = {"cursor-acp": fallback}
 
     for _provider_name, provider in providers.items():
         if isinstance(provider, ACPProvider):
@@ -141,6 +142,8 @@ async def main(connection: Any) -> None:
     manager.set_state_manager(state_mgr, registry)
 
     app = await iterm2.async_get_app(connection)
+    if app is None:
+        raise RuntimeError("iTerm2 async_get_app returned no App")
     available_sessions = {
         session.session_id
         for window in app.windows
@@ -167,6 +170,8 @@ async def main(connection: Any) -> None:
 
     async def _activate_tab(session_id: str) -> None:
         app = await iterm2.async_get_app(connection)
+        if app is None:
+            raise ValueError(f"Tab session {session_id} — iTerm2 App unavailable")
         target = app.get_session_by_id(session_id)
         if target is None:
             raise ValueError(f"Tab session {session_id} no longer exists")
@@ -251,7 +256,7 @@ async def _graceful_shutdown(
         manager: The ``AgentManager`` with running agents to stop.
         ipc: The ``IPCServer`` to shut down.
     """
-    for handle in list(manager.running_agents()):
+    for handle in manager.running_agents():
         try:
             await asyncio.wait_for(manager.stop(handle.name), timeout=5.0)
             logger.info("Stopped agent %r", handle.name)
@@ -313,7 +318,7 @@ def _build_providers_from_config(
     return providers
 
 
-def _wire_permission_relay(
+def _wire_permission_relay(  # NOSONAR — S3776: nested permission / ask-question callbacks
     provider: ACPProvider,
     registry: SessionRegistry,
     connection: Any,
@@ -389,6 +394,9 @@ def _wire_permission_relay(
             return "reject-once"
 
         app = await iterm2.async_get_app(connection)
+        if app is None:
+            logger.warning("iTerm2 App unavailable; rejecting permission for %s", agent_name)
+            return "reject-once"
         session = app.get_session_by_id(session_id)
         if session is None:
             logger.warning(
@@ -425,6 +433,8 @@ def _wire_permission_relay(
             return choices[0]
 
         app = await iterm2.async_get_app(connection)
+        if app is None:
+            return choices[0]
         session = app.get_session_by_id(session_id)
         if session is None:
             return choices[0]
@@ -444,7 +454,7 @@ def _wire_permission_relay(
                     if 0 <= idx < len(choices):
                         await session.async_inject(f"{choices[idx]}\r\n".encode())
                         return choices[idx]
-        except (TimeoutError, Exception):
+        except Exception:
             logger.warning("ask_question timed out or failed; using first choice")
 
         await session.async_inject(f"{choices[0]}\r\n".encode())

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "terminal-agent-kit"
 version = "0.1.0-alpha"
-description = "Forging your terminal into an agentic environment"
+description = "Transform your terminal into an agentic workspace"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
@@ -42,6 +42,7 @@ dev = [
     "pytest-asyncio>=0.23",
     "ruff>=0.4",
     "mypy>=1.10",
+    "types-PyYAML>=6.0",
 ]
 llm = [
     "httpx>=0.27",
@@ -63,6 +64,8 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
+# SonarLint / SonarQube rule ids may appear in `# noqa:`; Ruff only accepts them if listed here.
+external = ["S7503", "S7483"]
 select = [
     "E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "SIM", "TCH",
     "D", "RUF", "PIE", "RET", "PT",
@@ -73,6 +76,8 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "S101"]
+"tests/ipc/test_server.py" = ["TC003"]
+"tests/scaffold/test_new_project.py" = ["TC003"]
 "**/__init__.py" = ["D104"]
 "src/tak/setup/starship.py" = ["RUF001"]
 "src/tak/drivers/iterm2/daemon.py" = ["I001"]  # imports split by _ensure_tak_importable()
@@ -80,6 +85,19 @@ convention = "google"
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+# iTerm2's Python API is dynamic; strict checking produces false positives on RPC
+# decorators, Reference defaults, and symbols not listed in the package stub surface.
+[[tool.mypy.overrides]]
+module = [
+    "tak.drivers.iterm2.rpc",
+    "tak.drivers.iterm2.status_bar",
+    "tak.drivers.iterm2.daemon",
+    "tak.drivers.iterm2.driver",
+    "tak.setup.profiles",
+    "tak.setup.iterm2",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

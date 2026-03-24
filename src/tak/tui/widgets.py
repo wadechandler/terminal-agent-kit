@@ -44,7 +44,7 @@ async def _get_agents() -> tuple[list[dict[str, Any]], str | None]:
         if resp.success:
             return resp.data or [], None
         return [], resp.error or "unknown daemon error"
-    except (ConnectionError, TimeoutError, OSError) as exc:
+    except OSError as exc:
         return [], str(exc)
 
 
@@ -82,7 +82,8 @@ class AgentTable(Widget):
         """Initialise columns and start the polling interval."""
         table = self.query_one("#agent-data-table", DataTable)
         table.add_columns("Name", "Provider", "Model", "Status", "Tabs")
-        self.load_agents()
+        _initial = self.load_agents()
+        del _initial
         self.set_interval(self.POLL_INTERVAL, self.load_agents)
 
     @work(exclusive=True)

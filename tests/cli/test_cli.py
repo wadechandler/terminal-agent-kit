@@ -7,8 +7,9 @@ to ``False`` (no-daemon fallback) and ``True`` + ``_run_async`` mocked
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from click.testing import CliRunner
 
@@ -142,6 +143,42 @@ class TestAskCommand:
             result = CliRunner().invoke(cli, ["ask", "hi"])
         assert result.exit_code == 0
         assert "hello" in result.output
+
+    def test_prompt_ipc_includes_cwd_and_mode(self) -> None:
+        resp = MagicMock(success=True, data={"agent": "a", "response": "ok"})
+        mock_send = AsyncMock(return_value=resp)
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.ipc.client.send_request", mock_send),
+            patch("tak.cli.main._run_async", side_effect=lambda c: asyncio.run(c)),
+            patch("tak.cli.main._detect_session_id", return_value=None),
+            patch("tak.cli.main.os.getcwd", return_value="/from/cli"),
+        ):
+            result = CliRunner().invoke(cli, ["prompt", "--mode", "plan", "hello"])
+        assert result.exit_code == 0
+        mock_send.assert_called_once()
+        method, params = mock_send.call_args[0]
+        assert method == "prompt"
+        assert params["cwd"] == "/from/cli"
+        assert params["mode"] == "plan"
+
+    def test_session_end_with_daemon(self) -> None:
+        resp = MagicMock(
+            success=True, data={"agent": "my-agent", "status": "session_ended"}
+        )
+        mock_send = AsyncMock(return_value=resp)
+        with (
+            patch("tak.cli.main._daemon_available", return_value=True),
+            patch("tak.ipc.client.send_request", mock_send),
+            patch("tak.cli.main._run_async", side_effect=lambda c: asyncio.run(c)),
+            patch("tak.cli.main._detect_session_id", return_value=None),
+        ):
+            result = CliRunner().invoke(cli, ["session", "end", "my-agent"])
+        assert result.exit_code == 0
+        assert "Session ended" in result.output
+        mock_send.assert_called_once()
+        assert mock_send.call_args[0][0] == "session_end"
+        assert mock_send.call_args[0][1]["agent"] == "my-agent"
 
 
 class TestAssociateCommand:

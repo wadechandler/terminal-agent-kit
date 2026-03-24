@@ -77,13 +77,21 @@ class AdHocManager:
         self._schedule_auto_stop()
         return handle
 
-    async def ask(self, query: str) -> str:
+    async def ask(
+        self,
+        query: str,
+        *,
+        cwd: str | None = None,
+        mode: str | None = None,
+    ) -> str:
         """Send a question to the ad-hoc agent and return the response.
 
         Spawns the agent if it is not already running.
 
         Args:
             query: The question or prompt text.
+            cwd: Optional caller working directory for per-prompt context.
+            mode: Optional session mode when a new ACP session is created.
 
         Returns:
             The provider's response string.
@@ -95,7 +103,7 @@ class AdHocManager:
         provider = self._manager.get_provider(self._provider_name)
         if provider is None:
             raise ValueError(f"Provider {self._provider_name!r} not registered")
-        response = await provider.send(agent, query)
+        response = await provider.send(agent, query, cwd=cwd, mode=mode)
         self._touch()
         return response
 

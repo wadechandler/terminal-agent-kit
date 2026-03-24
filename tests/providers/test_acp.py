@@ -50,8 +50,9 @@ def _mock_spawn_agent_process() -> tuple[Any, AsyncMock, MagicMock]:
     mock_conn.prompt = AsyncMock(return_value=MagicMock(stop_reason="end_turn"))
     mock_conn.cancel = AsyncMock()
     mock_conn.close = AsyncMock()
-    mock_conn.set_session_model = AsyncMock()
-    mock_conn.set_session_mode = AsyncMock()
+    mock_conn.set_config_option = AsyncMock(
+        return_value=SimpleNamespace(config_options=[])
+    )
 
     mock_process = MagicMock()
     mock_process.returncode = None
@@ -124,9 +125,10 @@ class TestACPProviderSpawn:
             provider = ACPProvider(name="Goose", command=["goose", "acp"])
             await provider.spawn("my-agent", model="gpt-5.4")
 
-            mock_conn.set_session_model.assert_called_once_with(
-                model_id="gpt-5.4[reasoning=medium,context=272k,fast=false]",
-                session_id="test-session-id",
+            mock_conn.set_config_option.assert_called_once_with(
+                "model",
+                "test-session-id",
+                "gpt-5.4[reasoning=medium,context=272k,fast=false]",
             )
 
     async def test_spawn_resolves_model_name(self) -> None:
@@ -263,3 +265,80 @@ class TestACPProviderCallbacks:
         callback = AsyncMock(return_value="option-a")
         provider.set_ask_question_callback(callback)
         assert provider._ask_question_callback is callback
+
+
+class TestFormatCwdContext:
+    def test_xml_format(self) -> None:
+        from tak.providers.acp import format_cwd_context
+
+        out = format_cwd_context("/tmp/proj", "xml")  # noqa: S108
+        assert "<user_cwd>/tmp/proj</user_cwd>" in out
+        assert out.endswith("\n\n")
+
+    def test_bracket_format(self) -> None:
+        from tak.providers.acp import format_cwd_context
+
+        assert format_cwd_context("/a", "bracket") == "[User CWD: /a]\n\n"
+
+    def test_json_format(self) -> None:
+        from tak.providers.acp import format_cwd_context
+
+        assert '"user_cwd": "/b/c"' in format_cwd_context("/b/c", "json")
+
+
+class TestACPProviderSendSessionLifecycle:
+    async def test_send_reuses_single_new_session(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"])
+            await provider.spawn("a1")
+            handle = AgentHandle(
+                name="a1",
+                provider_name="x",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+            )
+            with patch("tak.providers.acp.load_config", return_value={}):
+                await provider.send(handle, "one")
+                await provider.send(handle, "two")
+            assert mock_conn.new_session.call_count == 1
+            assert mock_conn.prompt.call_count == 2
+
+    async def test_close_session_then_send_opens_new_session(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"])
+            await provider.spawn("a1")
+            handle = AgentHandle(
+                name="a1",
+                provider_name="x",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+            )
+            await provider.close_session("a1")
+            with patch("tak.providers.acp.load_config", return_value={}):
+                await provider.send(handle, "after")
+            assert mock_conn.new_session.call_count == 2
+
+    async def test_send_prepends_cwd_when_configured(self) -> None:
+        fake_spawn, mock_conn, _ = _mock_spawn_agent_process()
+
+        with patch("tak.providers.acp.spawn_agent_process", fake_spawn):
+            provider = ACPProvider(name="Test", command=["test-acp"])
+            await provider.spawn("a1")
+            handle = AgentHandle(
+                name="a1",
+                provider_name="x",
+                project_path=None,
+                status=AgentStatus.RUNNING,
+            )
+            cfg = {"prompt": {"cwd_context": {"enabled": True, "format": "bracket"}}}
+            with patch("tak.providers.acp.load_config", return_value=cfg):
+                await provider.send(handle, "hi", cwd="/work")
+
+            blocks = mock_conn.prompt.call_args.kwargs["prompt"]
+            text0 = getattr(blocks[0], "text", "") or ""
+            assert "[User CWD: /work]" in text0
+            assert text0.endswith("hi")

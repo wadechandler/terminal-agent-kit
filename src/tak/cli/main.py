@@ -5,6 +5,10 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
+from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
 
 import click
 from rich.console import Console
@@ -13,8 +17,10 @@ from rich.table import Table
 
 console = Console()
 
+_T = TypeVar("_T")
 
-def _run_async(coro):  # type: ignore[no-untyped-def]
+
+def _run_async(coro: Coroutine[Any, Any, _T]) -> _T:
     """Run an async coroutine from synchronous Click commands."""
     return asyncio.run(coro)
 
@@ -34,7 +40,7 @@ def _daemon_available() -> bool:
 @click.group(context_settings={"max_content_width": 120})
 @click.version_option(package_name="terminal-agent-kit")
 def cli() -> None:
-    """Terminal Agent Kit (tak) -- Forging your terminal into an agentic environment."""
+    """Terminal Agent Kit (tak) -- Transform your terminal into an agentic workspace."""
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +56,9 @@ def _detect_session_id() -> str | None:
 
 
 _PERMISSION_CHOICES = ["prompt", "reject", "auto-allow", "yolo"]
+
+_MSG_DAEMON_OFF_IT2 = "  [daemon not running -- start iTerm2 with tak daemon]"
+_MSG_DAEMON_OFF_SHORT = "  [daemon not running]"
 
 
 @cli.command()
@@ -92,7 +101,7 @@ def spawn(
             click.echo(f"  Project: {project}")
         if model:
             click.echo(f"  Model: {model}")
-        click.echo("  [daemon not running -- start iTerm2 with tak daemon]")
+        click.echo(_MSG_DAEMON_OFF_IT2)
         return
 
     from tak.ipc.client import send_request
@@ -127,7 +136,7 @@ def status() -> None:
     """Show status of all running agents."""
     if not _daemon_available():
         click.echo("Running agents:")
-        click.echo("  [daemon not running]")
+        click.echo(_MSG_DAEMON_OFF_SHORT)
         return
 
     from tak.ipc.client import send_request
@@ -167,7 +176,7 @@ def providers() -> None:
     """List available agent providers."""
     if not _daemon_available():
         click.echo("Available providers:")
-        click.echo("  [daemon not running -- start iTerm2 with tak daemon]")
+        click.echo(_MSG_DAEMON_OFF_IT2)
         click.echo()
         click.echo("Default providers (when daemon is running):")
         click.echo("  cursor-acp    Cursor (ACP over stdio)")
@@ -210,7 +219,7 @@ def stop(name: str) -> None:
     """Stop a running agent."""
     if not _daemon_available():
         click.echo(f"Stopping agent '{name}'...")
-        click.echo("  [daemon not running]")
+        click.echo(_MSG_DAEMON_OFF_SHORT)
         return
 
     from tak.ipc.client import send_request
@@ -256,6 +265,27 @@ def remove(name: str, force: bool) -> None:
         sys.exit(1)
 
 
+def _info_associated_agent_and_list(
+    session_id: str | None,
+) -> tuple[str, list[dict[str, Any]]]:
+    """When the daemon is up, return (tab-associated agent name, all agents)."""
+    if not _daemon_available():
+        return "", []
+    from tak.ipc.client import send_request
+
+    resp = _run_async(send_request("list_agents"))
+    if not resp.success:
+        return "", []
+    agents = list(resp.data or [])
+    agent_name = ""
+    if session_id:
+        for ag in agents:
+            if session_id in ag.get("tabs", []):
+                agent_name = ag["name"]
+                break
+    return agent_name, agents
+
+
 @cli.command()
 def info() -> None:
     """Show terminal environment and session details.
@@ -264,6 +294,8 @@ def info() -> None:
     daemon status, and relevant environment variables.
     """
     session_id = _detect_session_id()
+    daemon_up = _daemon_available()
+    agent_name, agents = _info_associated_agent_and_list(session_id)
 
     table = Table(title="tak info", show_header=False, box=None, padding=(0, 2))
     table.add_column("Key", style="cyan")
@@ -274,48 +306,40 @@ def info() -> None:
     table.add_row("Shell", os.environ.get("SHELL", "unknown"))
     table.add_row("TERM", os.environ.get("TERM", "unknown"))
     table.add_row("Session ID", session_id or "(not detected)")
-    table.add_row("Daemon", "running" if _daemon_available() else "not running")
-
-    agent_name = ""
-    if _daemon_available() and session_id:
-        from tak.ipc.client import send_request
-
-        resp = _run_async(send_request("list_agents"))
-        if resp.success:
-            for ag in resp.data or []:
-                if session_id in ag.get("tabs", []):
-                    agent_name = ag["name"]
-                    break
-
+    table.add_row("Daemon", "running" if daemon_up else "not running")
     table.add_row("Associated agent", agent_name or "(none)")
 
-    if _daemon_available():
-        from tak.ipc.client import send_request
-
-        resp = _run_async(send_request("list_agents"))
-        if resp.success:
-            agents = resp.data or []
-            running = [a for a in agents if a.get("status") == "running"]
-            table.add_row("Running agents", str(len(running)))
-            table.add_row("Total agents", str(len(agents)))
+    if daemon_up and agents:
+        running = [a for a in agents if a.get("status") == "running"]
+        table.add_row("Running agents", str(len(running)))
+        table.add_row("Total agents", str(len(agents)))
 
     table.add_row("CWD", os.getcwd())
 
     console.print(table)
 
 
-def _prompt_impl(query: tuple[str, ...], agent: str | None) -> None:
+_MODE_CHOICES = ["ask", "plan", "agent"]
+
+
+def _prompt_impl(
+    query: tuple[str, ...],
+    agent: str | None,
+    mode: str | None,
+) -> None:
     """Send a prompt to an agent (shared by ``prompt`` and ``ask`` commands)."""
     full_query = " ".join(query)
 
     if not _daemon_available():
         click.echo(f"Prompting: {full_query}")
-        click.echo("  [daemon not running -- start iTerm2 with tak daemon]")
+        click.echo(_MSG_DAEMON_OFF_IT2)
         return
 
     from tak.ipc.client import send_request
 
     params: dict[str, object] = {"message": full_query, "cwd": os.getcwd()}
+    if mode is not None:
+        params["mode"] = mode
     if agent:
         params["agent"] = agent
     else:
@@ -325,7 +349,7 @@ def _prompt_impl(query: tuple[str, ...], agent: str | None) -> None:
         else:
             params["use_adhoc"] = True
 
-    resp = _run_async(send_request("ask", params))
+    resp = _run_async(send_request("prompt", params))
     if resp.success:
         data = resp.data or {}
         click.echo(f"[{data.get('agent', '?')}] {data.get('response', '')}")
@@ -337,29 +361,86 @@ def _prompt_impl(query: tuple[str, ...], agent: str | None) -> None:
 @cli.command(name="prompt")
 @click.argument("query", nargs=-1, required=True)
 @click.option("--agent", "-a", default=None, help="Target a specific agent by name")
-def prompt_cmd(query: tuple[str, ...], agent: str | None) -> None:
+@click.option(
+    "--mode", "-M",
+    type=click.Choice(_MODE_CHOICES, case_sensitive=False),
+    default=None,
+    help="Session mode when a new ACP session is created (ask, plan, agent)",
+)
+def prompt_cmd(query: tuple[str, ...], agent: str | None, mode: str | None) -> None:
     """Send a prompt to an agent.
 
     Uses the agent associated with the current tab, or ad-hoc if none.
     Shorthand: tak p
     """
-    _prompt_impl(query, agent)
+    _prompt_impl(query, agent, mode)
 
 
 @cli.command(name="p", hidden=True)
 @click.argument("query", nargs=-1, required=True)
 @click.option("--agent", "-a", default=None, help="Target a specific agent by name")
-def prompt_short(query: tuple[str, ...], agent: str | None) -> None:
+@click.option(
+    "--mode", "-M",
+    type=click.Choice(_MODE_CHOICES, case_sensitive=False),
+    default=None,
+    help="Session mode when a new ACP session is created (ask, plan, agent)",
+)
+def prompt_short(query: tuple[str, ...], agent: str | None, mode: str | None) -> None:
     """Shorthand for 'tak prompt'."""
-    _prompt_impl(query, agent)
+    _prompt_impl(query, agent, mode)
 
 
 @cli.command(hidden=True)
 @click.argument("query", nargs=-1, required=True)
 @click.option("--agent", "-a", default=None, help="Target a specific agent by name")
-def ask(query: tuple[str, ...], agent: str | None) -> None:
+@click.option(
+    "--mode", "-M",
+    type=click.Choice(_MODE_CHOICES, case_sensitive=False),
+    default=None,
+    help="Session mode when a new ACP session is created (ask, plan, agent)",
+)
+def ask(query: tuple[str, ...], agent: str | None, mode: str | None) -> None:
     """Send a prompt to an agent (alias for 'tak prompt')."""
-    _prompt_impl(query, agent)
+    _prompt_impl(query, agent, mode)
+
+
+@cli.group()
+def session() -> None:
+    """Manage agent conversation sessions."""
+
+
+@session.command("end")
+@click.argument("agent", required=False)
+def session_end(agent: str | None) -> None:
+    """End the ACP session for an agent (fresh conversation on next prompt).
+
+    With no AGENT, uses the tab-associated agent or the ad-hoc agent.
+    """
+    if not _daemon_available():
+        target = agent or "(default)"
+        click.echo(f"Ending session for '{target}'...")
+        click.echo(_MSG_DAEMON_OFF_IT2)
+        return
+
+    from tak.ipc.client import send_request
+
+    params: dict[str, object] = {}
+    if agent:
+        params["agent"] = agent
+    else:
+        session_id = _detect_session_id()
+        if session_id:
+            params["session_id"] = session_id
+        else:
+            params["use_adhoc"] = True
+
+    resp = _run_async(send_request("session_end", params))
+    if resp.success:
+        data = resp.data or {}
+        click.echo(f"Session ended for agent '{data.get('agent', '?')}'.")
+    else:
+        click.echo(f"Error: {resp.error}", err=True)
+        sys.exit(1)
 
 
 @cli.command(name="agents")
@@ -372,7 +453,7 @@ def list_agents(provider: str | None, running_only: bool) -> None:
     """List all managed agents with optional filters."""
     if not _daemon_available():
         click.echo("Running agents:")
-        click.echo("  [daemon not running]")
+        click.echo(_MSG_DAEMON_OFF_SHORT)
         return
 
     from tak.ipc.client import send_request
@@ -626,6 +707,30 @@ def new_group() -> None:
     """Create new projects and files from templates."""
 
 
+def _prompt_new_project_fields(
+    name: str,
+    quick: bool,
+    desc: str,
+    language: str | None,
+    framework: str | None,
+    skill: bool,
+) -> tuple[str, str | None, str | None, bool]:
+    """Collect optional interactive fields for ``tak new project``."""
+    if quick:
+        return desc, language, framework, skill
+    if not desc:
+        desc = click.prompt("Project description", default=f"{name} project.")
+    if not language:
+        raw_language = click.prompt("Primary language", default="")
+        language = raw_language.strip() or None
+    if language and not framework:
+        raw_framework = click.prompt("Framework (optional)", default="")
+        framework = raw_framework.strip() or None
+    if not skill:
+        skill = click.confirm("Generate SKILL.md?", default=False)
+    return desc, language, framework, skill
+
+
 @new_group.command("project")
 @click.argument("name")
 @click.option("--quick", "-q", is_flag=True, help="Quick mode: skip interactive prompts")
@@ -651,17 +756,9 @@ def new_project(
 
     parent_dir = Path(os.getcwd())
 
-    if not quick:
-        if not desc:
-            desc = click.prompt("Project description", default=f"{name} project.")
-        if not language:
-            language = click.prompt("Primary language", default="")
-            language = language.strip() or None
-        if language and not framework:
-            framework = click.prompt("Framework (optional)", default="")
-            framework = framework.strip() or None
-        if not skill:
-            skill = click.confirm("Generate SKILL.md?", default=False)
+    desc, language, framework, skill = _prompt_new_project_fields(
+        name, quick, desc, language, framework, skill,
+    )
 
     try:
         result = create_project(

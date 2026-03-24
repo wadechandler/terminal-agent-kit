@@ -19,7 +19,7 @@ async def send_request(
     method: str,
     params: dict[str, Any] | None = None,
     socket_path: Path | None = None,
-    timeout: float = 30.0,
+    timeout: float = 30.0,  # NOSONAR(S7483) -- used with asyncio.timeout() internally
 ) -> IPCResponse:
     """Send a request to the tak daemon and return the response.
 
@@ -50,7 +50,8 @@ async def send_request(
         writer.write(request.encode())
         await writer.drain()
 
-        raw = await asyncio.wait_for(read_message(reader), timeout=timeout)
+        async with asyncio.timeout(timeout):
+            raw = await read_message(reader)
         return IPCResponse.decode(raw)
     finally:
         writer.close()

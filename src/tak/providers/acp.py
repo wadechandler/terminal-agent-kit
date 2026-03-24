@@ -10,6 +10,7 @@ Reference: https://agentclientprotocol.com/protocol
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import shutil
@@ -18,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from acp import spawn_agent_process
 
+from tak.core.config import load_config, prompt_cwd_context_settings
 from tak.providers.acp_session import (
     ACPSessionManager,
     AskQuestionCallback,
@@ -57,6 +59,26 @@ def _subprocess_env() -> dict[str, str]:
             path_parts.append(extra)
     env["PATH"] = os.pathsep.join(path_parts)
     return env
+
+
+def format_cwd_context(cwd: str, fmt: str) -> str:
+    """Build the prefix to prepend before the user prompt for CWD context.
+
+    Args:
+        cwd: Working directory path string.
+        fmt: One of ``xml``, ``bracket``, or ``json``.
+
+    Returns:
+        A non-empty prefix ending with two newlines, or an empty string
+        if *fmt* is unrecognized (callers should not pass ``none``).
+    """
+    if fmt == "xml":
+        return f"<context><user_cwd>{cwd}</user_cwd></context>\n\n"
+    if fmt == "bracket":
+        return f"[User CWD: {cwd}]\n\n"
+    if fmt == "json":
+        return json.dumps({"user_cwd": cwd}) + "\n\n"
+    return ""
 
 
 class ACPProvider(BaseProvider):
@@ -235,12 +257,22 @@ class ACPProvider(BaseProvider):
         """
         return self._sessions.get(agent_name)
 
-    async def send(self, handle: AgentHandle, message: str) -> str:
+    async def send(
+        self,
+        handle: AgentHandle,
+        message: str,
+        *,
+        cwd: str | None = None,
+        mode: str | None = None,
+    ) -> str:
         """Send a prompt via the ACP session and return the full response.
 
         Args:
             handle: The agent handle.
             message: The user prompt text.
+            cwd: Optional caller working directory for per-prompt context.
+            mode: When no ACP session is active (e.g. after :meth:`close_session`),
+                used as the mode for :meth:`ACPSessionManager.new_session`.
 
         Returns:
             The full response text.
@@ -253,16 +285,38 @@ class ACPProvider(BaseProvider):
             raise RuntimeError(
                 f"No ACP session for agent '{handle.name}'. Was spawn() called?"
             )
-        return await session.prompt(message)
+        if not session.session_id:
+            session_cwd = str(handle.project_path) if handle.project_path else "."
+            await session.new_session(
+                mode=mode or "agent",
+                cwd=session_cwd,
+                model=handle.model,
+            )
+            handle.acp_session_id = session.session_id
+
+        cfg = load_config()
+        enabled, fmt = prompt_cwd_context_settings(cfg)
+        text = message
+        if cwd and enabled and fmt != "none":
+            text = format_cwd_context(cwd, fmt) + text
+
+        return await session.prompt(text)
 
     async def send_streaming(
-        self, handle: AgentHandle, message: str
+        self,
+        handle: AgentHandle,
+        message: str,
+        *,
+        cwd: str | None = None,
+        mode: str | None = None,
     ) -> AsyncIterator[str]:
         """Send a prompt and yield response chunks as they stream in.
 
         Args:
             handle: The agent handle.
             message: The user prompt text.
+            cwd: Optional caller working directory for per-prompt context.
+            mode: Session mode when a new ACP session must be created.
 
         Yields:
             Response text chunks.
@@ -275,7 +329,22 @@ class ACPProvider(BaseProvider):
             raise RuntimeError(
                 f"No ACP session for agent '{handle.name}'. Was spawn() called?"
             )
-        async for chunk in session.prompt_streaming(message):
+        if not session.session_id:
+            session_cwd = str(handle.project_path) if handle.project_path else "."
+            await session.new_session(
+                mode=mode or "agent",
+                cwd=session_cwd,
+                model=handle.model,
+            )
+            handle.acp_session_id = session.session_id
+
+        cfg = load_config()
+        enabled, fmt = prompt_cwd_context_settings(cfg)
+        text = message
+        if cwd and enabled and fmt != "none":
+            text = format_cwd_context(cwd, fmt) + text
+
+        async for chunk in session.prompt_streaming(text):
             yield chunk
 
     async def cancel(self, handle: AgentHandle) -> None:
@@ -288,6 +357,19 @@ class ACPProvider(BaseProvider):
         if session is not None:
             await session.cancel()
 
+    async def close_session(self, agent_name: str) -> None:
+        """End the ACP conversation session but keep the subprocess connection.
+
+        The next :meth:`send` opens a fresh session via ``session/new``.
+
+        Args:
+            agent_name: The managed agent name.
+        """
+        session = self._sessions.get(agent_name)
+        if session is None:
+            return
+        await session.close_session()
+
     async def stop(self, handle: AgentHandle) -> None:
         """Terminate the ACP subprocess gracefully via the SDK.
 
@@ -296,6 +378,7 @@ class ACPProvider(BaseProvider):
         """
         session = self._sessions.pop(handle.name, None)
         if session is not None:
+            await session.close_session()
             await session.close()
 
         stack = self._exit_stacks.pop(handle.name, None)

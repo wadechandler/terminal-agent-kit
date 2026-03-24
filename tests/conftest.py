@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -12,7 +13,6 @@ from tak.core.session_registry import SessionRegistry
 from tak.providers.base import BaseProvider
 
 if TYPE_CHECKING:
-    import asyncio
     from pathlib import Path
 
 
@@ -35,6 +35,7 @@ class MockProcess:
         self.returncode = -9
 
     async def wait(self) -> int:
+        await asyncio.sleep(0)
         self.returncode = self.returncode or 0
         return self.returncode
 
@@ -50,13 +51,15 @@ class MockStream:
         self._buffer.append(data)
 
     async def drain(self) -> None:
-        pass
+        """Yield to the loop; the mock has no OS buffer to flush."""
+        await asyncio.sleep(0)
 
     def feed(self, data: bytes) -> None:
         """Feed data to be read by readline."""
         self._read_buffer += data
 
     async def readline(self) -> bytes:
+        await asyncio.sleep(0)
         if b"\n" in self._read_buffer:
             line, self._read_buffer = self._read_buffer.split(b"\n", 1)
             return line + b"\n"
@@ -88,6 +91,7 @@ class MockProvider(BaseProvider):
         project_path: Path | None = None,
         model: str | None = None,
     ) -> asyncio.subprocess.Process:
+        await asyncio.sleep(0)
         self.spawn_calls.append({
             "name": agent_name,
             "project": project_path,
@@ -95,11 +99,25 @@ class MockProvider(BaseProvider):
         })
         return MockProcess()  # type: ignore[return-value]
 
-    async def send(self, handle: AgentHandle, message: str) -> str:
-        self.send_calls.append({"agent": handle.name, "message": message})
+    async def send(
+        self,
+        handle: AgentHandle,
+        message: str,
+        *,
+        cwd: str | None = None,
+        mode: str | None = None,
+    ) -> str:
+        await asyncio.sleep(0)
+        self.send_calls.append({
+            "agent": handle.name,
+            "message": message,
+            "cwd": cwd,
+            "mode": mode,
+        })
         return self._canned_response
 
     async def stop(self, handle: AgentHandle) -> None:
+        await asyncio.sleep(0)
         self.stop_calls.append(handle.name)
         if handle.process:
             handle.process.terminate()  # type: ignore[union-attr]
@@ -121,21 +139,26 @@ class MockDriver:
         }
 
     async def list_sessions(self) -> list[dict[str, Any]]:
+        await asyncio.sleep(0)
         return list(self.sessions.values())
 
     async def get_active_session(self) -> str | None:
+        await asyncio.sleep(0)
         if self.sessions:
             return next(iter(self.sessions))
         return None
 
     async def inject_text(self, session_id: str, text: str) -> None:
+        await asyncio.sleep(0)
         self.injected_text.append({"session_id": session_id, "text": text})
 
     async def set_variable(self, session_id: str, key: str, value: str) -> None:
+        await asyncio.sleep(0)
         if session_id in self.sessions:
             self.sessions[session_id]["variables"][key] = value
 
     async def get_variable(self, session_id: str, key: str) -> str | None:
+        await asyncio.sleep(0)
         if session_id in self.sessions:
             return self.sessions[session_id]["variables"].get(key)
         return None

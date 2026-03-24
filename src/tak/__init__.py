@@ -1,3 +1,3 @@
-"""Terminal Agent Kit (tak) -- Forging your terminal into an agentic environment."""
+"""Terminal Agent Kit (tak) -- Transform your terminal into an agentic workspace."""
 
 __version__ = "0.1.0-alpha"

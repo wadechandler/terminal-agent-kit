@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 import pytest
@@ -122,6 +123,7 @@ class TestRestoreFullState:
             project_path: Path | None = None,
             model: str | None = None,
         ) -> object:
+            await asyncio.sleep(0)
             fail_calls.append(name)
             raise RuntimeError("spawn failed intentionally")
 

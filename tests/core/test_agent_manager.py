@@ -88,7 +88,7 @@ class TestAgentManagerRemove:
 
 
 class TestAgentManagerListing:
-    async def test_list_agents_empty(self, agent_manager: AgentManager) -> None:
+    def test_list_agents_empty(self, agent_manager: AgentManager) -> None:
         assert agent_manager.list_agents() == []
 
     async def test_list_agents_returns_all(
@@ -108,9 +108,7 @@ class TestAgentManagerListing:
         assert len(running) == 1
         assert running[0].name == "agent-2"
 
-    async def test_get_returns_none_for_unknown(
-        self, agent_manager: AgentManager
-    ) -> None:
+    def test_get_returns_none_for_unknown(self, agent_manager: AgentManager) -> None:
         assert agent_manager.get("nonexistent") is None
 
 

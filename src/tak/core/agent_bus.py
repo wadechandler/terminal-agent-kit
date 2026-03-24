@@ -23,6 +23,7 @@ class BusMessage:
     session_id: str
     text: str
     agent_name: str | None = None
+    cwd: str | None = None
 
 
 @dataclass
@@ -63,7 +64,7 @@ class AgentBus:
             raise ValueError(f"Agent '{agent_name}' not found")
 
         provider = self._providers[handle.provider_name]
-        response_text = await provider.send(handle, message.text)
+        response_text = await provider.send(handle, message.text, cwd=message.cwd)
 
         return BusResponse(
             text=response_text,

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wadechandler/terminal-agent-kit/config/tak-task-manifest.schema.json",
+  "title": "tak task manifest",
+  "description": "Schema for docs/tasks/manifest.yaml (phase/task tracking). Not Ansible.",
+  "type": "object",
+  "required": ["project", "phases"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "research_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}
